@@ -1,0 +1,30 @@
+# Tasks
+
+- [ ] Project Initialization <!-- id: 0 -->
+    - [ ] Initialize Git repository <!-- id: 1 -->
+    - [ ] Set up Backend (Node.js/Express) structure <!-- id: 2 -->
+    - [ ] Set up Frontend (React) structure <!-- id: 3 -->
+    - [ ] Configure Environment Variables (API Keys, DB URI) <!-- id: 4 -->
+- [ ] Backend Development (MVP) <!-- id: 5 -->
+    - [ ] Design Database Schema (Users, Matches, Series, Players, News - Multi-sport support) <!-- id: 6 -->
+    - [ ] Implement Authentication (JWT, Registration, Login) <!-- id: 7 -->
+    - [ ] Integrate Information Services <!-- id: 8 -->
+        - [ ] Integrate CricketData.org (Cricket) <!-- id: 9 -->
+        - [ ] Integrate API-Sports (Football, Basketball) <!-- id: 10 -->
+        - [ ] Integrate NewsAPI.org (Global Sports News) <!-- id: 11 -->
+        - [ ] Fetch Matches & Scores (All Sports) <!-- id: 12 -->
+    - [ ] Implement WebSocket for Real-time Updates <!-- id: 12 -->
+    - [ ] Create API Endpoints for Frontend (Unified Sport Feed) <!-- id: 13 -->
+- [ ] Frontend Development (MVP) <!-- id: 14 -->
+    - [ ] Setup Global Styles (Theme, Layout, CSS Variables) <!-- id: 15 -->
+    - [ ] Implement Header/Navigation (Sport Selector) <!-- id: 16 -->
+    - [ ] Home Page (Featured Matches - Mixed/Filtered) <!-- id: 17 -->
+    - [ ] Match Details Page (Dynamic Layout based on Sport) <!-- id: 18 -->
+    - [ ] Series/Schedule Page <!-- id: 19 -->
+    - [ ] User Authentication UI (Login/Signup) <!-- id: 20 -->
+    - [ ] Integrate Real-time Updates (Socket.io-client) <!-- id: 21 -->
+- [ ] Engagement & Growth (Phase 2 & 3) <!-- id: 22 -->
+    - [ ] Search Functionality (Cross-sport) <!-- id: 23 -->
+    - [ ] User Personalization (Follow teams/leagues) <!-- id: 24 -->
+    - [ ] News Editor Dashboard <!-- id: 25 -->
+    - [ ] Optimization & PWA <!-- id: 26 -->
