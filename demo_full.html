@@ -12,5 +12,562 @@
         rel="stylesheet">
     <!-- FontAwesome for Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="style.css">
+    <link href="style.css" rel="stylesheet">
+</head>
+
+<body>
+
+    <!-- Mobile Sidebar Overlay -->
+    <div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+    <!-- Sidebar -->
+    <div class="sidebar" id="sidebar">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <div class="logo"><i class="fas fa-bolt" style="color:#3b82f6;"></i>Sport<span>Flash</span></div>
+            <i class="fas fa-times mobile-close" style="display: none;" onclick="toggleSidebar()"></i>
+        </div>
+
+        <div class="nav-category">Menu</div>
+        <div class="nav-item active" onclick="switchView('home')"><i class="fas fa-home"></i> Home</div>
+        <div class="nav-item" onclick="switchView('matches')"><i class="fas fa-calendar-alt"></i> Matches</div>
+        <div class="nav-item" onclick="switchView('news')"><i class="fas fa-newspaper"></i> News</div>
+        <div class="nav-item" onclick="switchView('series')"><i class="fas fa-trophy"></i> Series</div>
+
+        <div class="nav-category">My Zone (Phase 2)</div>
+        <div class="nav-item"><i class="fas fa-star"></i> Following</div>
+        <div class="nav-item"><i class="fas fa-bookmark"></i> Bookmarks</div>
+
+        <div class="nav-category">Preferences</div>
+        <div class="nav-item"><i class="fas fa-cog"></i> Settings</div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main">
+        <!-- Top Bar -->
+        <div class="top-bar">
+            <div style="display: flex; align-items: center; gap: 1rem;">
+                <i class="fas fa-bars menu-toggle" onclick="toggleSidebar()"></i>
+                <h1 class="hide-mobile" style="margin: 0; font-size: 1.5rem;">Welcome to SportFlash</h1>
+            </div>
+            <div class="user-actions">
+                <i class="fas fa-search icon-btn" onclick="openSearch()" title="Search"></i>
+                <button class="btn btn-outline">
+                    <i class="fas fa-sign-in-alt"></i>
+                    Log in
+                </button>
+                <button class="btn btn-primary">
+                    <i class="fas fa-user-plus"></i>
+                    Sign Up
+                </button>
+            </div>
+        </div>
+
+        <div class="content-area">
+
+            <!-- VIEW: HOME DASHBOARD -->
+            <div id="home" class="view active">
+                <h2 style="margin-top: 0;">Did you know? (Live Demo)</h2>
+                <div class="cards-grid" style="display: grid; grid-template-columns: 2fr 1fr; gap: 2rem;">
+
+                    <div class="content-left">
+                        <h3 style="color: var(--text-muted); margin-bottom: 1rem; margin-top: 0;">TOP LIVE MATCHES</h3>
+
+                        <!-- Cricket Card -->
+                        <div class="card"
+                            style="background: linear-gradient(135deg, rgba(59,130,246,0.2), rgba(15,23,42,0.8)); border-color: var(--primary-cricket); cursor: pointer;"
+                            onclick="switchView('match-detail')">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 1rem;">
+                                <span style="color: var(--danger); font-weight: bold; animation: pulse 1.5s infinite;">●
+                                    LIVE
+                                    CRICKET</span>
+                                <span style="color: var(--text-muted);">ICC World Cup 2026</span>
+                            </div>
+                            <div class="score-hero" style="gap: 2rem; margin: 0;">
+                                <div class="team-lg">
+                                    <span style="font-size: 2rem;">🇮🇳</span>
+                                    <div style="font-weight: bold;">IND</div>
+                                    <div>248/3</div>
+                                </div>
+                                <div style="font-size: 1.5rem; font-weight: bold; opacity: 0.5;">VS</div>
+                                <div class="team-lg">
+                                    <span style="font-size: 2rem;">🇦🇺</span>
+                                    <div style="font-weight: bold;">AUS</div>
+                                    <div>--/--</div>
+                                </div>
+                            </div>
+                            <div style="text-align: center; margin-top: 1rem; color: var(--primary-cricket);">
+                                Click to view Match Dashboard (MVP Feature)
+                            </div>
+                        </div>
+
+                        <!-- Football Live Card -->
+                        <div class="card"
+                            style="background: linear-gradient(135deg, rgba(34,197,94,0.1), rgba(15,23,42,0.8)); border-color: var(--primary-football); margin-top: 1rem; cursor: pointer;"
+                            onclick="switchView('football-detail')">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                                <span style="color: var(--danger); font-weight: bold; animation: pulse 1.5s infinite;">●
+                                    LIVE
+                                    FOOTBALL</span>
+                                <span style="color: var(--text-muted);">Premier League</span>
+                            </div>
+                            <div style="display: flex; align-items: center; justify-content: space-between;">
+                                <div style="display: flex; align-items: center; gap: 1rem;">
+                                    <div style="font-size: 1.5rem;">🔴</div>
+                                    <div style="font-weight: bold; font-size: 1.2rem;">MUN</div>
+                                </div>
+                                <div style="text-align: center;">
+                                    <div class="match-score-display" style="font-size: 2rem;">2 - 1</div>
+                                    <div style="color: var(--primary-football); font-weight: bold;">72'</div>
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 1rem;">
+                                    <div style="font-weight: bold; font-size: 1.2rem;">CHE</div>
+                                    <div style="font-size: 1.5rem;">🔵</div>
+                                </div>
+                            </div>
+                            <div
+                                style="margin-top: 0.5rem; font-size: 0.85rem; color: var(--text-muted); text-align: center;">
+                                Goal: Rashford (54')
+                            </div>
+                            <div style="text-align: center; margin-top: 1rem; color: var(--primary-football);">
+                                Click to view Match Dashboard (MVP Feature)
+                            </div>
+                        </div>
+
+                        <!-- Basketball Live Card -->
+                        <div class="card"
+                            style="background: linear-gradient(135deg, rgba(249,115,22,0.1), rgba(15,23,42,0.8)); border-color: var(--primary-basketball); margin-top: 1rem; cursor: pointer;"
+                            onclick="switchView('basketball-detail')">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                                <span style="color: var(--danger); font-weight: bold; animation: pulse 1.5s infinite;">●
+                                    LIVE
+                                    NBA</span>
+                                <span style="color: var(--text-muted);">NBA Regular Season</span>
+                            </div>
+                            <div style="display: flex; align-items: center; justify-content: space-between;">
+                                <div style="display: flex; align-items: center; gap: 1rem;">
+                                    <div style="font-size: 1.5rem;">🏀</div>
+                                    <div style="font-weight: bold; font-size: 1.2rem;">LAL</div>
+                                </div>
+                                <div style="text-align: center;">
+                                    <div class="match-score-display" style="font-size: 2rem;">102 - 98</div>
+                                    <div style="color: var(--primary-basketball); font-weight: bold;">Q4 4:21</div>
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 1rem;">
+                                    <div style="font-weight: bold; font-size: 1.2rem;">GSW</div>
+                                    <div style="font-size: 1.5rem;">🌉</div>
+                                </div>
+                            </div>
+                            <div style="text-align: center; margin-top: 1rem; color: var(--primary-basketball);">
+                                Click to view Match Dashboard (MVP Feature)
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="content-right">
+                        <h3 style="color: var(--text-muted); margin-bottom: 1rem; margin-top: 0;">TRENDING NEWS</h3>
+                        <div class="card" style="min-height: 400px;">
+                            <div class="news-item">
+                                <div class="news-img" style="background: #1e3a8a;"></div>
+                                <div>
+                                    <div style="font-size: 0.75rem; color: var(--primary-cricket);">CRICKET</div>
+                                    <div class="news-title">BCCI announces new squad for T20 World Cup 2026.</div>
+                                </div>
+                            </div>
+                            <div class="news-item">
+                                <div class="news-img" style="background: #14532d;"></div>
+                                <div>
+                                    <div style="font-size: 0.75rem; color: var(--primary-football);">FOOTBALL</div>
+                                    <div class="news-title">Mbappe scores hat-trick in Madrid derby thriller.</div>
+                                </div>
+                            </div>
+                            <div class="news-item">
+                                <div class="news-img" style="background: #7c2d12;"></div>
+                                <div>
+                                    <div style="font-size: 0.75rem; color: #f97316;">BASKETBALL</div>
+                                    <div class="news-title">LeBron James breaks another all-time scoring record.</div>
+                                </div>
+                            </div>
+                            <div class="news-item" style="border-bottom: none;">
+                                <div class="news-img"
+                                    style="background: #ffffff; display: flex; align-items: center; justify-content: center; color: black; font-weight: bold; font-size: 1.5rem;">
+                                    +</div>
+                                <div>
+                                    <div class="news-title" style="margin-top: 0.5rem; color: var(--text-muted);">Log in
+                                        to read more personalized news</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- VIEW: CRICKET DETAILS -->
+            <div id="match-detail" class="view">
+                <div style="margin-bottom: 1rem; cursor: pointer; color: var(--text-muted);"
+                    onclick="switchView('home')">← Back to Dashboard</div>
+
+                <div class="card match-header" style="border-top: 4px solid var(--primary-cricket);">
+                    <span
+                        style="background: var(--danger); color: white; padding: 0.2rem 1rem; border-radius: 20px; font-size: 0.8rem;">●
+                        LIVE CRICKET</span>
+                    <div class="score-hero">
+                        <div class="team-lg">
+                            <div class="team-logo-lg">🇮🇳</div>
+                            <h2>India</h2>
+                            <div class="match-score-display">248/3</div>
+                            <div style="color: var(--text-muted);">32.4 Overs</div>
+                        </div>
+                        <div style="text-align: center; opacity: 0.7;">
+                            <div style="font-size: 1.2rem;">Match 45</div>
+                            <div>Wankhede Stadium</div>
+                        </div>
+                        <div class="team-lg">
+                            <div class="team-logo-lg">🇦🇺</div>
+                            <h2>Australia</h2>
+                            <div class="match-score-display" style="opacity: 0.5;">0/0</div>
+                            <div style="color: var(--text-muted);">Yet to Bat</div>
+                        </div>
+                    </div>
+                    <div style="margin-top: 1rem; color: var(--primary-cricket); font-weight: 500;">
+                        Live: Kohli (82*) and Pandya (12*) are at the crease.
+                    </div>
+                </div>
+
+                <!-- Tabs -->
+                <div class="tabs">
+                    <div class="tab active" onclick="switchTab('scorecard', this)">Scorecard</div>
+                    <div class="tab" onclick="switchTab('comm', this)">Commentary</div>
+                    <div class="tab" onclick="switchTab('info', this)">Match Info</div>
+                </div>
+
+                <!-- Tab Content: Scorecard -->
+                <div id="scorecard" class="tab-content active">
+                    <div class="card">
+                        <h4>🏏 India Batting</h4>
+                        <table style="width: 100%; border-collapse: collapse; text-align: left;">
+                            <tr style="border-bottom: 1px solid rgba(255,255,255,0.1); color: var(--text-muted);">
+                                <th style="padding: 0.5rem;">Batter</th>
+                                <th>R</th>
+                                <th>B</th>
+                                <th>4s</th>
+                                <th>6s</th>
+                                <th>SR</th>
+                            </tr>
+                            <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                                <td style="padding: 1rem 0.5rem;">Rohit Sharma</td>
+                                <td>45</td>
+                                <td>32</td>
+                                <td>6</td>
+                                <td>2</td>
+                                <td>140.6</td>
+                            </tr>
+                            <tr
+                                style="border-bottom: 1px solid rgba(255,255,255,0.05); background: rgba(59,130,246,0.1);">
+                                <td style="padding: 1rem 0.5rem; color: var(--primary-cricket);">Virat Kohli *</td>
+                                <td>82</td>
+                                <td>94</td>
+                                <td>8</td>
+                                <td>1</td>
+                                <td>87.2</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Tab Content: Commentary -->
+                <div id="comm" class="tab-content">
+                    <div class="comm-bubble">
+                        <div class="over-badge">32.4</div>
+                        <div>
+                            <div style="font-weight: bold;">FOUR! What a shot!</div>
+                            <div style="color: var(--text-muted);">Starc to Kohli, full length, driven beautifully
+                                through the covers. No chance for the fielder.</div>
+                        </div>
+                    </div>
+                    <div class="comm-bubble">
+                        <div class="over-badge">32.3</div>
+                        <div>
+                            <div>Starc to Kohli, no run. Good length delivery on off stump.</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab Content: Match Info -->
+                <div id="info" class="tab-content">
+                    <div class="card">
+                        <h4>Match Information</h4>
+                        <p><strong>Tournament:</strong> ICC World Cup 2026</p>
+                        <p><strong>Venue:</strong> Wankhede Stadium, Mumbai</p>
+                        <p><strong>Date:</strong> 25th October 2026</p>
+                        <p><strong>Toss:</strong> India won the toss and elected to bat.</p>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- VIEW: FOOTBALL DETAILS -->
+            <div id="football-detail" class="view">
+                <div style="margin-bottom: 1rem; cursor: pointer; color: var(--text-muted);"
+                    onclick="switchView('home')">← Back to Dashboard</div>
+
+                <div class="card match-header" style="border-top: 4px solid var(--primary-football);">
+                    <span
+                        style="background: var(--danger); color: white; padding: 0.2rem 1rem; border-radius: 20px; font-size: 0.8rem;">●
+                        LIVE FOOTBALL</span>
+                    <div class="score-hero">
+                        <div class="team-lg">
+                            <div class="team-logo-lg">🔴</div>
+                            <h2>Man Utd</h2>
+                            <div class="match-score-display">2</div>
+                        </div>
+                        <div style="text-align: center; opacity: 0.7;">
+                            <div style="font-size: 2rem; font-weight: bold; color: var(--primary-football);">72:45</div>
+                            <div>Old Trafford</div>
+                        </div>
+                        <div class="team-lg">
+                            <div class="team-logo-lg">🔵</div>
+                            <h2>Chelsea</h2>
+                            <div class="match-score-display">1</div>
+                        </div>
+                    </div>
+                    <div style="margin-top: 1rem; color: var(--primary-football); font-weight: 500;">
+                        ⚽ Goal! Rashford (54'), Bruno (12') | Sterling (32')
+                    </div>
+                </div>
+
+                <div class="tabs">
+                    <div class="tab active" onclick="switchTab('lineups', this)">Lineups</div>
+                    <div class="tab" onclick="switchTab('stats', this)">Stats</div>
+                    <div class="tab" onclick="switchTab('timeline', this)">Timeline</div>
+                </div>
+
+                <div id="lineups" class="tab-content active">
+                    <div class="card">
+                        <h4>Starting XI</h4>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
+                            <div>
+                                <div style="color: var(--text-muted); margin-bottom: 0.5rem;">Man Utd (4-2-3-1)</div>
+                                <div style="padding: 0.5rem; border-bottom: 1px solid rgba(255,255,255,0.05);">Onana
+                                    (GK)</div>
+                                <div style="padding: 0.5rem; border-bottom: 1px solid rgba(255,255,255,0.05);">Dalot
+                                </div>
+                                <div style="padding: 0.5rem; border-bottom: 1px solid rgba(255,255,255,0.05);">Martinez
+                                </div>
+                                <div style="padding: 0.5rem; border-bottom: 1px solid rgba(255,255,255,0.05);">Fernandes
+                                    (C)</div>
+                                <div style="padding: 0.5rem; border-bottom: 1px solid rgba(255,255,255,0.05);">Rashford
+                                    ⚽</div>
+                            </div>
+                            <div>
+                                <div style="color: var(--text-muted); margin-bottom: 0.5rem;">Chelsea (4-3-3)</div>
+                                <div style="padding: 0.5rem; border-bottom: 1px solid rgba(255,255,255,0.05);">Sanchez
+                                    (GK)</div>
+                                <div style="padding: 0.5rem; border-bottom: 1px solid rgba(255,255,255,0.05);">James
+                                </div>
+                                <div style="padding: 0.5rem; border-bottom: 1px solid rgba(255,255,255,0.05);">Silva
+                                </div>
+                                <div style="padding: 0.5rem; border-bottom: 1px solid rgba(255,255,255,0.05);">Sterling
+                                    ⚽</div>
+                                <div style="padding: 0.5rem; border-bottom: 1px solid rgba(255,255,255,0.05);">Jackson
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="stats" class="tab-content">
+                    <div class="card">
+                        <h4>Match Stats</h4>
+                        <p><strong>Possession:</strong> Man Utd 55% - 45% Chelsea</p>
+                        <p><strong>Shots on Target:</strong> Man Utd 7 - 4 Chelsea</p>
+                        <p><strong>Corners:</strong> Man Utd 5 - 3 Chelsea</p>
+                    </div>
+                </div>
+
+                <div id="timeline" class="tab-content">
+                    <div class="card">
+                        <h4>Match Timeline</h4>
+                        <p>12' ⚽ Goal! Bruno Fernandes (MUN)</p>
+                        <p>32' ⚽ Goal! Raheem Sterling (CHE)</p>
+                        <p>54' ⚽ Goal! Marcus Rashford (MUN)</p>
+                        <p>70' 🟨 Yellow Card: Casemiro (MUN)</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VIEW: BASKETBALL DETAILS -->
+            <div id="basketball-detail" class="view">
+                <div style="margin-bottom: 1rem; cursor: pointer; color: var(--text-muted);"
+                    onclick="switchView('home')">← Back to Dashboard</div>
+
+                <div class="card match-header" style="border-top: 4px solid var(--primary-basketball);">
+                    <span
+                        style="background: var(--danger); color: white; padding: 0.2rem 1rem; border-radius: 20px; font-size: 0.8rem;">●
+                        LIVE NBA</span>
+                    <div class="score-hero">
+                        <div class="team-lg">
+                            <div class="team-logo-lg">🏀</div>
+                            <h2>Lakers</h2>
+                            <div class="match-score-display">102</div>
+                        </div>
+                        <div style="text-align: center; opacity: 0.7;">
+                            <div style="font-size: 2rem; font-weight: bold; color: var(--primary-basketball);">Q4 4:21
+                            </div>
+                            <div>Crypto.com Arena</div>
+                        </div>
+                        <div class="team-lg">
+                            <div class="team-logo-lg">🌉</div>
+                            <h2>Warriors</h2>
+                            <div class="match-score-display">98</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tabs">
+                    <div class="tab active" onclick="switchTab('boxscore', this)">Box Score</div>
+                    <div class="tab" onclick="switchTab('playbyplay', this)">Play-by-Play</div>
+                    <div class="tab" onclick="switchTab('bbinfo', this)">Info</div>
+                </div>
+
+                <div id="boxscore" class="tab-content active">
+                    <div class="card">
+                        <h4>Top Performers</h4>
+                        <table style="width: 100%; border-collapse: collapse; text-align: left;">
+                            <tr style="border-bottom: 1px solid rgba(255,255,255,0.1); color: var(--text-muted);">
+                                <th>Player</th>
+                                <th>PTS</th>
+                                <th>AST</th>
+                                <th>REB</th>
+                            </tr>
+                            <tr style="background: rgba(249,115,22,0.1);">
+                                <td style="padding: 1rem 0.5rem; color: var(--primary-basketball);">LeBron James (LAL)
+                                </td>
+                                <td>28</td>
+                                <td>8</td>
+                                <td>7</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                                <td style="padding: 1rem 0.5rem;">Steph Curry (GSW)</td>
+                                <td>32</td>
+                                <td>4</td>
+                                <td>2</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                                <td style="padding: 1rem 0.5rem;">Anthony Davis (LAL)</td>
+                                <td>22</td>
+                                <td>2</td>
+                                <td>12</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+
+                <div id="playbyplay" class="tab-content">
+                    <div class="card">
+                        <h4>Play-by-Play (Q4)</h4>
+                        <p>4:21 - LeBron James (LAL) makes 2-pt jump shot.</p>
+                        <p>3:50 - Stephen Curry (GSW) makes 3-pt jump shot.</p>
+                        <p>3:20 - Anthony Davis (LAL) defensive rebound.</p>
+                        <p>2:55 - Foul on Draymond Green (GSW).</p>
+                    </div>
+                </div>
+
+                <div id="bbinfo" class="tab-content">
+                    <div class="card">
+                        <h4>Match Information</h4>
+                        <p><strong>Tournament:</strong> NBA Regular Season</p>
+                        <p><strong>Venue:</strong> Crypto.com Arena, Los Angeles</p>
+                        <p><strong>Date:</strong> 10th April 2024</p>
+                        <p><strong>Referees:</strong> M. Davis, J. Williams, S. Foster</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VIEW: MATCHES / SCHEDULE -->
+            <div id="matches" class="view">
+                <h2>Match Schedule</h2>
+                <div style="display: flex; gap: 1rem; margin-bottom: 1.5rem;">
+                    <button
+                        style="background: var(--primary-cricket); border: none; padding: 0.5rem 1rem; border-radius: 8px; color: white;">Cricket</button>
+                    <button
+                        style="background: transparent; border: 1px solid var(--text-muted); padding: 0.5rem 1rem; border-radius: 8px; color: var(--text-muted);">Football</button>
+                </div>
+                <div class="card">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 1rem;">
+                        <span>Tomorrow, 14:00 GMT</span>
+                        <span
+                            style="background: rgba(255,255,255,0.1); padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.8rem;">ODI
+                            Series</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 1rem;">
+                        <span style="font-size: 1.5rem;">🏴󠁧󠁢󠁥󠁮󠁧󠁿</span> England vs Pakistan <span
+                            style="font-size: 1.5rem;">🇵🇰</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VIEW: SERIES -->
+            <div id="series" class="view">
+                <h2>Series Archive</h2>
+                <div class="card">
+                    <h3>Upcoming Series</h3>
+                    <p style="color: var(--text-muted);">India Tour of England 2026</p>
+                    <p style="color: var(--text-muted);">The Ashes 2027</p>
+                </div>
+            </div>
+
+            <!-- VIEW: NEWS -->
+            <div id="news" class="view">
+                <h2>Latest Headlines</h2>
+                <div class="card">
+                    <h3>Editorials (Read Only)</h3>
+                    <p style="color: var(--text-muted);">This section will feature long-form articles published via the
+                        Editor Dashboard.</p>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
     <script src="script.js"></script>
+
+    <!-- Toast Notification Container -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <!-- Sidebar Overlay -->
+    <div id="sidebar-overlay" class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+    <!-- Search Modal -->
+    <div id="search-modal" class="search-modal">
+        <div class="search-container">
+            <!-- Search Header -->
+            <div class="search-header">
+                <div class="search-input-wrapper">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="search-input" class="search-input"
+                        placeholder="Search matches, teams, players, news..." oninput="performSearch(this.value)"
+                        autocomplete="off">
+                </div>
+                <i class="fas fa-times search-close" onclick="closeSearch()"></i>
+            </div>
+
+            <!-- Search Filters -->
+            <div class="search-filters">
+                <div class="filter-chip active" onclick="setSearchFilter('all')">All</div>
+                <div class="filter-chip" onclick="setSearchFilter('matches')">Matches</div>
+                <div class="filter-chip" onclick="setSearchFilter('teams')">Teams</div>
+                <div class="filter-chip" onclick="setSearchFilter('players')">Players</div>
+                <div class="filter-chip" onclick="setSearchFilter('news')">News</div>
+            </div>
+
+            <!-- Search Results -->
+            <div id="search-results" class="search-results">
+                <!-- Results will be populated by JavaScript -->
+            </div>
+        </div>
+    </div>
+
+</body>
+
+</html>
