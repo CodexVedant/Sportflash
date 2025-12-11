@@ -542,50 +542,63 @@ Root Navigator (Stack)
 
 ### Backend Structure
 ```
-sportflash-backend/
+backend/
 ├── src/
 │   ├── config/
-│   │   ├── database.js
-│   │   ├── env.js
-│   │   └── socket.js
+│   │   ├── database.js          // MongoDB connection
+│   │   ├── env.js               // Environment config
+│   │   └── socket.js            // Socket.IO setup
 │   ├── models/
-│   │   ├── User.js
-│   │   ├── Match.js
-│   │   ├── News.js
-│   │   ├── Team.js
-│   │   └── Player.js
+│   │   ├── User.js              // User schema
+│   │   ├── Match.js             // Match schema
+│   │   ├── News.js              // News schema
+│   │   ├── Team.js              // Team schema
+│   │   └── Player.js            // Player schema
 │   ├── controllers/
-│   │   ├── authController.js
-│   │   ├── matchController.js
-│   │   ├── newsController.js
-│   │   └── userController.js
+│   │   ├── authController.js    // Authentication logic
+│   │   ├── matchController.js   // Match operations
+│   │   ├── newsController.js    // News operations
+│   │   ├── userController.js    // User operations
+│   │   ├── teamController.js    // Team operations
+│   │   └── playerController.js  // Player operations
 │   ├── routes/
-│   │   ├── auth.js
-│   │   ├── matches.js
-│   │   ├── news.js
-│   │   └── users.js
+│   │   ├── authRoutes.js        // Auth endpoints
+│   │   ├── matchRoutes.js       // Match endpoints
+│   │   ├── newsRoutes.js        // News endpoints
+│   │   ├── userRoutes.js        // User endpoints
+│   │   ├── teamRoutes.js        // Team endpoints
+│   │   └── searchRoutes.js      // Search endpoints
 │   ├── middleware/
-│   │   ├── auth.js
-│   │   ├── errorHandler.js
-│   │   └── validation.js
+│   │   ├── auth.js              // JWT authentication
+│   │   ├── errorHandler.js      // Error handling
+│   │   ├── upload.js            // Multer file upload
+│   │   └── validation.js        // Input validation
 │   ├── services/
-│   │   ├── cricketAPI.js
-│   │   ├── footballAPI.js
-│   │   ├── basketballAPI.js
-│   │   ├── newsAPI.js
-│   │   └── notificationService.js
+│   │   ├── cricketAPI.js        // CricketData API integration
+│   │   ├── footballAPI.js       // API-Football integration
+│   │   ├── basketballAPI.js     // Basketball API integration
+│   │   ├── newsAPI.js           // NewsAPI integration
+│   │   └── notificationService.js // Push notifications
 │   ├── utils/
-│   │   ├── logger.js
-│   │   ├── cache.js
-│   │   └── helpers.js
+│   │   ├── logger.js            // Winston logger
+│   │   ├── cache.js             // Caching utilities
+│   │   └── helpers.js           // Helper functions
 │   ├── jobs/
-│   │   ├── fetchLiveMatches.js
-│   │   └── updateNews.js
-│   └── app.js
+│   │   ├── fetchLiveMatches.js  // Cron job for live scores
+│   │   └── updateNews.js        // Cron job for news
+│   ├── app.js                   // Express app setup
+│   └── server.js                // Server entry point
 ├── tests/
+│   ├── auth.test.js
+│   ├── matches.test.js
+│   └── news.test.js
+├── uploads/
+│   └── .gitkeep
+├── .env
 ├── .env.example
 ├── .gitignore
 ├── package.json
+├── package-lock.json
 └── README.md
 ```
 
