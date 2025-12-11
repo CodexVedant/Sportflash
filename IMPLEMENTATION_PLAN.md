@@ -22,7 +22,7 @@
 
 #### 1.1 Backend Setup
 - [ ] Initialize Node.js project with Express
-- [ ] Setup MongoDB connection (local + MongoDB Atlas)
+- [ ] Setup MongoDB connection (local )
 - [ ] Configure environment variables (.env)
 - [ ] Setup project structure (MVC pattern)
 - [ ] Install core dependencies
