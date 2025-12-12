@@ -1,143 +1,121 @@
-# Sportflash Backend Setup Guide
+# Sportflash Master Backend Setup Guide
 
-Complete step-by-step guide to set up the Node.js backend with Express, MongoDB, JWT, and Multer.
+This guide is aligned with the **SportFlash Implementation Plan**. It covers the complete backend architecture including services for external APIs, cron jobs, and real-time features.
 
 ---
 
 ## 📋 Prerequisites
 
-- Node.js (v16 or higher)
-- MongoDB installed locally OR MongoDB Atlas account
-- Code editor (VS Code recommended)
-- Postman or similar API testing tool
+- Node.js (v16+)
+- MongoDB (Local or Atlas)
+- Redis (Optional, for caching)
+- API Keys:
+  - NewsAPI
+  - API-Football
+  - CricketData
 
 ---
 
-## 🚀 Step-by-Step Setup
+## 🚀 Optimized Directory Structure
 
-### **Step 1: Create Backend Directory Structure**
+Based on `IMPLEMENTATION_PLAN.md`, we will create this exact structure:
 
 ```bash
-# Navigate to your project root
-cd d:\Sportflash
+backend/
+├── src/
+│   ├── config/             # Configuration (DB, Env, Socket)
+│   ├── controllers/        # Route logic (Auth, Match, News...)
+│   ├── models/             # Mongoose Models (User, Match...)
+│   ├── routes/             # API Routes
+│   ├── middleware/         # Auth, Upload, Validation, Error
+│   ├── services/           # External APIs (Cricket, Football, News)
+│   ├── utils/              # Logger, Cache, Helpers
+│   ├── jobs/               # Cron jobs (Fetch matches, Update news)
+│   ├── app.js              # Express App setup
+│   └── server.js           # Server entry point
+├── tests/                  # Unit & Integration tests
+├── uploads/                # Static files
+├── .env
+└── package.json
+```
 
-# Create backend directory
+---
+
+## 🛠️ Step-by-Step Implementation
+
+### **Step 1: Create Directories**
+
+```bash
 mkdir backend
 cd backend
-
-# Create project structure
-mkdir src
+mkdir src tests uploads
 cd src
-mkdir config controllers models routes middleware utils
+mkdir config controllers models routes middleware services utils jobs
 cd ..
 ```
 
-Your structure should look like:
-```
-backend/
-├── src/
-│   ├── config/
-│   ├── controllers/
-│   ├── models/
-│   ├── routes/
-│   ├── middleware/
-│   └── utils/
-```
-
----
-
-### **Step 2: Initialize Node.js Project**
+### **Step 2: Initialize & Install Dependencies**
 
 ```bash
-# Initialize package.json
 npm init -y
 ```
 
----
-
-### **Step 3: Install Core Dependencies**
-
+**Install Production Dependencies:**
 ```bash
-# Core dependencies
 npm install express mongoose dotenv cors helmet morgan
-
-# Authentication & Security
-npm install jsonwebtoken bcryptjs
-
-# File Upload
-npm install multer
-
-# Validation
-npm install express-validator
-
-# Development dependencies
-npm install --save-dev nodemon
+npm install jsonwebtoken bcryptjs            # Auth
+npm install multer                           # File Upload
+npm install socket.io                        # Real-time
+npm install axios                            # API Requests
+npm install node-cron                        # Scheduled Jobs
+npm install express-validator                # Validation
+npm install compression                      # Response Compression
+npm install winston                          # Logging
 ```
 
-**Dependencies Explained:**
-- `express` - Web framework
-- `mongoose` - MongoDB ODM
-- `dotenv` - Environment variables
-- `cors` - Cross-Origin Resource Sharing
-- `helmet` - Security headers
-- `morgan` - HTTP request logger
-- `jsonwebtoken` - JWT authentication
-- `bcryptjs` - Password hashing
-- `multer` - File upload handling
-- `express-validator` - Input validation
-- `nodemon` - Auto-restart server on changes
+**Install Dev Dependencies:**
+```bash
+npm install --save-dev nodemon jest supertest
+```
 
 ---
 
-### **Step 4: Create Environment Variables**
+### **Step 3: Core Configuration**
 
-Create `.env` file in the `backend` directory:
-
+#### **3.1 Environment Variables (`.env`)**
 ```env
-# Server Configuration
-NODE_ENV=development
+# Server
 PORT=5000
+NODE_ENV=development
+CLIENT_URL=http://localhost:19000
 
-# MongoDB Configuration
-# For Local MongoDB:
+# Database
 MONGODB_URI=mongodb://localhost:27017/sportflash
 
-# For MongoDB Atlas (replace with your connection string):
-# MONGODB_URI=mongodb+srv://<username>:<password>@cluster0.xxxxx.mongodb.net/sportflash?retryWrites=true&w=majority
-
-# JWT Configuration
-JWT_SECRET=your_super_secret_jwt_key_change_this_in_production
+# JWT Auth
+JWT_SECRET=your_jwt_secret
 JWT_EXPIRE=7d
 
-# File Upload Configuration
+# External APIs
+NEWS_API_KEY=75705b8a2a7a403ca553e2885a29638f
+FOOTBALL_API_KEY=0331700a39932ec89dc7ac831f7a6952
+CRICKET_API_KEY=27b48bcc-d8cd-405c-a0af-df533800f83a
+
+# File Upload
 MAX_FILE_SIZE=5242880
 UPLOAD_PATH=./uploads
-
-# CORS Configuration
-CLIENT_URL=http://localhost:3000
 ```
 
-**Important:** Add `.env` to `.gitignore`!
-
----
-
-### **Step 5: Create MongoDB Configuration**
-
-Create `src/config/database.js`:
-
+#### **3.2 Database Config (`src/config/database.js`)**
 ```javascript
 const mongoose = require('mongoose');
 
 const connectDB = async () => {
   try {
-    const conn = await mongoose.connect(process.env.MONGODB_URI, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    });
-
+    const conn = await mongoose.connect(process.env.MONGODB_URI);
     console.log(`✅ MongoDB Connected: ${conn.connection.host}`);
   } catch (error) {
-    console.error(`❌ Error: ${error.message}`);
+    console.error(`❌ DB Connection Error: ${error.message}`);
     process.exit(1);
   }
 };
@@ -145,144 +123,174 @@ const connectDB = async () => {
 module.exports = connectDB;
 ```
 
+#### **3.3 Socket.IO Config (`src/config/socket.js`)**
+```javascript
+const socketIO = require('socket.io');
+
+let io;
+
+const initSocket = (server) => {
+  io = socketIO(server, {
+    cors: {
+      origin: process.env.CLIENT_URL || "*",
+      methods: ["GET", "POST"]
+    }
+  });
+
+  io.on('connection', (socket) => {
+    console.log('🔌 Client connected:', socket.id);
+
+    socket.on('match:subscribe', (matchId) => {
+      socket.join(`match_${matchId}`);
+    });
+
+    socket.on('disconnect', () => {
+      console.log('Client disconnected');
+    });
+  });
+
+  return io;
+};
+
+const getIO = () => {
+  if (!io) {
+    throw new Error('Socket.io not initialized!');
+  }
+  return io;
+};
+
+module.exports = { initSocket, getIO };
+```
+
 ---
 
-### **Step 6: Create Middleware**
+### **Step 4: Models Setup**
 
-#### **6.1 Error Handler Middleware**
-Create `src/middleware/errorHandler.js`:
-
+#### **4.1 User Model (`src/models/User.js`)**
 ```javascript
-const errorHandler = (err, req, res, next) => {
-  let error = { ...err };
-  error.message = err.message;
+const mongoose = require('mongoose');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 
-  // Log to console for dev
-  console.error(err);
+const UserSchema = new mongoose.Schema({
+  name: { type: String, required: true },
+  email: { type: String, required: true, unique: true },
+  password: { type: String, required: true, select: false },
+  role: { type: String, enum: ['user', 'admin'], default: 'user' },
+  avatar: String,
+  preferences: {
+    favoriteTeams: [String],
+    favoriteSports: [String]
+  },
+  createdAt: { type: Date, default: Date.now }
+});
 
-  // Mongoose bad ObjectId
-  if (err.name === 'CastError') {
-    const message = 'Resource not found';
-    error = { message, statusCode: 404 };
-  }
+// Hash password
+UserSchema.pre('save', async function(next) {
+  if (!this.isModified('password')) next();
+  this.password = await bcrypt.hash(this.password, 10);
+});
 
-  // Mongoose duplicate key
-  if (err.code === 11000) {
-    const message = 'Duplicate field value entered';
-    error = { message, statusCode: 400 };
-  }
-
-  // Mongoose validation error
-  if (err.name === 'ValidationError') {
-    const message = Object.values(err.errors).map(val => val.message);
-    error = { message, statusCode: 400 };
-  }
-
-  res.status(error.statusCode || 500).json({
-    success: false,
-    error: error.message || 'Server Error'
-  });
+// Sign JWT
+UserSchema.methods.getSignedJwtToken = function() {
+  return jwt.sign({ id: this._id }, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRE });
 };
 
-module.exports = errorHandler;
+// Match password
+UserSchema.methods.matchPassword = async function(enteredPass) {
+  return await bcrypt.compare(enteredPass, this.password);
+};
+
+module.exports = mongoose.model('User', UserSchema);
 ```
 
-#### **6.2 JWT Authentication Middleware**
-Create `src/middleware/auth.js`:
-
+#### **4.2 Match Model (`src/models/Match.js`)**
 ```javascript
-const jwt = require('jsonwebtoken');
-const User = require('../models/User');
+const mongoose = require('mongoose');
 
-exports.protect = async (req, res, next) => {
-  let token;
+const MatchSchema = new mongoose.Schema({
+  sport: { type: String, enum: ['cricket', 'football', 'basketball'], required: true },
+  homeTeam: {
+    name: String,
+    logo: String,
+    score: String
+  },
+  awayTeam: {
+    name: String,
+    logo: String,
+    score: String
+  },
+  status: { type: String, enum: ['live', 'upcoming', 'finished'], default: 'upcoming' },
+  startTime: Date,
+  league: String,
+  liveData: {
+    currentPeriod: String, // '1st Half', 'Over 10.2'
+    events: []
+  },
+  externalId: String // ID from the external API
+});
 
-  // Check for token in headers
-  if (
-    req.headers.authorization &&
-    req.headers.authorization.startsWith('Bearer')
-  ) {
-    token = req.headers.authorization.split(' ')[1];
-  }
+module.exports = mongoose.model('Match', MatchSchema);
+```
 
-  // Make sure token exists
-  if (!token) {
-    return res.status(401).json({
-      success: false,
-      error: 'Not authorized to access this route'
-    });
-  }
+---
+
+### **Step 5: Services (External APIs)**
+
+#### **5.1 Football API Service (`src/services/footballAPI.js`)**
+```javascript
+const axios = require('axios');
+
+const fetchLiveMatches = async () => {
+  const options = {
+    method: 'GET',
+    url: 'https://v3.football.api-sports.io/fixtures',
+    params: { live: 'all' },
+    headers: {
+      'x-rapidapi-key': process.env.FOOTBALL_API_KEY,
+      'x-rapidapi-host': 'v3.football.api-sports.io'
+    }
+  };
 
   try {
-    // Verify token
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
-    // Attach user to request
-    req.user = await User.findById(decoded.id);
-
-    next();
-  } catch (err) {
-    return res.status(401).json({
-      success: false,
-      error: 'Not authorized to access this route'
-    });
+    const response = await axios.request(options);
+    return response.data;
+  } catch (error) {
+    console.error(error);
+    return null;
   }
 };
 
-// Grant access to specific roles
-exports.authorize = (...roles) => {
-  return (req, res, next) => {
-    if (!roles.includes(req.user.role)) {
-      return res.status(403).json({
-        success: false,
-        error: `User role ${req.user.role} is not authorized to access this route`
-      });
-    }
-    next();
-  };
-};
+module.exports = { fetchLiveMatches };
 ```
 
-#### **6.3 Multer File Upload Middleware**
-Create `src/middleware/upload.js`:
+---
 
+### **Step 6: Middleware**
+
+#### **6.1 File Upload (`src/middleware/upload.js`)**
 ```javascript
 const multer = require('multer');
 const path = require('path');
 
-// Configure storage
 const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, process.env.UPLOAD_PATH || './uploads');
-  },
-  filename: function (req, file, cb) {
-    // Generate unique filename
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
+  destination: (req, file, cb) => cb(null, './uploads'),
+  filename: (req, file, cb) => {
+    cb(null, `${Date.now()}-${file.originalname}`);
   }
 });
 
-// File filter
-const fileFilter = (req, file, cb) => {
-  // Allowed file types
-  const allowedTypes = /jpeg|jpg|png|gif|mp4|mov|avi/;
-  const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
-  const mimetype = allowedTypes.test(file.mimetype);
-
-  if (mimetype && extname) {
-    return cb(null, true);
-  } else {
-    cb(new Error('Invalid file type. Only images and videos are allowed.'));
-  }
-};
-
-// Upload middleware
 const upload = multer({
-  storage: storage,
-  limits: {
-    fileSize: parseInt(process.env.MAX_FILE_SIZE) || 5242880 // 5MB default
-  },
-  fileFilter: fileFilter
+  storage,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
+  fileFilter: (req, file, cb) => {
+    const types = /jpeg|jpg|png|gif/;
+    if (types.test(path.extname(file.originalname).toLowerCase())) {
+      cb(null, true);
+    } else {
+      cb(new Error('Images only!'));
+    }
+  }
 });
 
 module.exports = upload;
@@ -290,543 +298,89 @@ module.exports = upload;
 
 ---
 
-### **Step 7: Create User Model**
+### **Step 7: Server Entry Point**
 
-Create `src/models/User.js`:
-
-```javascript
-const mongoose = require('mongoose');
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
-
-const UserSchema = new mongoose.Schema({
-  name: {
-    type: String,
-    required: [true, 'Please add a name'],
-    trim: true,
-    maxlength: [50, 'Name cannot be more than 50 characters']
-  },
-  email: {
-    type: String,
-    required: [true, 'Please add an email'],
-    unique: true,
-    lowercase: true,
-    match: [
-      /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/,
-      'Please add a valid email'
-    ]
-  },
-  password: {
-    type: String,
-    required: [true, 'Please add a password'],
-    minlength: 6,
-    select: false
-  },
-  role: {
-    type: String,
-    enum: ['user', 'admin'],
-    default: 'user'
-  },
-  avatar: {
-    type: String,
-    default: 'default-avatar.jpg'
-  },
-  createdAt: {
-    type: Date,
-    default: Date.now
-  }
-});
-
-// Encrypt password using bcrypt
-UserSchema.pre('save', async function(next) {
-  if (!this.isModified('password')) {
-    next();
-  }
-
-  const salt = await bcrypt.genSalt(10);
-  this.password = await bcrypt.hash(this.password, salt);
-});
-
-// Sign JWT and return
-UserSchema.methods.getSignedJwtToken = function() {
-  return jwt.sign({ id: this._id }, process.env.JWT_SECRET, {
-    expiresIn: process.env.JWT_EXPIRE
-  });
-};
-
-// Match user entered password to hashed password in database
-UserSchema.methods.matchPassword = async function(enteredPassword) {
-  return await bcrypt.compare(enteredPassword, this.password);
-};
-
-module.exports = mongoose.model('User', UserSchema);
-```
-
----
-
-### **Step 8: Create Authentication Controller**
-
-Create `src/controllers/authController.js`:
-
-```javascript
-const User = require('../models/User');
-
-// @desc    Register user
-// @route   POST /api/auth/register
-// @access  Public
-exports.register = async (req, res, next) => {
-  try {
-    const { name, email, password, role } = req.body;
-
-    // Create user
-    const user = await User.create({
-      name,
-      email,
-      password,
-      role
-    });
-
-    sendTokenResponse(user, 201, res);
-  } catch (err) {
-    res.status(400).json({
-      success: false,
-      error: err.message
-    });
-  }
-};
-
-// @desc    Login user
-// @route   POST /api/auth/login
-// @access  Public
-exports.login = async (req, res, next) => {
-  try {
-    const { email, password } = req.body;
-
-    // Validate email & password
-    if (!email || !password) {
-      return res.status(400).json({
-        success: false,
-        error: 'Please provide an email and password'
-      });
-    }
-
-    // Check for user
-    const user = await User.findOne({ email }).select('+password');
-
-    if (!user) {
-      return res.status(401).json({
-        success: false,
-        error: 'Invalid credentials'
-      });
-    }
-
-    // Check if password matches
-    const isMatch = await user.matchPassword(password);
-
-    if (!isMatch) {
-      return res.status(401).json({
-        success: false,
-        error: 'Invalid credentials'
-      });
-    }
-
-    sendTokenResponse(user, 200, res);
-  } catch (err) {
-    res.status(400).json({
-      success: false,
-      error: err.message
-    });
-  }
-};
-
-// @desc    Get current logged in user
-// @route   GET /api/auth/me
-// @access  Private
-exports.getMe = async (req, res, next) => {
-  try {
-    const user = await User.findById(req.user.id);
-
-    res.status(200).json({
-      success: true,
-      data: user
-    });
-  } catch (err) {
-    res.status(400).json({
-      success: false,
-      error: err.message
-    });
-  }
-};
-
-// Helper function to get token from model, create cookie and send response
-const sendTokenResponse = (user, statusCode, res) => {
-  // Create token
-  const token = user.getSignedJwtToken();
-
-  res.status(statusCode).json({
-    success: true,
-    token,
-    user: {
-      id: user._id,
-      name: user.name,
-      email: user.email,
-      role: user.role
-    }
-  });
-};
-```
-
----
-
-### **Step 9: Create Routes**
-
-Create `src/routes/authRoutes.js`:
-
+#### **7.1 App Setup (`src/app.js`)**
 ```javascript
 const express = require('express');
-const {
-  register,
-  login,
-  getMe
-} = require('../controllers/authController');
-
-const router = express.Router();
-
-const { protect } = require('../middleware/auth');
-
-router.post('/register', register);
-router.post('/login', login);
-router.get('/me', protect, getMe);
-
-module.exports = router;
-```
-
----
-
-### **Step 10: Create Main Server File**
-
-Create `src/server.js`:
-
-```javascript
-const express = require('express');
-const dotenv = require('dotenv');
 const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
-const connectDB = require('./config/database');
 const errorHandler = require('./middleware/errorHandler');
-
-// Load env vars
-dotenv.config();
-
-// Connect to database
-connectDB();
 
 const app = express();
 
-// Body parser
+// Middleware
 app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-
-// Security middleware
+app.use(cors());
 app.use(helmet());
+if (process.env.NODE_ENV === 'development') app.use(morgan('dev'));
 
-// Enable CORS
-app.use(cors({
-  origin: process.env.CLIENT_URL || '*',
-  credentials: true
-}));
-
-// Dev logging middleware
-if (process.env.NODE_ENV === 'development') {
-  app.use(morgan('dev'));
-}
-
-// Serve static files (uploads)
+// Static folder
 app.use('/uploads', express.static('uploads'));
 
-// Health check endpoint
-app.get('/health', (req, res) => {
-  res.status(200).json({
-    success: true,
-    message: 'Server is running',
-    timestamp: new Date().toISOString()
-  });
-});
-
-// Mount routers
+// Routes
 app.use('/api/auth', require('./routes/authRoutes'));
+// app.use('/api/matches', require('./routes/matchRoutes'));
+// app.use('/api/news', require('./routes/newsRoutes'));
 
-// Error handler (must be last)
+// Error Handler
 app.use(errorHandler);
+
+module.exports = app;
+```
+
+#### **7.2 Server (`src/server.js`)**
+```javascript
+const app = require('./app');
+const dotenv = require('dotenv');
+const connectDB = require('./config/database');
+const { initSocket } = require('./config/socket');
+const http = require('http');
+
+// Load Config
+dotenv.config();
+connectDB();
+
+const server = http.createServer(app);
+const io = initSocket(server); // Initialize Socket.IO
 
 const PORT = process.env.PORT || 5000;
 
-const server = app.listen(PORT, () => {
-  console.log(`🚀 Server running in ${process.env.NODE_ENV} mode on port ${PORT}`);
-});
-
-// Handle unhandled promise rejections
-process.on('unhandledRejection', (err, promise) => {
-  console.log(`❌ Error: ${err.message}`);
-  // Close server & exit process
-  server.close(() => process.exit(1));
+server.listen(PORT, () => {
+  console.log(`🚀 Server running on port ${PORT}`);
 });
 ```
 
 ---
 
-### **Step 11: Update package.json Scripts**
+### **Step 8: Cron Jobs Example**
 
-Edit `package.json` and add these scripts:
+#### **8.1 Fetch Jobs (`src/jobs/fetchLiveMatches.js`)**
+```javascript
+const cron = require('node-cron');
+const { fetchLiveMatches } = require('../services/footballAPI');
+const Match = require('../models/Match');
 
-```json
-{
-  "scripts": {
-    "start": "node src/server.js",
-    "dev": "nodemon src/server.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
-  }
-}
+// Run every minute
+cron.schedule('*/1 * * * *', async () => {
+  console.log('Job: Fetching live matches...');
+  // Logic to fetch from API and update DB
+  // const matches = await fetchLiveMatches();
+  // ... update DB ...
+});
 ```
 
 ---
 
-### **Step 12: Create Uploads Directory**
+## ✅ What's Next?
 
-```bash
-# In backend directory
-mkdir uploads
-```
+1. **Run the Setup**: Execute the directory creation commands.
+2. **Implement Routes**: Create route files in `src/routes/` for all controllers.
+3. **Build Services**: Fully implement the API wrappers in `src/services/`.
+4. **Test**: Use Postman to verify Auth and Uploads.
 
----
-
-### **Step 13: Update .gitignore**
-
-Create/update `.gitignore` in backend directory:
-
-```
-node_modules/
-.env
-uploads/*
-!uploads/.gitkeep
-*.log
-.DS_Store
-```
-
-Create `.gitkeep` in uploads:
-```bash
-touch uploads/.gitkeep
-```
-
----
-
-## 🧪 Testing the Setup
-
-### **1. Start the Server**
-
-```bash
-cd backend
-npm run dev
-```
-
-You should see:
-```
-✅ MongoDB Connected: localhost
-🚀 Server running in development mode on port 5000
-```
-
-### **2. Test Health Check Endpoint**
-
-Open browser or Postman:
-```
-GET http://localhost:5000/health
-```
-
-Expected response:
-```json
-{
-  "success": true,
-  "message": "Server is running",
-  "timestamp": "2025-12-11T08:17:52.000Z"
-}
-```
-
-### **3. Test User Registration**
-
-**POST** `http://localhost:5000/api/auth/register`
-
-Headers:
-```
-Content-Type: application/json
-```
-
-Body:
-```json
-{
-  "name": "Test User",
-  "email": "test@example.com",
-  "password": "password123"
-}
-```
-
-Expected response:
-```json
-{
-  "success": true,
-  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-  "user": {
-    "id": "...",
-    "name": "Test User",
-    "email": "test@example.com",
-    "role": "user"
-  }
-}
-```
-
-### **4. Test User Login**
-
-**POST** `http://localhost:5000/api/auth/login`
-
-Body:
-```json
-{
-  "email": "test@example.com",
-  "password": "password123"
-}
-```
-
-### **5. Test Protected Route**
-
-**GET** `http://localhost:5000/api/auth/me`
-
-Headers:
-```
-Authorization: Bearer YOUR_TOKEN_HERE
-```
-
----
-
-## 📁 Final Project Structure
-
-```
-backend/
-├── src/
-│   ├── config/
-│   │   ├── database.js          // MongoDB connection
-│   │   ├── env.js               // Environment config
-│   │   └── socket.js            // Socket.IO setup
-│   ├── models/
-│   │   ├── User.js              // User schema
-│   │   ├── Match.js             // Match schema
-│   │   ├── News.js              // News schema
-│   │   ├── Team.js              // Team schema
-│   │   └── Player.js            // Player schema
-│   ├── controllers/
-│   │   ├── authController.js    // Authentication logic
-│   │   ├── matchController.js   // Match operations
-│   │   ├── newsController.js    // News operations
-│   │   ├── userController.js    // User operations
-│   │   ├── teamController.js    // Team operations
-│   │   └── playerController.js  // Player operations
-│   ├── routes/
-│   │   ├── authRoutes.js        // Auth endpoints
-│   │   ├── matchRoutes.js       // Match endpoints
-│   │   ├── newsRoutes.js        // News endpoints
-│   │   ├── userRoutes.js        // User endpoints
-│   │   ├── teamRoutes.js        // Team endpoints
-│   │   └── searchRoutes.js      // Search endpoints
-│   ├── middleware/
-│   │   ├── auth.js              // JWT authentication
-│   │   ├── errorHandler.js      // Error handling
-│   │   ├── upload.js            // Multer file upload
-│   │   └── validation.js        // Input validation
-│   ├── services/
-│   │   ├── cricketAPI.js        // CricketData API integration
-│   │   ├── footballAPI.js       // API-Football integration
-│   │   ├── basketballAPI.js     // Basketball API integration
-│   │   ├── newsAPI.js           // NewsAPI integration
-│   │   └── notificationService.js // Push notifications
-│   ├── utils/
-│   │   ├── logger.js            // Winston logger
-│   │   ├── cache.js             // Caching utilities
-│   │   └── helpers.js           // Helper functions
-│   ├── jobs/
-│   │   ├── fetchLiveMatches.js  // Cron job for live scores
-│   │   └── updateNews.js        // Cron job for news
-│   ├── app.js                   // Express app setup
-│   └── server.js                // Server entry point
-├── tests/
-│   ├── auth.test.js
-│   ├── matches.test.js
-│   └── news.test.js
-├── uploads/
-│   └── .gitkeep
-├── .env
-├── .env.example
-├── .gitignore
-├── package.json
-├── package-lock.json
-└── README.md
-```
-
----
-
-## 🔐 Security Best Practices
-
-1. **Never commit `.env` file** - Add to `.gitignore`
-2. **Use strong JWT secrets** - Generate with: `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`
-3. **Set appropriate CORS origins** - Don't use `*` in production
-4. **Validate all inputs** - Use express-validator
-5. **Rate limiting** - Install `express-rate-limit` for production
-6. **Use HTTPS** - In production environments
-7. **Keep dependencies updated** - Run `npm audit` regularly
-
----
-
-## 🎯 Next Steps
-
-1. ✅ Create additional models (Posts, Comments, etc.)
-2. ✅ Add more controllers and routes
-3. ✅ Implement file upload endpoints using Multer
-4. ✅ Add input validation with express-validator
-5. ✅ Set up MongoDB Atlas for production
-6. ✅ Add rate limiting and additional security
-7. ✅ Write API documentation
-8. ✅ Add unit tests
-
----
-
-## 🐛 Common Issues & Solutions
-
-### MongoDB Connection Error
-```
-Error: connect ECONNREFUSED 127.0.0.1:27017
-```
-**Solution:** Make sure MongoDB is running locally or check your Atlas connection string.
-
-### Port Already in Use
-```
-Error: listen EADDRINUSE: address already in use :::5000
-```
-**Solution:** Change PORT in `.env` or kill the process using port 5000.
-
-### JWT Secret Not Found
-```
-Error: secretOrPrivateKey must have a value
-```
-**Solution:** Make sure `JWT_SECRET` is set in `.env` file.
-
----
-
-## 📚 Additional Resources
-
-- [Express.js Documentation](https://expressjs.com/)
-- [Mongoose Documentation](https://mongoosejs.com/)
-- [JWT.io](https://jwt.io/)
-- [Multer Documentation](https://github.com/expressjs/multer)
-- [MongoDB Atlas Setup](https://www.mongodb.com/cloud/atlas)
-
----
-
-**Happy Coding! 🚀**
+This structure allows your backend to scale with:
+- **Services** for handling the complexity of 3 different sport APIs.
+- **Jobs** for keeping data fresh without user requests.
+- **Socket.IO** for the "Live" feel of the app.

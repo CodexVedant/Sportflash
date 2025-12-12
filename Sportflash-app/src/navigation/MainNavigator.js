@@ -1,0 +1,64 @@
+import React from 'react';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { Ionicons } from '@expo/vector-icons';
+import { BlurView } from 'expo-blur';
+import { View, StyleSheet } from 'react-native';
+
+// Screens
+import HomeScreen from '../screens/home/HomeScreen';
+import MatchesScreen from '../screens/matches/MatchesScreen';
+import NewsScreen from '../screens/news/NewsScreen';
+import ProfileScreen from '../screens/profile/ProfileScreen';
+
+// Theme
+import { theme } from '../utils/theme';
+
+const Tab = createBottomTabNavigator();
+
+export default function MainNavigator() {
+    return (
+        <Tab.Navigator
+            screenOptions={({ route }) => ({
+                headerShown: false,
+                tabBarStyle: styles.tabBar,
+                tabBarActiveTintColor: theme.colors.primary,
+                tabBarInactiveTintColor: theme.colors.textMuted,
+                tabBarIcon: ({ focused, color, size }) => {
+                    let iconName;
+
+                    if (route.name === 'Home') {
+                        iconName = focused ? 'home' : 'home-outline';
+                    } else if (route.name === 'Matches') {
+                        iconName = focused ? 'calendar' : 'calendar-outline';
+                    } else if (route.name === 'News') {
+                        iconName = focused ? 'newspaper' : 'newspaper-outline';
+                    } else if (route.name === 'Profile') {
+                        iconName = focused ? 'person' : 'person-outline';
+                    }
+
+                    return <Ionicons name={iconName} size={size} color={color} />;
+                },
+                tabBarBackground: () => (
+                    <BlurView tint="dark" intensity={80} style={StyleSheet.absoluteFill} />
+                ),
+            })}
+        >
+            <Tab.Screen name="Home" component={HomeScreen} />
+            <Tab.Screen name="Matches" component={MatchesScreen} />
+            <Tab.Screen name="News" component={NewsScreen} />
+            <Tab.Screen name="Profile" component={ProfileScreen} />
+        </Tab.Navigator>
+    );
+}
+
+const styles = StyleSheet.create({
+    tabBar: {
+        position: 'absolute',
+        bottom: 0,
+        backgroundColor: 'transparent',
+        borderTopWidth: 0,
+        height: 80, // Taller tab bar
+        paddingBottom: 20,
+        elevation: 0,
+    }
+});
