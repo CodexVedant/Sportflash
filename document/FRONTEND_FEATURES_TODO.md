@@ -1,4 +1,4 @@
-# Frontend Features to Add to demo_full.html
+# Frontend Features 
 
 ## 🎯 Missing Frontend/UI Features (Can be implemented without backend)
 

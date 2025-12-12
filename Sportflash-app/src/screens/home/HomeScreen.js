@@ -1,9 +1,10 @@
-import React from 'react';
-import { View, Text, StyleSheet, SafeAreaView, ScrollView, Animated } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, SafeAreaView, ScrollView, Animated, TouchableOpacity } from 'react-native';
 import { theme } from '../../utils/theme';
 import { LinearGradient } from 'expo-linear-gradient';
 import MatchCard from '../../components/match/MatchCard';
 import { Ionicons } from '@expo/vector-icons';
+import SearchModal from '../../components/common/SearchModal';
 
 // Mock Data
 const LIVE_MATCHES = [
@@ -39,16 +40,21 @@ const LIVE_MATCHES = [
 ];
 
 export default function HomeScreen({ navigation }) {
+    const [searchVisible, setSearchVisible] = useState(false);
 
     return (
         <SafeAreaView style={styles.container}>
+            <SearchModal visible={searchVisible} onClose={() => setSearchVisible(false)} />
+
             {/* Header */}
             <View style={styles.header}>
                 <View style={styles.logoContainer}>
                     <Text style={styles.logoText}>Sport<Text style={styles.highlight}>Flash</Text></Text>
                 </View>
                 <View style={styles.actions}>
-                    <Ionicons name="search" size={24} color={theme.colors.text} style={{ marginRight: 16 }} />
+                    <TouchableOpacity onPress={() => setSearchVisible(true)}>
+                        <Ionicons name="search" size={24} color={theme.colors.text} style={{ marginRight: 16 }} />
+                    </TouchableOpacity>
                     <Ionicons name="notifications-outline" size={24} color={theme.colors.text} />
                 </View>
             </View>
@@ -95,16 +101,25 @@ const styles = StyleSheet.create({
     },
     header: {
         flexDirection: 'row',
-        justifyContent: 'space-between',
+        justifyContent: 'flex-end', // Push actions to the right
         alignItems: 'center',
         paddingHorizontal: theme.spacing.lg,
         paddingVertical: theme.spacing.md,
         borderBottomWidth: 1,
         borderBottomColor: 'rgba(255,255,255,0.05)',
+        position: 'relative',
+    },
+    logoContainer: {
+        position: 'absolute',
+        left: 0,
+        right: 0,
+        alignItems: 'center',
+        justifyContent: 'center',
+        pointerEvents: 'none', // Allow clicks to pass through if overlapping
     },
     logoText: {
         fontSize: 24,
-        fontFamily: theme.fonts.display, // or 'Oswald' if successfully loaded
+        fontFamily: theme.fonts.display,
         fontWeight: 'bold',
         color: theme.colors.text,
         letterSpacing: 1,
@@ -114,6 +129,7 @@ const styles = StyleSheet.create({
     },
     actions: {
         flexDirection: 'row',
+        zIndex: 10, // Ensure actions are clickable
     },
     scrollContent: {
         padding: theme.spacing.lg,

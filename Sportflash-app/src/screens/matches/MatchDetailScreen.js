@@ -1,16 +1,18 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, ScrollView, Animated } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, ScrollView } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { theme } from '../../utils/theme';
 import { Ionicons } from '@expo/vector-icons';
-import { BlurView } from 'expo-blur';
+import Animated, { useSharedValue, useAnimatedStyle, withSequence, withTiming, withSpring, interpolateColor } from 'react-native-reanimated';
+import { useToast } from '../../context/ToastContext';
 
 export default function MatchDetailScreen({ navigation, route }) {
     const { match } = route.params || {};
     const [activeTab, setActiveTab] = useState('Scorecard');
+    const { showToast } = useToast();
 
     // Default mock if no params (for testing directly)
-    const displayMatch = match || {
+    const initialMatch = match || {
         sport: 'cricket',
         homeTeam: { name: 'IND', logo: '🇮🇳', score: '248/3' },
         awayTeam: { name: 'AUS', logo: '🇦🇺', score: '180/6' },
@@ -18,8 +20,13 @@ export default function MatchDetailScreen({ navigation, route }) {
         league: 'ICC World Cup 2026'
     };
 
+    const [homeScore, setHomeScore] = useState(initialMatch.homeTeam.score);
+
+    // Animation Shared Value for Flash Effect
+    const scoreColorAnim = useSharedValue(0);
+
     const getSportColor = () => {
-        switch (displayMatch.sport?.toLowerCase()) {
+        switch (initialMatch.sport?.toLowerCase()) {
             case 'cricket': return theme.colors.cricket;
             case 'football': return theme.colors.football;
             case 'basketball': return theme.colors.basketball;
@@ -28,6 +35,55 @@ export default function MatchDetailScreen({ navigation, route }) {
     };
 
     const activeColor = getSportColor();
+
+    const scoreAnimatedStyle = useAnimatedStyle(() => {
+        return {
+            color: interpolateColor(
+                scoreColorAnim.value,
+                [0, 1],
+                ['#FFFFFF', theme.colors.cricket] // Flash to Cricket Blue/Sport Color
+            )
+        };
+    });
+
+    // Live Simulation Logic
+    useEffect(() => {
+        if (initialMatch.status !== 'live' || initialMatch.sport !== 'cricket') return;
+
+        const interval = setInterval(() => {
+            // Logic ported from script.js
+            if (activeTab === 'Scorecard' || activeTab === 'Commentary') { // Only update if viewing
+                if (Math.random() > 0.7) {
+                    // Parse current score "248/3"
+                    let [runs, wickets] = homeScore.split('/').map(Number);
+
+                    const addedRuns = Math.floor(Math.random() * 4) + 1;
+                    runs += addedRuns;
+
+                    let newWicket = false;
+                    // Small chance of wicket
+                    if (Math.random() > 0.95 && wickets < 10) {
+                        wickets += 1;
+                        newWicket = true;
+                        showToast('🏏 WICKET! A big breakthrough!', 'error');
+                    } else if (Math.random() > 0.6) {
+                        showToast(`🏏 Score Update: India moves to ${runs}/${wickets}`, 'info');
+                    }
+
+                    setHomeScore(`${runs}/${wickets}`);
+
+                    // Trigger Flash Animation
+                    scoreColorAnim.value = withSequence(
+                        withTiming(1, { duration: 100 }),
+                        withTiming(0, { duration: 500 })
+                    );
+                }
+            }
+        }, 3000);
+
+        return () => clearInterval(interval);
+    }, [homeScore, activeTab]);
+
 
     const renderTabContent = () => {
         switch (activeTab) {
@@ -83,7 +139,7 @@ export default function MatchDetailScreen({ navigation, route }) {
                     <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
                         <Ionicons name="arrow-back" size={24} color="#FFF" />
                     </TouchableOpacity>
-                    <Text style={styles.headerTitle}>{displayMatch.league}</Text>
+                    <Text style={styles.headerTitle}>{initialMatch.league}</Text>
                     <TouchableOpacity>
                         <Ionicons name="share-outline" size={24} color="#FFF" />
                     </TouchableOpacity>
@@ -92,20 +148,22 @@ export default function MatchDetailScreen({ navigation, route }) {
                 {/* Match Score Hero */}
                 <View style={styles.scoreHero}>
                     <View style={styles.teamContainer}>
-                        <View style={styles.logoLg}><Text style={{ fontSize: 32 }}>{displayMatch.homeTeam.logo}</Text></View>
-                        <Text style={styles.teamNameHero}>{displayMatch.homeTeam.name}</Text>
+                        <View style={styles.logoLg}><Text style={{ fontSize: 32 }}>{initialMatch.homeTeam.logo}</Text></View>
+                        <Text style={styles.teamNameHero}>{initialMatch.homeTeam.name}</Text>
                     </View>
 
                     <View style={styles.scoreBoard}>
-                        <Text style={styles.mainScore}>{displayMatch.homeTeam.score}</Text>
+                        <Animated.Text style={[styles.mainScore, scoreAnimatedStyle]}>
+                            {homeScore}
+                        </Animated.Text>
                         <Text style={styles.vsText}>VS</Text>
-                        <Text style={styles.mainScore}>{displayMatch.awayTeam.score || '--/--'}</Text>
-                        <Text style={styles.statusBadge}>{displayMatch.status.toUpperCase()}</Text>
+                        <Text style={styles.mainScore}>{initialMatch.awayTeam.score || '--/--'}</Text>
+                        <Text style={styles.statusBadge}>{initialMatch.status.toUpperCase()}</Text>
                     </View>
 
                     <View style={styles.teamContainer}>
-                        <View style={styles.logoLg}><Text style={{ fontSize: 32 }}>{displayMatch.awayTeam.logo}</Text></View>
-                        <Text style={styles.teamNameHero}>{displayMatch.awayTeam.name}</Text>
+                        <View style={styles.logoLg}><Text style={{ fontSize: 32 }}>{initialMatch.awayTeam.logo}</Text></View>
+                        <Text style={styles.teamNameHero}>{initialMatch.awayTeam.name}</Text>
                     </View>
                 </View>
 
