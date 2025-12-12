@@ -1,43 +1,71 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
-// Fix: Default export check
-import Button from '../../components/common/Button';
+import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity } from 'react-native';
 import { theme } from '../../utils/theme';
 import { LinearGradient } from 'expo-linear-gradient';
+import { Ionicons } from '@expo/vector-icons';
+import Button from '../../components/common/Button';
 
 export default function WelcomeScreen({ navigation }) {
     return (
         <View style={styles.container}>
-            {/* Background Graphic Placeholder */}
-            <View style={styles.backgroundGraphic}>
-                <LinearGradient
-                    colors={[theme.colors.primary, theme.colors.background]}
-                    style={styles.gradient}
-                />
-            </View>
+            {/* Background with subtle gradient */}
+            <LinearGradient
+                colors={['#0f172a', '#1e293b']}
+                style={StyleSheet.absoluteFill}
+            />
 
-            <View style={styles.content}>
-                <View style={styles.header}>
-                    <Text style={styles.title}>Sport<Text style={styles.highlight}>Flash</Text></Text>
-                    <Text style={styles.subtitle}>Live Scores. Real Time. Premium Experience.</Text>
-                </View>
+            {/* Decorative localized glows */}
+            <LinearGradient
+                colors={[theme.colors.primary, 'transparent']}
+                style={styles.glowTopLeft}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+            />
+            <LinearGradient
+                colors={[theme.colors.football, 'transparent']}
+                style={styles.glowBottomRight}
+                start={{ x: 1, y: 1 }}
+                end={{ x: 0, y: 0 }}
+            />
 
-                <View style={styles.actions}>
-                    <Button
-                        title="Get Started"
-                        onPress={() => navigation.navigate('Register')}
-                        size="lg"
-                        style={{ marginBottom: 16, width: '100%' }}
-                    />
-                    <Button
-                        title="I have an account"
-                        variant="outline"
-                        onPress={() => navigation.navigate('Login')}
-                        size="lg"
-                        style={{ width: '100%' }}
-                    />
+            <SafeAreaView style={styles.safeArea}>
+                <View style={styles.content}>
+
+                    {/* Logo Section */}
+                    <View style={styles.logoContainer}>
+                        <View style={styles.iconCircle}>
+                            <Ionicons name="flash" size={48} color={theme.colors.primary} />
+                        </View>
+                        <Text style={styles.logoText}>
+                            Sport<Text style={styles.highlight}>Flash</Text>
+                        </Text>
+                        <Text style={styles.tagline}>Live Scores. Real Time. Premium.</Text>
+                    </View>
+
+                    {/* Feature preview or spacing */}
+                    <View style={{ flex: 1 }} />
+
+                    {/* Action Buttons */}
+                    <View style={styles.actions}>
+                        <Button
+                            title="Sign Up"
+                            onPress={() => navigation.navigate('Register')}
+                            size="lg"
+                            style={{ marginBottom: 16, width: '100%' }}
+                            icon="person-add-outline"
+                        />
+                        <Button
+                            title="Log In"
+                            variant="outline"
+                            onPress={() => navigation.navigate('Login')}
+                            size="lg"
+                            style={{ width: '100%' }}
+                            icon="log-in-outline"
+                        />
+                    </View>
+
                 </View>
-            </View>
+            </SafeAreaView>
         </View>
     );
 }
@@ -47,43 +75,71 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: theme.colors.background,
     },
-    backgroundGraphic: {
+    safeArea: {
         flex: 1,
-        backgroundColor: '#1E293B', // Slate 800
-        justifyContent: 'flex-end',
     },
-    gradient: {
+    glowTopLeft: {
         position: 'absolute',
-        left: 0,
-        right: 0,
-        bottom: 0,
-        top: 0,
-        opacity: 0.5
+        top: -100,
+        left: -100,
+        width: 300,
+        height: 300,
+        borderRadius: 150,
+        opacity: 0.2,
+    },
+    glowBottomRight: {
+        position: 'absolute',
+        bottom: -100,
+        right: -100,
+        width: 300,
+        height: 300,
+        borderRadius: 150,
+        opacity: 0.15,
     },
     content: {
+        flex: 1,
         padding: theme.spacing.xl,
-        paddingBottom: theme.spacing.xxl * 1.5,
+        justifyContent: 'center',
+        alignItems: 'center',
     },
-    header: {
-        marginBottom: theme.spacing.xxl,
+    logoContainer: {
+        alignItems: 'center',
+        marginTop: 60,
     },
-    title: {
-        // fontFamily: theme.fonts.display, // Font disabled
+    iconCircle: {
+        width: 100,
+        height: 100,
+        borderRadius: 50,
+        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginBottom: 20,
+        borderWidth: 1,
+        borderColor: 'rgba(59, 130, 246, 0.3)',
+        shadowColor: theme.colors.primary,
+        shadowOffset: { width: 0, height: 0 },
+        shadowOpacity: 0.5,
+        shadowRadius: 20,
+        elevation: 10,
+    },
+    logoText: {
+        fontSize: 42,
         fontWeight: 'bold',
-        fontSize: 48,
         color: theme.colors.text,
-        marginBottom: theme.spacing.sm,
+        letterSpacing: 2,
+        fontFamily: theme.fonts.display,
     },
     highlight: {
         color: theme.colors.primary,
     },
-    subtitle: {
-        // fontFamily: theme.fonts.medium, // Font disabled
-        fontSize: 18,
+    tagline: {
         color: theme.colors.textMuted,
-        lineHeight: 26,
+        fontSize: 18,
+        marginTop: 10,
+        letterSpacing: 1,
     },
     actions: {
         width: '100%',
+        marginBottom: 40,
     }
 });
