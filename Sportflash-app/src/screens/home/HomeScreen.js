@@ -67,7 +67,7 @@ export default function HomeScreen({ navigation }) {
                             homeTeam={match.homeTeam}
                             awayTeam={match.awayTeam}
                             score={match.score}
-                            onPress={() => navigation.navigate('Matches')} // Will link to details later
+                            onPress={() => navigation.navigate('MatchDetail', { match })}
                         />
                     ))}
                 </View>

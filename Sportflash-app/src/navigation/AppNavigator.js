@@ -7,6 +7,7 @@ import { StatusBar } from 'expo-status-bar';
 // Navigators
 import AuthNavigator from './AuthNavigator';
 import MainNavigator from './MainNavigator';
+import MatchDetailScreen from '../screens/matches/MatchDetailScreen'; // Added
 
 // Mock Auth Context (replace with real redux later)
 const Stack = createNativeStackNavigator();
@@ -19,7 +20,6 @@ export default function AppNavigator() {
 
     useEffect(() => {
         async function prepare() {
-            // await SplashScreen.preventAutoHideAsync();
             SplashScreen.hideAsync();
         }
         prepare();
@@ -34,9 +34,11 @@ export default function AppNavigator() {
             <StatusBar style="light" />
             <Stack.Navigator screenOptions={{ headerShown: false }}>
                 {isAuthenticated ? (
-                    <Stack.Screen name="Main" component={MainNavigator} />
+                    <>
+                        <Stack.Screen name="Main" component={MainNavigator} />
+                        <Stack.Screen name="MatchDetail" component={MatchDetailScreen} />
+                    </>
                 ) : (
-                    // Check if we have Auth screens ready, else show temp placeholder
                     <Stack.Screen name="Auth" component={AuthNavigator} initialParams={{ setIsAuthenticated }} />
                 )}
             </Stack.Navigator>
