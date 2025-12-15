@@ -1,18 +1,8 @@
 import axios from 'axios';
-import { Platform } from 'react-native';
-
-// Helper to determine base URL based on platform
-// Android Emulator uses 10.0.2.2 to access host machine localhost
-const getBaseUrl = () => {
-    if (Platform.OS === 'android') {
-        return 'http://10.0.2.2:5000/api';
-    }
-    // iOS Simulator and Web use localhost
-    return 'http://localhost:5000/api';
-};
+import { API_BASE_URL } from '../config';
 
 const api = axios.create({
-    baseURL: getBaseUrl(),
+    baseURL: API_BASE_URL,
     headers: {
         'Content-Type': 'application/json',
     },

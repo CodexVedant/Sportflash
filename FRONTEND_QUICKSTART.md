@@ -122,22 +122,21 @@ The app flow is:
 
 ## 🔧 Configuration Files
 
-### Environment Variables
-Create `.env` file (gitignored for security):
-```env
-API_BASE_URL=http://localhost:5000/api
-SOCKET_URL=http://localhost:5000
-```
+### API Configuration (`src/config.js`)
+- Centralized configuration for API and Socket URLs
+- **Edit this file** to change your backend URL
+- Automatically handles platform differences:
+  - **Android Emulator:** `http://10.0.2.2:5000`
+  - **iOS/Web:** `http://localhost:5000`
 
 ### API Service (`src/services/api.js`)
-- Automatically detects platform
-- Handles Android emulator localhost
+- Uses configuration from `src/config.js`
 - Includes request interceptors for auth tokens
 
 ### Socket Service (`src/services/socket.js`)
+- Uses configuration from `src/config.js`
 - Auto-connect disabled (manual control)
 - WebSocket transport only
-- Platform-aware URL configuration
 
 ## 🎮 Available Commands
 
