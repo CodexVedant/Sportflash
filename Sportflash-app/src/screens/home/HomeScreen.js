@@ -1,46 +1,16 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, ScrollView, Animated, TouchableOpacity, useWindowDimensions, Platform } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, SafeAreaView, ScrollView, Animated, TouchableOpacity, useWindowDimensions, Platform, ActivityIndicator } from 'react-native';
 import { theme } from '../../utils/theme';
 import { LinearGradient } from 'expo-linear-gradient';
 import MatchCard from '../../components/match/MatchCard';
 import { Ionicons } from '@expo/vector-icons';
 import SearchModal from '../../components/common/SearchModal';
-
-// Mock Data
-const LIVE_MATCHES = [
-    {
-        id: 1,
-        sport: 'cricket',
-        status: 'live',
-        league: 'ICC World Cup 2026',
-        homeTeam: { name: 'IND', logo: '🇮🇳', score: '248/3', overs: '42.4 Overs' },
-        awayTeam: { name: 'AUS', logo: '🇦🇺', score: '--/--', overs: '' },
-        score: null, // Cricket shows score in team object
-    },
-    {
-        id: 2,
-        sport: 'football',
-        status: 'live',
-        league: 'Premier League',
-        homeTeam: { name: 'MUN', logo: '🔴', score: '' },
-        awayTeam: { name: 'CHE', logo: '🔵', score: '' },
-        score: '2 - 1',
-        timer: '72:34',
-    },
-    {
-        id: 3,
-        sport: 'basketball',
-        status: 'live',
-        league: 'NBA',
-        homeTeam: { name: 'LAL', logo: '🟣', score: '88' },
-        awayTeam: { name: 'GSW', logo: '🌉', score: '92' },
-        score: 'Q4',
-        timer: '04:21',
-    },
-];
+import api from '../../services/api';
 
 export default function HomeScreen({ navigation }) {
     const [searchVisible, setSearchVisible] = useState(false);
+    const [matches, setMatches] = useState([]);
+    const [loading, setLoading] = useState(true);
     const { width } = useWindowDimensions();
 
     // Responsive Logic
@@ -51,10 +21,61 @@ export default function HomeScreen({ navigation }) {
     // Grid Calculation
     const numColumns = isWideScreen ? 3 : (isDesktop ? 2 : 1);
     const gap = theme.spacing.md;
-    // Calculate card width: (Total Width - Padding - Total Gaps) / numColumns
     const cardWidth = isDesktop
         ? (width - (theme.spacing.lg * 2) - (gap * (numColumns - 1))) / numColumns
         : '100%';
+
+    useEffect(() => {
+        fetchMatches();
+    }, []);
+
+    const fetchMatches = async () => {
+        try {
+            const response = await api.get('/matches/live');
+
+            // Map backend data to UI format
+            const mappedMatches = response.data.data.map(match => {
+                let timer = match.currentMinute;
+                let centerInfo = null;
+
+                if (match.sport === 'cricket') {
+                    timer = match.cricketData?.overs ? `${match.cricketData.overs} Overs` : '';
+                } else if (match.sport === 'basketball') {
+                    timer = match.basketballData?.quarter ? `Q${match.basketballData.quarter}` : '';
+                    centerInfo = 'Live';
+                } else if (match.sport === 'football') {
+                    if (match.homeTeam.score && match.awayTeam.score) {
+                        centerInfo = `${match.homeTeam.score} - ${match.awayTeam.score}`;
+                    }
+                }
+
+                return {
+                    id: match._id,
+                    sport: match.sport,
+                    status: match.status,
+                    league: match.league,
+                    homeTeam: {
+                        name: match.homeTeam.name,
+                        logo: match.homeTeam.logo,
+                        score: match.homeTeam.score
+                    },
+                    awayTeam: {
+                        name: match.awayTeam.name,
+                        logo: match.awayTeam.logo,
+                        score: match.awayTeam.score
+                    },
+                    score: centerInfo,
+                    timer: timer
+                };
+            });
+
+            setMatches(mappedMatches);
+        } catch (error) {
+            console.log('Error fetching matches:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     return (
         <SafeAreaView style={styles.container}>
@@ -81,21 +102,30 @@ export default function HomeScreen({ navigation }) {
                     <View style={styles.section}>
                         <Text style={styles.sectionTitle}>TOP LIVE MATCHES</Text>
 
-                        <View style={[styles.gridContainer, isDesktop && { flexDirection: 'row', flexWrap: 'wrap', gap: gap }]}>
-                            {LIVE_MATCHES.map(match => (
-                                <View key={match.id} style={{ width: cardWidth, marginBottom: isDesktop ? 0 : 16 }}>
-                                    <MatchCard
-                                        sport={match.sport}
-                                        status={match.status}
-                                        league={match.league}
-                                        homeTeam={match.homeTeam}
-                                        awayTeam={match.awayTeam}
-                                        score={match.score}
-                                        onPress={() => navigation.navigate('MatchDetail', { match })}
-                                    />
-                                </View>
-                            ))}
-                        </View>
+                        {loading ? (
+                            <ActivityIndicator size="large" color={theme.colors.primary} />
+                        ) : matches.length === 0 ? (
+                            <View style={styles.emptyContainer}>
+                                <Text style={styles.emptyText}>No live matches right now.</Text>
+                            </View>
+                        ) : (
+                            <View style={[styles.gridContainer, isDesktop && { flexDirection: 'row', flexWrap: 'wrap', gap: gap }]}>
+                                {matches.map(match => (
+                                    <View key={match.id} style={{ width: cardWidth, marginBottom: isDesktop ? 0 : 16 }}>
+                                        <MatchCard
+                                            sport={match.sport}
+                                            status={match.status}
+                                            league={match.league}
+                                            homeTeam={match.homeTeam}
+                                            awayTeam={match.awayTeam}
+                                            score={match.score}
+                                            timer={match.timer}
+                                            onPress={() => navigation.navigate('MatchDetail', { match })}
+                                        />
+                                    </View>
+                                ))}
+                            </View>
+                        )}
                     </View>
 
                     {/* Trending News Placeholder */}
@@ -138,6 +168,18 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
         pointerEvents: 'none', // Allow clicks to pass through if overlapping
+    },
+    emptyContainer: {
+        padding: theme.spacing.xl,
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: 'rgba(255,255,255,0.02)',
+        borderRadius: theme.borderRadius.lg,
+    },
+    emptyText: {
+        color: theme.colors.textMuted,
+        fontFamily: theme.fonts.medium,
+        fontSize: theme.sizes.md,
     },
     logoText: {
         fontSize: 24,

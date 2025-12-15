@@ -1,11 +1,11 @@
 import React, { useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { theme } from '../../utils/theme';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, { useSharedValue, useAnimatedStyle, withRepeat, withTiming, withSequence } from 'react-native-reanimated';
 
-export default function MatchCard({ sport, status, league, homeTeam, awayTeam, score, onPress }) {
+export default function MatchCard({ sport, status, league, homeTeam, awayTeam, score, timer, onPress }) {
 
     // Determine Colors based on Sport
     const getSportColor = () => {
@@ -68,7 +68,11 @@ export default function MatchCard({ sport, status, league, homeTeam, awayTeam, s
                     {/* Home Team */}
                     <View style={styles.team}>
                         <View style={styles.logoPlaceholder}>
-                            <Text style={{ fontSize: 24 }}>{homeTeam.logo}</Text>
+                            {homeTeam.logo?.startsWith('http') ? (
+                                <Image source={{ uri: homeTeam.logo }} style={{ width: 32, height: 32, resizeMode: 'contain' }} />
+                            ) : (
+                                <Text style={{ fontSize: 24 }}>{homeTeam.logo}</Text>
+                            )}
                         </View>
                         <Text style={styles.teamName}>{homeTeam.name}</Text>
                         <Text style={styles.score}>{homeTeam.score}</Text>
@@ -79,7 +83,7 @@ export default function MatchCard({ sport, status, league, homeTeam, awayTeam, s
                         {status === 'live' ? (
                             <View style={{ alignItems: 'center' }}>
                                 <Text style={[styles.liveScore, { color: sportColor }]}>{score ? score : 'VS'}</Text>
-                                <Text style={styles.timer}>{homeTeam.overs || '72\''}</Text>
+                                <Text style={styles.timer}>{timer || homeTeam.overs || ''}</Text>
                             </View>
                         ) : (
                             <Text style={styles.vs}>VS</Text>
@@ -89,7 +93,11 @@ export default function MatchCard({ sport, status, league, homeTeam, awayTeam, s
                     {/* Away Team */}
                     <View style={styles.team}>
                         <View style={styles.logoPlaceholder}>
-                            <Text style={{ fontSize: 24 }}>{awayTeam.logo}</Text>
+                            {awayTeam.logo?.startsWith('http') ? (
+                                <Image source={{ uri: awayTeam.logo }} style={{ width: 32, height: 32, resizeMode: 'contain' }} />
+                            ) : (
+                                <Text style={{ fontSize: 24 }}>{awayTeam.logo}</Text>
+                            )}
                         </View>
                         <Text style={styles.teamName}>{awayTeam.name}</Text>
                         <Text style={styles.score}>{awayTeam.score}</Text>

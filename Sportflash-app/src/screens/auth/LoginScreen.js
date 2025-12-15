@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, KeyboardAvoidingView, Platform } from 'react-native';
+import React, { useState, useContext } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, KeyboardAvoidingView, Platform, Alert } from 'react-native';
+import { AuthContext } from '../../context/AuthContext';
 import { theme } from '../../utils/theme';
 import Input from '../../components/common/Input';
 import Button from '../../components/common/Button';
@@ -9,20 +10,21 @@ export default function LoginScreen({ navigation, route }) {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
+    const { login } = useContext(AuthContext);
 
-    // Mock login function - in real app connect to authSlice
-    const handleLogin = () => {
+    const handleLogin = async () => {
+        if (!email || !password) {
+            Alert.alert('Error', 'Please fill in all fields');
+            return;
+        }
+
         setLoading(true);
-        setTimeout(() => {
-            setLoading(false);
-            // Determine if we need to update state via params or dispatch
-            if (route.params?.setIsAuthenticated) {
-                route.params.setIsAuthenticated(true);
-            } else {
-                // Just for demo flow if state isn't passed (shouldn't happen with AppNavigator setup)
-                console.log("Logged In");
-            }
-        }, 1500);
+        const result = await login(email, password);
+        setLoading(false);
+
+        if (!result.success) {
+            Alert.alert('Login Failed', result.message);
+        }
     };
 
     return (

@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, KeyboardAvoidingView, Platform } from 'react-native';
+import React, { useState, useContext } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, KeyboardAvoidingView, Platform, Alert } from 'react-native';
+import { AuthContext } from '../../context/AuthContext';
 import { theme } from '../../utils/theme';
 import Input from '../../components/common/Input';
 import Button from '../../components/common/Button';
@@ -9,6 +10,23 @@ export default function RegisterScreen({ navigation }) {
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [loading, setLoading] = useState(false);
+    const { register } = useContext(AuthContext);
+
+    const handleRegister = async () => {
+        if (!name || !email || !password) {
+            Alert.alert('Error', 'Please fill in all fields');
+            return;
+        }
+
+        setLoading(true);
+        const result = await register(name, email, password);
+        setLoading(false);
+
+        if (!result.success) {
+            Alert.alert('Registration Failed', result.message);
+        }
+    };
 
     return (
         <SafeAreaView style={styles.container}>
@@ -51,7 +69,8 @@ export default function RegisterScreen({ navigation }) {
 
                     <Button
                         title="Sign Up"
-                        onPress={() => { }}
+                        onPress={handleRegister}
+                        loading={loading}
                         size="lg"
                         style={{ marginTop: 20 }}
                     />
