@@ -27,12 +27,17 @@ export default function SearchModal({ visible, onClose }) {
     const loadRecentSearches = async () => {
         try {
             const saved = await AsyncStorage.getItem('recentSearches');
+            let items = [];
             if (saved) {
-                setRecentSearches(JSON.parse(saved));
-            } else {
-                // Default/Trending searches for demo purposes so the list isn't empty initially
-                setRecentSearches(['India vs Australia', 'Lakers vs Warriors', 'Cristiano Ronaldo']);
+                items = JSON.parse(saved);
             }
+
+            // If empty, show defaults so the UI isn't empty
+            if (items.length === 0) {
+                items = ['India vs Australia', 'Lakers vs Warriors', 'Cristiano Ronaldo', 'Mumbai Indians', 'Lionel Messi'];
+            }
+
+            setRecentSearches(items);
         } catch (error) {
             console.log('Error loading recent searches:', error);
         }
