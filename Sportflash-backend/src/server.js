@@ -43,6 +43,16 @@ app.get('/health', (req, res) => {
     });
 });
 
+// API Health check
+app.get('/api/health', (req, res) => {
+    res.json({
+        status: 'ok',
+        timestamp: new Date(),
+        environment: process.env.NODE_ENV,
+        message: 'SportFlash API is running'
+    });
+});
+
 // Import Routes
 const authRoutes = require('./routes/authRoutes');
 const matchRoutes = require('./routes/matchRoutes');
