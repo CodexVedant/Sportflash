@@ -1,10 +1,13 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity, Image } from 'react-native';
 import { theme } from '../../utils/theme';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import Sidebar from '../../components/navigation/Sidebar';
 
 export default function NewsScreen() {
+    const [sidebarVisible, setSidebarVisible] = useState(false);
+
     const NEWS_DATA = [
         {
             id: 1,
@@ -45,8 +48,14 @@ export default function NewsScreen() {
 
     return (
         <SafeAreaView style={styles.container}>
+            <Sidebar visible={sidebarVisible} onClose={() => setSidebarVisible(false)} />
             <View style={styles.header}>
-                <Text style={styles.headerTitle}>Trending News</Text>
+                <View style={styles.headerRow}>
+                    <TouchableOpacity onPress={() => setSidebarVisible(true)} style={styles.menuBtn}>
+                        <Ionicons name="menu" size={28} color={theme.colors.text} />
+                    </TouchableOpacity>
+                    <Text style={styles.headerTitle}>Trending News</Text>
+                </View>
             </View>
             <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
                 {/* Featured News */}
@@ -188,4 +197,11 @@ const styles = StyleSheet.create({
         fontFamily: theme.fonts.medium,
         lineHeight: 22,
     },
+    headerRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    menuBtn: {
+        marginRight: 16,
+    }
 });

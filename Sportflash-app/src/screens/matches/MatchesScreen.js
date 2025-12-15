@@ -2,9 +2,12 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, FlatList } from 'react-native';
 import { theme } from '../../utils/theme';
 import MatchCard from '../../components/match/MatchCard';
+import Sidebar from '../../components/navigation/Sidebar';
+import { Ionicons } from '@expo/vector-icons';
 
 export default function MatchesScreen() {
     const [activeTab, setActiveTab] = useState('Upcoming');
+    const [sidebarVisible, setSidebarVisible] = useState(false);
 
     const TABS = ['Live', 'Upcoming', 'Results'];
 
@@ -74,8 +77,15 @@ export default function MatchesScreen() {
 
     return (
         <SafeAreaView style={styles.container}>
+            <Sidebar visible={sidebarVisible} onClose={() => setSidebarVisible(false)} />
+
             <View style={styles.header}>
-                <Text style={styles.headerTitle}>Matches</Text>
+                <View style={styles.headerRow}>
+                    <TouchableOpacity onPress={() => setSidebarVisible(true)} style={styles.menuBtn}>
+                        <Ionicons name="menu" size={28} color={theme.colors.text} />
+                    </TouchableOpacity>
+                    <Text style={styles.headerTitle}>Matches</Text>
+                </View>
             </View>
 
             {/* Tabs */}
@@ -160,5 +170,12 @@ const styles = StyleSheet.create({
     emptyText: {
         color: theme.colors.textMuted,
         fontSize: 16,
+    },
+    headerRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    menuBtn: {
+        marginRight: 16,
     }
 });

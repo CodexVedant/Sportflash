@@ -20,15 +20,17 @@ export default function HomeScreen({ navigation }) {
     const { user } = useContext(AuthContext);
 
     // Responsive Logic
-    const isWideScreen = width > 1200;
-    const isDesktop = width > 768; // Desktop breakpoint
-    const isTablet = width > 480 && width <= 768;
+    const isDesktop = width > 768;
+    const MAX_WIDTH = 1200;
+    const contentWidth = isDesktop ? Math.min(width, MAX_WIDTH) : width;
 
     // Grid Calculation
-    const numColumns = isWideScreen ? 3 : (isDesktop ? 2 : 1);
+    const numColumns = width > 1024 ? 3 : (isDesktop ? 2 : 1);
     const gap = theme.spacing.md;
+    const padding = theme.spacing.lg * 2;
+
     const cardWidth = isDesktop
-        ? (width - (theme.spacing.lg * 2) - (gap * (numColumns - 1))) / numColumns
+        ? (contentWidth - padding - (gap * (numColumns - 1))) / numColumns
         : '100%';
 
     useEffect(() => {
@@ -259,7 +261,7 @@ const styles = StyleSheet.create({
         width: '100%',
     },
     contentContainerDesktop: {
-        maxWidth: 1024,
+        maxWidth: 1200,
         alignSelf: 'center',
     },
     gridContainer: {

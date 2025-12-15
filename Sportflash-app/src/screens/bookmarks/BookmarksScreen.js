@@ -2,12 +2,12 @@ import React from 'react';
 import { View, Text, StyleSheet, SafeAreaView } from 'react-native';
 import { theme } from '../../utils/theme';
 
-export default function FollowingScreen() {
+export default function BookmarksScreen() {
     return (
         <SafeAreaView style={styles.container}>
             <View style={styles.content}>
-                <Text style={styles.title}>Following</Text>
-                <Text style={styles.subtitle}>Track your favorite teams and matches.</Text>
+                <Text style={styles.title}>Bookmarks</Text>
+                <Text style={styles.subtitle}>Saved news and highlights will appear here.</Text>
             </View>
         </SafeAreaView>
     );

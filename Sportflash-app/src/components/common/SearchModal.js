@@ -113,7 +113,7 @@ export default function SearchModal({ visible, onClose }) {
                 {/* Click outside to close */}
                 <TouchableOpacity style={StyleSheet.absoluteFill} activeOpacity={1} onPress={onClose} />
 
-                <SafeAreaView style={styles.safeArea} pointerEvents="box-none">
+                <SafeAreaView style={[styles.safeArea, { pointerEvents: 'box-none' }]}>
                     <View style={[styles.modalWrapper, { alignItems: 'center' }]}>
                         {/* Floating Modal Card */}
                         <View style={[
