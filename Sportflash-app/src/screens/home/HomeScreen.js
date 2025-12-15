@@ -6,12 +6,15 @@ import MatchCard from '../../components/match/MatchCard';
 import { Ionicons } from '@expo/vector-icons';
 import SearchModal from '../../components/common/SearchModal';
 import api from '../../services/api';
+import { AuthContext } from '../../context/AuthContext';
+import { useContext } from 'react';
 
 export default function HomeScreen({ navigation }) {
     const [searchVisible, setSearchVisible] = useState(false);
     const [matches, setMatches] = useState([]);
     const [loading, setLoading] = useState(true);
     const { width } = useWindowDimensions();
+    const { user } = useContext(AuthContext);
 
     // Responsive Logic
     const isWideScreen = width > 1200;
@@ -90,7 +93,17 @@ export default function HomeScreen({ navigation }) {
                     <TouchableOpacity onPress={() => setSearchVisible(true)}>
                         <Ionicons name="search" size={24} color={theme.colors.text} style={{ marginRight: 16 }} />
                     </TouchableOpacity>
-                    <Ionicons name="notifications-outline" size={24} color={theme.colors.text} />
+
+                    {user ? (
+                        <Ionicons name="notifications-outline" size={24} color={theme.colors.text} />
+                    ) : (
+                        <TouchableOpacity
+                            style={styles.loginBtn}
+                            onPress={() => navigation.navigate('Login')}
+                        >
+                            <Text style={styles.loginBtnText}>Login</Text>
+                        </TouchableOpacity>
+                    )}
                 </View>
             </View>
 
@@ -237,5 +250,16 @@ const styles = StyleSheet.create({
     },
     gridContainer: {
         width: '100%',
+    },
+    loginBtn: {
+        backgroundColor: theme.colors.primary,
+        paddingHorizontal: 16,
+        paddingVertical: 8,
+        borderRadius: 20,
+    },
+    loginBtnText: {
+        color: '#fff',
+        fontFamily: theme.fonts.bold,
+        fontSize: 14,
     }
 });

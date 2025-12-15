@@ -6,8 +6,10 @@ import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 
 // Navigators
-import AuthNavigator from './AuthNavigator';
 import MainNavigator from './MainNavigator';
+// Screens
+import LoginScreen from '../screens/auth/LoginScreen';
+import RegisterScreen from '../screens/auth/RegisterScreen';
 import MatchDetailScreen from '../screens/matches/MatchDetailScreen';
 
 import { AuthContext } from '../context/AuthContext';
@@ -16,7 +18,7 @@ import { theme } from '../utils/theme';
 const Stack = createNativeStackNavigator();
 
 export default function AppNavigator() {
-    const { user, loading } = useContext(AuthContext);
+    const { loading } = useContext(AuthContext);
 
     useEffect(() => {
         async function prepare() {
@@ -37,14 +39,10 @@ export default function AppNavigator() {
         <NavigationContainer>
             <StatusBar style="light" />
             <Stack.Navigator screenOptions={{ headerShown: false }}>
-                {user ? (
-                    <>
-                        <Stack.Screen name="Main" component={MainNavigator} />
-                        <Stack.Screen name="MatchDetail" component={MatchDetailScreen} />
-                    </>
-                ) : (
-                    <Stack.Screen name="Auth" component={AuthNavigator} />
-                )}
+                <Stack.Screen name="Main" component={MainNavigator} />
+                <Stack.Screen name="Login" component={LoginScreen} />
+                <Stack.Screen name="Register" component={RegisterScreen} />
+                <Stack.Screen name="MatchDetail" component={MatchDetailScreen} />
             </Stack.Navigator>
         </NavigationContainer>
     );

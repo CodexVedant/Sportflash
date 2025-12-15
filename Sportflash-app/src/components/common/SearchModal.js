@@ -1,18 +1,51 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Modal, TextInput, TouchableOpacity, ScrollView, Animated, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, Modal, TextInput, TouchableOpacity, ScrollView, Platform, KeyboardAvoidingView, useWindowDimensions } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { Ionicons } from '@expo/vector-icons';
 import { theme } from '../../utils/theme';
 import { useToast } from '../../context/ToastContext';
-
-const { width, height } = Dimensions.get('window');
+import { SafeAreaView } from 'react-native-safe-area-context';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function SearchModal({ visible, onClose }) {
     const [query, setQuery] = useState('');
-    const [recentSearches, setRecentSearches] = useState([]); // Empty by default to show empty state
+    const [recentSearches, setRecentSearches] = useState([]);
     const [results, setResults] = useState([]);
     const [activeFilter, setActiveFilter] = useState('All');
     const { showToast } = useToast();
+    const { width, height } = useWindowDimensions();
+
+    const isDesktop = width > 768;
+    const cardWidth = isDesktop ? 600 : width * 0.95;
+    const cardMaxHeight = height * 0.8;
+
+    // Load recent searches on mount
+    useEffect(() => {
+        loadRecentSearches();
+    }, []);
+
+    const loadRecentSearches = async () => {
+        try {
+            const saved = await AsyncStorage.getItem('recentSearches');
+            if (saved) {
+                setRecentSearches(JSON.parse(saved));
+            } else {
+                // Default/Trending searches for demo purposes so the list isn't empty initially
+                setRecentSearches(['India vs Australia', 'Lakers vs Warriors', 'Cristiano Ronaldo']);
+            }
+        } catch (error) {
+            console.log('Error loading recent searches:', error);
+        }
+    };
+
+    const clearRecentSearches = async () => {
+        try {
+            await AsyncStorage.removeItem('recentSearches');
+            setRecentSearches([]);
+        } catch (error) {
+            console.log('Error clearing history:', error);
+        }
+    };
 
     // Mock Search Data
     const MOCK_DATA = [
@@ -22,6 +55,8 @@ export default function SearchModal({ visible, onClose }) {
         { id: 4, title: 'Virat Kohli', subtitle: 'Player • India', icon: 'person-outline', type: 'Players' },
         { id: 5, title: 'Mumbai Indians', subtitle: 'Team • IPL', icon: 'people-outline', type: 'Teams' },
         { id: 6, title: 'World Cup Finals', subtitle: 'News • 2h ago', icon: 'newspaper-outline', type: 'News' },
+        { id: 7, title: 'Rohit Sharma', subtitle: 'Player • India', icon: 'person-outline', type: 'Players' },
+        { id: 8, title: 'Real Madrid', subtitle: 'Team • La Liga', icon: 'people-outline', type: 'Teams' },
     ];
 
     useEffect(() => {
@@ -40,12 +75,19 @@ export default function SearchModal({ visible, onClose }) {
         }
     }, [query, activeFilter]);
 
-    const handleSelect = (item) => {
-        showToast(`Selected: ${item.title}`);
-        if (!recentSearches.includes(item.title)) {
-            setRecentSearches([item.title, ...recentSearches].slice(0, 5));
+    const handleSelect = async (item) => {
+        // showToast(`Selected: ${item.title}`);
+
+        let newRecent = [item.title, ...recentSearches.filter(r => r !== item.title)].slice(0, 5);
+        setRecentSearches(newRecent);
+        try {
+            await AsyncStorage.setItem('recentSearches', JSON.stringify(newRecent));
+        } catch (e) {
+            console.log('Error saving search:', e);
         }
+
         onClose();
+        // Here you would typically navigation.navigate to detail screen
     };
 
     const filters = ['All', 'Matches', 'Teams', 'Players', 'News'];
@@ -57,124 +99,152 @@ export default function SearchModal({ visible, onClose }) {
             animationType="fade"
             onRequestClose={onClose}
         >
-            <View style={styles.overlay}>
-                {/* Clicking outside closes the modal */}
-                <TouchableOpacity style={StyleSheet.absoluteFill} activeOpacity={1} onPress={onClose} />
-
+            <KeyboardAvoidingView
+                behavior={Platform.OS === "ios" ? "padding" : "height"}
+                style={styles.container}
+            >
                 <BlurView intensity={40} tint="dark" style={StyleSheet.absoluteFill} />
 
-                {/* Floating Modal Card */}
-                <View style={styles.modalCard}>
+                {/* Click outside to close */}
+                <TouchableOpacity style={StyleSheet.absoluteFill} activeOpacity={1} onPress={onClose} />
 
-                    {/* Header: Input + Close */}
-                    <View style={styles.headerRow}>
-                        <View style={styles.searchContainer}>
-                            <Ionicons name="search" size={20} color={theme.colors.textMuted} />
-                            <TextInput
-                                style={styles.input}
-                                placeholder="Search matches, teams, players..."
-                                placeholderTextColor={theme.colors.textMuted}
-                                value={query}
-                                onChangeText={setQuery}
-                                autoFocus
-                            />
-                            {query.length > 0 && (
-                                <TouchableOpacity onPress={() => setQuery('')}>
-                                    <Ionicons name="close-circle" size={18} color={theme.colors.textMuted} />
-                                </TouchableOpacity>
-                            )}
-                        </View>
-                        <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
-                            <Ionicons name="close" size={24} color={theme.colors.textMuted} />
-                        </TouchableOpacity>
-                    </View>
+                <SafeAreaView style={styles.safeArea} pointerEvents="box-none">
+                    <View style={[styles.modalWrapper, { alignItems: 'center' }]}>
+                        {/* Floating Modal Card */}
+                        <View style={[
+                            styles.modalCard,
+                            {
+                                width: cardWidth,
+                                maxHeight: cardMaxHeight
+                            }
+                        ]}>
 
-                    {/* Filter Chips */}
-                    <View style={styles.filterRow}>
-                        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
-                            {filters.map(filter => (
-                                <TouchableOpacity
-                                    key={filter}
-                                    style={[
-                                        styles.chip,
-                                        activeFilter === filter && styles.chipActive
-                                    ]}
-                                    onPress={() => setActiveFilter(filter)}
-                                >
-                                    <Text style={[
-                                        styles.chipText,
-                                        activeFilter === filter && styles.chipTextActive
-                                    ]}>{filter}</Text>
-                                </TouchableOpacity>
-                            ))}
-                        </ScrollView>
-                    </View>
-
-                    <View style={styles.divider} />
-
-                    {/* Content Area */}
-                    <ScrollView style={styles.content} keyboardShouldPersistTaps="handled">
-                        {query.length === 0 ? (
-                            // Empty State / Recent
-                            recentSearches.length === 0 ? (
-                                <View style={styles.emptyState}>
-                                    <View style={styles.emptyIconBg}>
-                                        <Ionicons name="time-outline" size={40} color={theme.colors.textMuted} />
-                                    </View>
-                                    <Text style={styles.emptyTitle}>No recent searches</Text>
-                                    <Text style={styles.emptySub}>Start typing to search for matches, teams, players, or news</Text>
+                            {/* Header: Input + Close */}
+                            <View style={styles.headerRow}>
+                                <View style={styles.searchContainer}>
+                                    <Ionicons name="search" size={20} color={theme.colors.textMuted} />
+                                    <TextInput
+                                        style={styles.input}
+                                        placeholder="Search..."
+                                        placeholderTextColor={theme.colors.textMuted}
+                                        value={query}
+                                        onChangeText={setQuery}
+                                        autoFocus
+                                    />
+                                    {query.length > 0 && (
+                                        <TouchableOpacity onPress={() => setQuery('')}>
+                                            <Ionicons name="close-circle" size={18} color={theme.colors.textMuted} />
+                                        </TouchableOpacity>
+                                    )}
                                 </View>
-                            ) : (
-                                <View>
-                                    <Text style={styles.sectionHeader}>RECENT SEARCHES</Text>
-                                    {recentSearches.map((item, index) => (
-                                        <TouchableOpacity key={index} style={styles.recentItem} onPress={() => setQuery(item)}>
-                                            <Ionicons name="time-outline" size={18} color={theme.colors.textMuted} />
-                                            <Text style={styles.recentText}>{item}</Text>
-                                            <Ionicons name="chevron-forward" size={16} color="rgba(255,255,255,0.2)" style={{ marginLeft: 'auto' }} />
+                                <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
+                                    <Text style={styles.cancelText}>Cancel</Text>
+                                </TouchableOpacity>
+                            </View>
+
+                            {/* Filter Chips */}
+                            <View style={styles.filterRow}>
+                                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
+                                    {filters.map(filter => (
+                                        <TouchableOpacity
+                                            key={filter}
+                                            style={[
+                                                styles.chip,
+                                                activeFilter === filter && styles.chipActive
+                                            ]}
+                                            onPress={() => setActiveFilter(filter)}
+                                        >
+                                            <Text style={[
+                                                styles.chipText,
+                                                activeFilter === filter && styles.chipTextActive
+                                            ]}>{filter}</Text>
                                         </TouchableOpacity>
                                     ))}
-                                </View>
-                            )
-                        ) : (
-                            // Results
-                            <View>
-                                {results.length === 0 ? (
-                                    <Text style={styles.noResults}>No results found.</Text>
-                                ) : (
-                                    results.map(item => (
-                                        <TouchableOpacity key={item.id} style={styles.resultItem} onPress={() => handleSelect(item)}>
-                                            <View style={styles.iconBox}>
-                                                <Ionicons name={item.icon} size={20} color={theme.colors.text} />
-                                            </View>
-                                            <View>
-                                                <Text style={styles.itemTitle}>{item.title}</Text>
-                                                <Text style={styles.itemSub}>{item.subtitle}</Text>
-                                            </View>
-                                        </TouchableOpacity>
-                                    ))
-                                )}
+                                </ScrollView>
                             </View>
-                        )}
-                    </ScrollView>
 
-                </View>
-            </View>
+                            <View style={styles.divider} />
+
+                            {/* Content Area */}
+                            <ScrollView style={styles.content} keyboardShouldPersistTaps="handled">
+                                {query.length === 0 ? (
+                                    // Empty State / Recent
+                                    recentSearches.length === 0 ? (
+                                        <View style={styles.emptyState}>
+                                            <View style={styles.emptyIconBg}>
+                                                <Ionicons name="search-outline" size={40} color={theme.colors.textMuted} />
+                                            </View>
+                                            <Text style={styles.emptyTitle}>Search SportFlash</Text>
+                                            <Text style={styles.emptySub}>Find matches, teams, and news</Text>
+                                        </View>
+                                    ) : (
+                                        <View>
+                                            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                                                <Text style={styles.sectionHeader}>RECENT</Text>
+                                                <TouchableOpacity onPress={clearRecentSearches}>
+                                                    <Text style={{ color: theme.colors.primary, fontSize: 13 }}>Clear</Text>
+                                                </TouchableOpacity>
+                                            </View>
+
+                                            {recentSearches.map((item, index) => (
+                                                <TouchableOpacity key={index} style={styles.recentItem} onPress={() => setQuery(item)}>
+                                                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                                                        <Ionicons name="time-outline" size={16} color={theme.colors.textMuted} />
+                                                        <Text style={styles.recentText}>{item}</Text>
+                                                    </View>
+                                                    <Ionicons name="arrow-forward-outline" size={16} color={theme.colors.textMuted} />
+                                                </TouchableOpacity>
+                                            ))}
+                                        </View>
+                                    )
+                                ) : (
+                                    // Results
+                                    <View>
+                                        {results.length === 0 ? (
+                                            <View style={styles.emptyState}>
+                                                <Text style={styles.noResults}>No results found for "{query}"</Text>
+                                            </View>
+                                        ) : (
+                                            results.map(item => (
+                                                <TouchableOpacity key={item.id} style={styles.resultItem} onPress={() => handleSelect(item)}>
+                                                    <View style={styles.iconBox}>
+                                                        <Ionicons name={item.icon} size={20} color={theme.colors.text} />
+                                                    </View>
+                                                    <View style={{ flex: 1 }}>
+                                                        <Text style={styles.itemTitle}>{item.title}</Text>
+                                                        <Text style={styles.itemSub}>{item.subtitle}</Text>
+                                                    </View>
+                                                    <Ionicons name="chevron-forward" size={16} color={theme.colors.textMuted} />
+                                                </TouchableOpacity>
+                                            ))
+                                        )}
+                                    </View>
+                                )}
+                            </ScrollView>
+
+                        </View>
+                    </View>
+                </SafeAreaView>
+            </KeyboardAvoidingView>
         </Modal>
     );
 }
 
 const styles = StyleSheet.create({
-    overlay: {
+    container: {
+        flex: 1,
+    },
+    safeArea: {
         flex: 1,
         justifyContent: 'flex-start',
-        paddingTop: 60, // Top margin
-        alignItems: 'center',
+    },
+    modalWrapper: {
+        flex: 1,
+        paddingTop: Platform.OS === 'android' ? 20 : 0,
+        justifyContent: 'flex-start',
     },
     modalCard: {
-        width: width * 0.95,
-        height: height * 0.6, // Fixed height card
-        backgroundColor: '#1E293B', // Slate 800ish (Cards)
+        backgroundColor: '#1E293B',
         borderRadius: 16,
         borderWidth: 1,
         borderColor: 'rgba(255,255,255,0.1)',
@@ -184,33 +254,41 @@ const styles = StyleSheet.create({
         shadowRadius: 20,
         elevation: 20,
         overflow: 'hidden',
+        marginTop: 10,
     },
     headerRow: {
         flexDirection: 'row',
         alignItems: 'center',
         padding: 16,
+        paddingBottom: 12,
         gap: 12,
     },
     searchContainer: {
         flex: 1,
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: 'rgba(0,0,0,0.2)',
-        borderRadius: 8,
+        backgroundColor: 'rgba(0,0,0,0.3)',
+        borderRadius: 12,
         paddingHorizontal: 12,
-        height: 44,
+        height: 48,
         borderWidth: 1,
-        borderColor: 'rgba(255,255,255,0.05)',
+        borderColor: 'rgba(255,255,255,0.1)',
         gap: 10,
     },
     input: {
         flex: 1,
         color: '#fff',
-        fontSize: 15,
+        fontSize: 16,
         fontFamily: theme.fonts?.medium || 'System',
+        height: '100%',
     },
     closeBtn: {
-        padding: 4,
+        padding: 8,
+    },
+    cancelText: {
+        color: theme.colors.primary,
+        fontSize: 16,
+        fontFamily: theme.fonts?.medium,
     },
     filterRow: {
         paddingHorizontal: 16,
@@ -241,31 +319,33 @@ const styles = StyleSheet.create({
         backgroundColor: 'rgba(255,255,255,0.05)',
     },
     content: {
-        flex: 1,
         padding: 16,
     },
     emptyState: {
         alignItems: 'center',
         justifyContent: 'center',
-        marginTop: 60,
-        opacity: 0.7,
+        paddingVertical: 40,
+        opacity: 0.8,
     },
     emptyIconBg: {
+        width: 60,
+        height: 60,
+        borderRadius: 30,
+        backgroundColor: 'rgba(255,255,255,0.03)',
+        alignItems: 'center',
+        justifyContent: 'center',
         marginBottom: 16,
-        opacity: 0.5,
     },
     emptyTitle: {
         color: theme.colors.text,
-        fontSize: 16,
+        fontSize: 18,
         marginBottom: 8,
-        fontWeight: '600',
+        fontWeight: 'bold',
     },
     emptySub: {
         color: theme.colors.textMuted,
-        fontSize: 13,
+        fontSize: 14,
         textAlign: 'center',
-        maxWidth: 250,
-        lineHeight: 20,
     },
     sectionHeader: {
         color: theme.colors.textMuted,
@@ -277,10 +357,10 @@ const styles = StyleSheet.create({
     recentItem: {
         flexDirection: 'row',
         alignItems: 'center',
-        paddingVertical: 12,
+        justifyContent: 'space-between',
+        paddingVertical: 14,
         borderBottomWidth: 1,
         borderBottomColor: 'rgba(255,255,255,0.05)',
-        gap: 12,
     },
     recentText: {
         color: theme.colors.text,
@@ -315,6 +395,6 @@ const styles = StyleSheet.create({
     noResults: {
         color: theme.colors.textMuted,
         textAlign: 'center',
-        marginTop: 20,
+        fontSize: 16,
     },
 });
