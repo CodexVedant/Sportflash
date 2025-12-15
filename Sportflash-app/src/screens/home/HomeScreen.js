@@ -9,8 +9,11 @@ import api from '../../services/api';
 import { AuthContext } from '../../context/AuthContext';
 import { useContext } from 'react';
 
+import Sidebar, { SidebarContent } from '../../components/navigation/Sidebar';
+
 export default function HomeScreen({ navigation }) {
     const [searchVisible, setSearchVisible] = useState(false);
+    const [sidebarVisible, setSidebarVisible] = useState(false);
     const [matches, setMatches] = useState([]);
     const [loading, setLoading] = useState(true);
     const { width } = useWindowDimensions();
@@ -18,7 +21,7 @@ export default function HomeScreen({ navigation }) {
 
     // Responsive Logic
     const isWideScreen = width > 1200;
-    const isDesktop = width > 768;
+    const isDesktop = width > 768; // Desktop breakpoint
     const isTablet = width > 480 && width <= 768;
 
     // Grid Calculation
@@ -83,12 +86,19 @@ export default function HomeScreen({ navigation }) {
     return (
         <SafeAreaView style={styles.container}>
             <SearchModal visible={searchVisible} onClose={() => setSearchVisible(false)} />
+            <Sidebar visible={sidebarVisible} onClose={() => setSidebarVisible(false)} />
 
             {/* Header */}
             <View style={[styles.header, isDesktop && styles.headerDesktop]}>
+                {/* Menu Icon (Always Visible) */}
+                <TouchableOpacity onPress={() => setSidebarVisible(true)} style={styles.menuBtn}>
+                    <Ionicons name="menu" size={28} color={theme.colors.text} />
+                </TouchableOpacity>
+
                 <View style={[styles.logoContainer, isDesktop && styles.logoContainerDesktop]}>
                     <Text style={styles.logoText}>Sport<Text style={styles.highlight}>Flash</Text></Text>
                 </View>
+
                 <View style={styles.actions}>
                     <TouchableOpacity onPress={() => setSearchVisible(true)}>
                         <Ionicons name="search" size={24} color={theme.colors.text} style={{ marginRight: 16 }} />
@@ -166,7 +176,7 @@ const styles = StyleSheet.create({
     },
     header: {
         flexDirection: 'row',
-        justifyContent: 'flex-end', // Push actions to the right
+        justifyContent: 'space-between',
         alignItems: 'center',
         paddingHorizontal: theme.spacing.lg,
         paddingVertical: theme.spacing.md,
@@ -174,13 +184,16 @@ const styles = StyleSheet.create({
         borderBottomColor: 'rgba(255,255,255,0.05)',
         position: 'relative',
     },
+    menuBtn: {
+        zIndex: 20,
+    },
     logoContainer: {
         position: 'absolute',
         left: 0,
         right: 0,
         alignItems: 'center',
         justifyContent: 'center',
-        pointerEvents: 'none', // Allow clicks to pass through if overlapping
+        pointerEvents: 'none',
     },
     emptyContainer: {
         padding: theme.spacing.xl,
@@ -206,7 +219,8 @@ const styles = StyleSheet.create({
     },
     actions: {
         flexDirection: 'row',
-        zIndex: 10, // Ensure actions are clickable
+        zIndex: 10,
+        alignItems: 'center', // Fix vertical alignment
     },
     scrollContent: {
         padding: theme.spacing.lg,
