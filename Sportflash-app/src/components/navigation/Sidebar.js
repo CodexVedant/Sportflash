@@ -40,8 +40,18 @@ export function SidebarContent({ onClose, style, showClose = true }) {
 
     const handleNavigation = (route) => {
         setActiveRoute(route);
-        if (onClose) onClose(); // Call onClose if provided
-        navigation.navigate(route);
+        if (onClose) onClose();
+
+        // Handle Tab Navigation vs Stack Navigation
+        const TAB_ROUTES = ['Home', 'Matches', 'News', 'Profile'];
+
+        if (TAB_ROUTES.includes(route)) {
+            // If target is a tab, navigate to Main navigator first
+            navigation.navigate('Main', { screen: route });
+        } else {
+            // Otherwise navigate directly (for Stack screens)
+            navigation.navigate(route);
+        }
     };
 
     return (
