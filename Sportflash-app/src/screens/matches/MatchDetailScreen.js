@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, ScrollView, useWindowDimensions, Platform } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { theme } from '../../utils/theme';
 import { Ionicons } from '@expo/vector-icons';
@@ -10,6 +10,8 @@ export default function MatchDetailScreen({ navigation, route }) {
     const { match } = route.params || {};
     const [activeTab, setActiveTab] = useState('Scorecard');
     const { showToast } = useToast();
+    const { width } = useWindowDimensions();
+    const isDesktop = width > 768;
 
     // Default mock if no params (for testing directly)
     const initialMatch = match || {
@@ -134,64 +136,70 @@ export default function MatchDetailScreen({ navigation, route }) {
             />
 
             <SafeAreaView style={{ flex: 1 }}>
-                {/* Top Navigation Bar */}
-                <View style={styles.topBar}>
-                    <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-                        <Ionicons name="arrow-back" size={24} color="#FFF" />
-                    </TouchableOpacity>
-                    <Text style={styles.headerTitle}>{initialMatch.league}</Text>
-                    <TouchableOpacity>
-                        <Ionicons name="share-outline" size={24} color="#FFF" />
-                    </TouchableOpacity>
-                </View>
 
-                {/* Match Score Hero */}
-                <View style={styles.scoreHero}>
-                    <View style={styles.teamContainer}>
-                        <View style={styles.logoLg}><Text style={{ fontSize: 32 }}>{initialMatch.homeTeam.logo}</Text></View>
-                        <Text style={styles.teamNameHero}>{initialMatch.homeTeam.name}</Text>
-                    </View>
+                {/* Responsive Container */}
+                <View style={[styles.mainContainer, isDesktop && styles.desktopContainer]}>
 
-                    <View style={styles.scoreBoard}>
-                        <Animated.Text style={[styles.mainScore, scoreAnimatedStyle]}>
-                            {homeScore}
-                        </Animated.Text>
-                        <Text style={styles.vsText}>VS</Text>
-                        <Text style={styles.mainScore}>{initialMatch.awayTeam.score || '--/--'}</Text>
-                        <Text style={styles.statusBadge}>{initialMatch.status.toUpperCase()}</Text>
-                    </View>
-
-                    <View style={styles.teamContainer}>
-                        <View style={styles.logoLg}><Text style={{ fontSize: 32 }}>{initialMatch.awayTeam.logo}</Text></View>
-                        <Text style={styles.teamNameHero}>{initialMatch.awayTeam.name}</Text>
-                    </View>
-                </View>
-
-                {/* Tabs */}
-                <View style={styles.tabBar}>
-                    {['Scorecard', 'Commentary', 'Info'].map((tab) => (
-                        <TouchableOpacity
-                            key={tab}
-                            style={[
-                                styles.tabItem,
-                                activeTab === tab && { borderBottomColor: activeColor }
-                            ]}
-                            onPress={() => setActiveTab(tab)}
-                        >
-                            <Text style={[
-                                styles.tabText,
-                                activeTab === tab && { color: activeColor, fontWeight: 'bold' }
-                            ]}>
-                                {tab}
-                            </Text>
+                    {/* Top Navigation Bar */}
+                    <View style={styles.topBar}>
+                        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
+                            <Ionicons name="arrow-back" size={24} color="#FFF" />
                         </TouchableOpacity>
-                    ))}
-                </View>
+                        <Text style={styles.headerTitle}>{initialMatch.league}</Text>
+                        <TouchableOpacity>
+                            <Ionicons name="share-outline" size={24} color="#FFF" />
+                        </TouchableOpacity>
+                    </View>
 
-                {/* Scrollable Content */}
-                <ScrollView style={styles.contentScroll}>
-                    {renderTabContent()}
-                </ScrollView>
+                    {/* Match Score Hero */}
+                    <View style={styles.scoreHero}>
+                        <View style={styles.teamContainer}>
+                            <View style={styles.logoLg}><Text style={{ fontSize: 32 }}>{initialMatch.homeTeam.logo}</Text></View>
+                            <Text style={styles.teamNameHero}>{initialMatch.homeTeam.name}</Text>
+                        </View>
+
+                        <View style={styles.scoreBoard}>
+                            <Animated.Text style={[styles.mainScore, scoreAnimatedStyle]}>
+                                {homeScore}
+                            </Animated.Text>
+                            <Text style={styles.vsText}>VS</Text>
+                            <Text style={styles.mainScore}>{initialMatch.awayTeam.score || '--/--'}</Text>
+                            <Text style={styles.statusBadge}>{initialMatch.status.toUpperCase()}</Text>
+                        </View>
+
+                        <View style={styles.teamContainer}>
+                            <View style={styles.logoLg}><Text style={{ fontSize: 32 }}>{initialMatch.awayTeam.logo}</Text></View>
+                            <Text style={styles.teamNameHero}>{initialMatch.awayTeam.name}</Text>
+                        </View>
+                    </View>
+
+                    {/* Tabs */}
+                    <View style={styles.tabBar}>
+                        {['Scorecard', 'Commentary', 'Info'].map((tab) => (
+                            <TouchableOpacity
+                                key={tab}
+                                style={[
+                                    styles.tabItem,
+                                    activeTab === tab && { borderBottomColor: activeColor }
+                                ]}
+                                onPress={() => setActiveTab(tab)}
+                            >
+                                <Text style={[
+                                    styles.tabText,
+                                    activeTab === tab && { color: activeColor, fontWeight: 'bold' }
+                                ]}>
+                                    {tab}
+                                </Text>
+                            </TouchableOpacity>
+                        ))}
+                    </View>
+
+                    {/* Scrollable Content */}
+                    <ScrollView style={styles.contentScroll} showsVerticalScrollIndicator={false}>
+                        {renderTabContent()}
+                    </ScrollView>
+
+                </View>
 
             </SafeAreaView>
         </View>
@@ -202,6 +210,15 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: theme.colors.background,
+    },
+    mainContainer: {
+        flex: 1,
+        width: '100%',
+    },
+    desktopContainer: {
+        maxWidth: 1024,
+        alignSelf: 'center',
+        paddingTop: 20,
     },
     headerBg: {
         position: 'absolute',

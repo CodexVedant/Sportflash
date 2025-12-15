@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, ScrollView, Animated, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, SafeAreaView, ScrollView, Animated, TouchableOpacity, useWindowDimensions, Platform } from 'react-native';
 import { theme } from '../../utils/theme';
 import { LinearGradient } from 'expo-linear-gradient';
 import MatchCard from '../../components/match/MatchCard';
@@ -41,14 +41,28 @@ const LIVE_MATCHES = [
 
 export default function HomeScreen({ navigation }) {
     const [searchVisible, setSearchVisible] = useState(false);
+    const { width } = useWindowDimensions();
+
+    // Responsive Logic
+    const isWideScreen = width > 1200;
+    const isDesktop = width > 768;
+    const isTablet = width > 480 && width <= 768;
+
+    // Grid Calculation
+    const numColumns = isWideScreen ? 3 : (isDesktop ? 2 : 1);
+    const gap = theme.spacing.md;
+    // Calculate card width: (Total Width - Padding - Total Gaps) / numColumns
+    const cardWidth = isDesktop
+        ? (width - (theme.spacing.lg * 2) - (gap * (numColumns - 1))) / numColumns
+        : '100%';
 
     return (
         <SafeAreaView style={styles.container}>
             <SearchModal visible={searchVisible} onClose={() => setSearchVisible(false)} />
 
             {/* Header */}
-            <View style={styles.header}>
-                <View style={styles.logoContainer}>
+            <View style={[styles.header, isDesktop && styles.headerDesktop]}>
+                <View style={[styles.logoContainer, isDesktop && styles.logoContainerDesktop]}>
                     <Text style={styles.logoText}>Sport<Text style={styles.highlight}>Flash</Text></Text>
                 </View>
                 <View style={styles.actions}>
@@ -61,33 +75,41 @@ export default function HomeScreen({ navigation }) {
 
             <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
 
-                {/* Live Section */}
-                <View style={styles.section}>
-                    <Text style={styles.sectionTitle}>TOP LIVE MATCHES</Text>
-                    {LIVE_MATCHES.map(match => (
-                        <MatchCard
-                            key={match.id}
-                            sport={match.sport}
-                            status={match.status}
-                            league={match.league}
-                            homeTeam={match.homeTeam}
-                            awayTeam={match.awayTeam}
-                            score={match.score}
-                            onPress={() => navigation.navigate('MatchDetail', { match })}
-                        />
-                    ))}
-                </View>
+                <View style={[styles.contentContainer, isDesktop && styles.contentContainerDesktop]}>
 
-                {/* Trending News Placeholder */}
-                <View style={styles.section}>
-                    <Text style={styles.sectionTitle}>TRENDING NEWS</Text>
-                    <View style={styles.newsPlaceholder}>
-                        <Text style={{ color: theme.colors.textMuted }}>News feed coming in Phase 1B...</Text>
+                    {/* Live Section */}
+                    <View style={styles.section}>
+                        <Text style={styles.sectionTitle}>TOP LIVE MATCHES</Text>
+
+                        <View style={[styles.gridContainer, isDesktop && { flexDirection: 'row', flexWrap: 'wrap', gap: gap }]}>
+                            {LIVE_MATCHES.map(match => (
+                                <View key={match.id} style={{ width: cardWidth, marginBottom: isDesktop ? 0 : 16 }}>
+                                    <MatchCard
+                                        sport={match.sport}
+                                        status={match.status}
+                                        league={match.league}
+                                        homeTeam={match.homeTeam}
+                                        awayTeam={match.awayTeam}
+                                        score={match.score}
+                                        onPress={() => navigation.navigate('MatchDetail', { match })}
+                                    />
+                                </View>
+                            ))}
+                        </View>
                     </View>
-                </View>
 
-                {/* Bottom spacing for TabBar */}
-                <View style={{ height: 80 }} />
+                    {/* Trending News Placeholder */}
+                    <View style={styles.section}>
+                        <Text style={styles.sectionTitle}>TRENDING NEWS</Text>
+                        <View style={styles.newsPlaceholder}>
+                            <Text style={{ color: theme.colors.textMuted }}>News feed coming in Phase 1B...</Text>
+                        </View>
+                    </View>
+
+                    {/* Bottom spacing for TabBar */}
+                    <View style={{ height: 80 }} />
+
+                </View>
 
             </ScrollView>
         </SafeAreaView>
@@ -152,5 +174,26 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         borderWidth: 1,
         borderColor: 'rgba(255,255,255,0.05)',
+    },
+    // Desktop Styles
+    headerDesktop: {
+        paddingHorizontal: theme.spacing.xl,
+        justifyContent: 'space-between',
+    },
+    logoContainerDesktop: {
+        position: 'relative', // Reset absolute position on desktop
+        alignItems: 'flex-start',
+        left: 'auto',
+        right: 'auto',
+    },
+    contentContainer: {
+        width: '100%',
+    },
+    contentContainerDesktop: {
+        maxWidth: 1024,
+        alignSelf: 'center',
+    },
+    gridContainer: {
+        width: '100%',
     }
 });
