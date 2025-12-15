@@ -1,20 +1,24 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, ScrollView, useWindowDimensions, Platform } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { theme } from '../../utils/theme';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, { useSharedValue, useAnimatedStyle, withSequence, withTiming, withSpring, interpolateColor } from 'react-native-reanimated';
 import { useToast } from '../../context/ToastContext';
+import { AuthContext } from '../../context/AuthContext';
+import socket from '../../services/socket';
 
 export default function MatchDetailScreen({ navigation, route }) {
     const { match } = route.params || {};
     const [activeTab, setActiveTab] = useState('Scorecard');
     const { showToast } = useToast();
+    const { user, updateUserPreferences } = useContext(AuthContext);
     const { width } = useWindowDimensions();
     const isDesktop = width > 768;
 
-    // Default mock if no params (for testing directly)
+    // Default mock if no params
     const initialMatch = match || {
+        _id: '1', // Ensure ID matches backend simulation
         sport: 'cricket',
         homeTeam: { name: 'IND', logo: '🇮🇳', score: '248/3' },
         awayTeam: { name: 'AUS', logo: '🇦🇺', score: '180/6' },
@@ -22,7 +26,38 @@ export default function MatchDetailScreen({ navigation, route }) {
         league: 'ICC World Cup 2026'
     };
 
-    const [homeScore, setHomeScore] = useState(initialMatch.homeTeam.score);
+    const [homeScore, setHomeScore] = useState(initialMatch.homeTeam.score || '0/0');
+    const [awayScore, setAwayScore] = useState(initialMatch.awayTeam.score || '0/0');
+    const [timer, setTimer] = useState(initialMatch.timer || '');
+    const [liveCommentary, setLiveCommentary] = useState([]);
+
+    // Logic to check if following
+    const isFollowingHome = user?.preferences?.favoriteTeams?.includes(initialMatch.homeTeam.name);
+    const isFollowingAway = user?.preferences?.favoriteTeams?.includes(initialMatch.awayTeam.name);
+
+    const handleFollow = async (teamName) => {
+        if (!user) {
+            showToast('Please login to follow teams', 'info');
+            return;
+        }
+
+        try {
+            let currentTeams = user.preferences?.favoriteTeams || [];
+            let newTeams;
+
+            if (currentTeams.includes(teamName)) {
+                newTeams = currentTeams.filter(t => t !== teamName);
+                showToast(`Unfollowed ${teamName}`);
+            } else {
+                newTeams = [...currentTeams, teamName];
+                showToast(`Following ${teamName}`);
+            }
+
+            await updateUserPreferences({ favoriteTeams: newTeams });
+        } catch (error) {
+            showToast('Failed to update favorites', 'error');
+        }
+    };
 
     // Animation Shared Value for Flash Effect
     const scoreColorAnim = useSharedValue(0);
@@ -43,48 +78,54 @@ export default function MatchDetailScreen({ navigation, route }) {
             color: interpolateColor(
                 scoreColorAnim.value,
                 [0, 1],
-                ['#FFFFFF', theme.colors.cricket] // Flash to Cricket Blue/Sport Color
+                ['#FFFFFF', theme.colors.cricket]
             )
         };
     });
 
-    // Live Simulation Logic
+    // Real-time Socket Connection
     useEffect(() => {
-        if (initialMatch.status !== 'live' || initialMatch.sport !== 'cricket') return;
+        // join match room
+        const matchId = initialMatch._id || initialMatch.id || '1';
+        socket.emit('join_match', matchId);
 
-        const interval = setInterval(() => {
-            // Logic ported from script.js
-            if (activeTab === 'Scorecard' || activeTab === 'Commentary') { // Only update if viewing
-                if (Math.random() > 0.7) {
-                    // Parse current score "248/3"
-                    let [runs, wickets] = homeScore.split('/').map(Number);
+        const handleScoreUpdate = (data) => {
+            console.log("Socket Update:", data);
 
-                    const addedRuns = Math.floor(Math.random() * 4) + 1;
-                    runs += addedRuns;
-
-                    let newWicket = false;
-                    // Small chance of wicket
-                    if (Math.random() > 0.95 && wickets < 10) {
-                        wickets += 1;
-                        newWicket = true;
-                        showToast('🏏 WICKET! A big breakthrough!', 'error');
-                    } else if (Math.random() > 0.6) {
-                        showToast(`🏏 Score Update: India moves to ${runs}/${wickets}`, 'info');
-                    }
-
-                    setHomeScore(`${runs}/${wickets}`);
-
-                    // Trigger Flash Animation
+            // Only update if match ID matches (or generic '1' for demo)
+            if (data.matchId === matchId || matchId === '1') {
+                if (data.homeScore !== homeScore) {
+                    setHomeScore(data.homeScore);
+                    // Flash animation on score change
                     scoreColorAnim.value = withSequence(
                         withTiming(1, { duration: 100 }),
                         withTiming(0, { duration: 500 })
                     );
                 }
-            }
-        }, 3000);
 
-        return () => clearInterval(interval);
-    }, [homeScore, activeTab]);
+                if (data.awayScore) setAwayScore(data.awayScore);
+                if (data.currentMinute) setTimer(data.currentMinute);
+
+                if (data.commentary) {
+                    setLiveCommentary(prev => {
+                        const newComm = [{ text: data.commentary, time: data.currentMinute }, ...prev];
+                        return newComm.slice(0, 20); // Keep last 20
+                    });
+
+                    if (activeTab === 'Commentary') {
+                        // showToast('🎙️ New Commentary Update', 'info'); 
+                    }
+                }
+            }
+        };
+
+        socket.on('score_update', handleScoreUpdate);
+
+        return () => {
+            socket.off('score_update', handleScoreUpdate);
+            socket.emit('leave_match', matchId);
+        };
+    }, []);
 
 
     const renderTabContent = () => {
@@ -106,16 +147,20 @@ export default function MatchDetailScreen({ navigation, route }) {
             case 'Commentary':
                 return (
                     <View style={styles.tabContent}>
-                        {[1, 2, 3].map((item, i) => (
-                            <View key={i} style={styles.commBubble}>
-                                <View style={styles.overBadge}>
-                                    <Text style={styles.overText}>42.{i}</Text>
-                                </View>
-                                <Text style={styles.commText}>
-                                    What a shot! Covers driven beautifully for four. The crowd goes wild!
-                                </Text>
+                        {liveCommentary.length === 0 ? (
+                            <View style={{ padding: 20, alignItems: 'center' }}>
+                                <Text style={{ color: theme.colors.textMuted }}>Waiting for live updates...</Text>
                             </View>
-                        ))}
+                        ) : (
+                            liveCommentary.map((item, i) => (
+                                <View key={i} style={styles.commBubble}>
+                                    <View style={styles.overBadge}>
+                                        <Text style={styles.overText}>{item.time || 'Live'}</Text>
+                                    </View>
+                                    <Text style={styles.commText}>{item.text}</Text>
+                                </View>
+                            ))
+                        )}
                     </View>
                 );
             default:
@@ -155,7 +200,12 @@ export default function MatchDetailScreen({ navigation, route }) {
                     <View style={styles.scoreHero}>
                         <View style={styles.teamContainer}>
                             <View style={styles.logoLg}><Text style={{ fontSize: 32 }}>{initialMatch.homeTeam.logo}</Text></View>
-                            <Text style={styles.teamNameHero}>{initialMatch.homeTeam.name}</Text>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                                <Text style={styles.teamNameHero}>{initialMatch.homeTeam.name}</Text>
+                                <TouchableOpacity onPress={() => handleFollow(initialMatch.homeTeam.name)}>
+                                    <Ionicons name={isFollowingHome ? "star" : "star-outline"} size={16} color={isFollowingHome ? theme.colors.warning : theme.colors.textMuted} />
+                                </TouchableOpacity>
+                            </View>
                         </View>
 
                         <View style={styles.scoreBoard}>
@@ -163,13 +213,18 @@ export default function MatchDetailScreen({ navigation, route }) {
                                 {homeScore}
                             </Animated.Text>
                             <Text style={styles.vsText}>VS</Text>
-                            <Text style={styles.mainScore}>{initialMatch.awayTeam.score || '--/--'}</Text>
-                            <Text style={styles.statusBadge}>{initialMatch.status.toUpperCase()}</Text>
+                            <Text style={styles.mainScore}>{awayScore}</Text>
+                            <Text style={styles.statusBadge}>{timer || initialMatch.status.toUpperCase()}</Text>
                         </View>
 
                         <View style={styles.teamContainer}>
                             <View style={styles.logoLg}><Text style={{ fontSize: 32 }}>{initialMatch.awayTeam.logo}</Text></View>
-                            <Text style={styles.teamNameHero}>{initialMatch.awayTeam.name}</Text>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                                <Text style={styles.teamNameHero}>{initialMatch.awayTeam.name}</Text>
+                                <TouchableOpacity onPress={() => handleFollow(initialMatch.awayTeam.name)}>
+                                    <Ionicons name={isFollowingAway ? "star" : "star-outline"} size={16} color={isFollowingAway ? theme.colors.warning : theme.colors.textMuted} />
+                                </TouchableOpacity>
+                            </View>
                         </View>
                     </View>
 

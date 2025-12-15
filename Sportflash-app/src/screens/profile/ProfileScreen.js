@@ -79,13 +79,13 @@ export default function ProfileScreen() {
                 {/* Stats Row */}
                 <View style={styles.statsRow}>
                     <View style={styles.statItem}>
-                        <Text style={styles.statValue}>12</Text>
+                        <Text style={styles.statValue}>{user?.preferences?.favoriteTeams?.length || 0}</Text>
                         <Text style={styles.statLabel}>Following</Text>
                     </View>
                     <View style={styles.statDivider} />
                     <View style={styles.statItem}>
-                        <Text style={styles.statValue}>5</Text>
-                        <Text style={styles.statLabel}>Leagues</Text>
+                        <Text style={styles.statValue}>{user?.preferences?.favoriteSports?.length || 0}</Text>
+                        <Text style={styles.statLabel}>Sports</Text>
                     </View>
                     <View style={styles.statDivider} />
                     <View style={styles.statItem}>

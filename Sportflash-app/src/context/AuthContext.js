@@ -77,15 +77,43 @@ export const AuthProvider = ({ children }) => {
     };
 
     const logout = async () => {
-        setUser(null);
-        setToken(null);
-        delete api.defaults.headers.common['Authorization'];
-        await AsyncStorage.removeItem('token');
-        await AsyncStorage.removeItem('user');
+        setLoading(true);
+        try {
+            await AsyncStorage.removeItem('token');
+            await AsyncStorage.removeItem('user');
+            setUser(null);
+            setToken(null);
+            delete api.defaults.headers.common['Authorization'];
+        } catch (error) {
+            console.log('Logout error', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const updateUserPreferences = async (preferences) => {
+        try {
+            const res = await api.put('/auth/preferences', preferences);
+            const updatedUser = res.data.data;
+            setUser(updatedUser);
+            await AsyncStorage.setItem('user', JSON.stringify(updatedUser));
+            return updatedUser;
+        } catch (error) {
+            console.log('Update Preferences error', error);
+            throw error;
+        }
     };
 
     return (
-        <AuthContext.Provider value={{ user, token, login, register, logout, loading }}>
+        <AuthContext.Provider value={{
+            loading,
+            user,
+            token,
+            login,
+            register,
+            logout,
+            updateUserPreferences
+        }}>
             {children}
         </AuthContext.Provider>
     );
