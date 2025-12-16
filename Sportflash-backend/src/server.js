@@ -8,6 +8,7 @@ require('dotenv').config();
 
 const app = express();
 const server = http.createServer(app);
+const axios = require('axios');
 
 // Socket.IO Setup
 const io = new Server(server, {
@@ -16,6 +17,36 @@ const io = new Server(server, {
         methods: ['GET', 'POST']
     }
 });
+
+// Fetch and broadcast live scores
+const fetchLiveScores = async () => {
+    console.log('Attempting to fetch live scores...');
+    const options = {
+        method: 'GET',
+        url: 'https://cricket-live-score10.p.rapidapi.com/live',
+        headers: {
+            'x-rapidapi-key': process.env.RAPIDAPI_KEY || 'YOUR_RAPIDAPI_KEY',
+            'x-rapidapi-host': 'cricket-live-score10.p.rapidapi.com'
+        }
+    };
+
+    try {
+        const response = await axios.request(options);
+        const matches = response.data;
+
+        if (matches && matches.length > 0) {
+            io.emit('score_update', matches);
+            console.log('Live scores updated and broadcasted.');
+        } else {
+            console.log('No live matches found or data is empty.');
+        }
+    } catch (error) {
+        console.error('Error fetching live scores:', error.response ? error.response.data : error.message);
+    }
+};
+
+// Fetch scores every 30 second
+setInterval(fetchLiveScores, 30000);
 
 // Connect to Database
 const connectDB = require('./config/database');
@@ -64,35 +95,25 @@ app.use('/api/matches', matchRoutes);
 
 // Socket.IO Connection Handler
 io.on('connection', (socket) => {
-    console.log(`✅ Client connected: ${socket.id}`);
+    console.log(` Client connected: ${socket.id}`);
 
     // Join match room
     socket.on('join_match', (matchId) => {
         socket.join(`match_${matchId}`);
-        console.log(`📺 Client ${socket.id} joined match_${matchId}`);
+        console.log(` Client ${socket.id} joined match_${matchId}`);
     });
 
     // Leave match room
     socket.on('leave_match', (matchId) => {
         socket.leave(`match_${matchId}`);
-        console.log(`👋 Client ${socket.id} left match_${matchId}`);
+        console.log(` Client ${socket.id} left match_${matchId}`);
     });
 
     socket.on('disconnect', () => {
-        console.log(`❌ Client disconnected: ${socket.id}`);
+        console.log(` Client disconnected: ${socket.id}`);
     });
 });
 
-// Simulate live score updates (for demo purposes)
-setInterval(() => {
-    io.emit('score_update', {
-        matchId: '1',
-        homeScore: '248/3',
-        awayScore: '--/--',
-        currentMinute: '46.1 overs',
-        commentary: 'FOUR! Kohli drives through covers for a boundary!'
-    });
-}, 10000); // Every 10 seconds
 
 // 404 Handler
 app.use((req, res) => {
@@ -114,8 +135,8 @@ app.use((err, req, res, next) => {
 
 const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => {
-    console.log(`⚡ Server running on http://localhost:${PORT}`);
-    console.log(`🏥 Health check: http://localhost:${PORT}/health`);
-    console.log(`🔌 Socket.IO ready for connections`);
-    console.log(`📊 Environment: ${process.env.NODE_ENV}`);
+    console.log(` Server running on http://localhost:${PORT}`);
+    console.log(` Health check: http://localhost:${PORT}/health`);
+    console.log(` Socket.IO ready for connections`);
+    console.log(` Environment: ${process.env.NODE_ENV}`);
 });
