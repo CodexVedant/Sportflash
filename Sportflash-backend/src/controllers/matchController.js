@@ -1,5 +1,34 @@
 const Match = require('../models/Match');
 
+// @desc    Get all matches with optional filters
+// @route   GET /api/matches
+// @access  Public
+exports.getMatches = async (req, res) => {
+    try {
+        const { status } = req.query;
+        const query = {};
+
+        if (status) {
+            query.status = status;
+        }
+
+        const matches = await Match.find(query)
+            .sort({ scheduledAt: -1 })
+            .limit(20);
+
+        res.status(200).json({
+            success: true,
+            count: matches.length,
+            data: matches
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: error.message
+        });
+    }
+};
+
 // @desc    Get all live matches
 // @route   GET /api/matches/live
 // @access  Public

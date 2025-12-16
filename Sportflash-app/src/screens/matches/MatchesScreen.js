@@ -1,59 +1,40 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, FlatList } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, FlatList, ActivityIndicator } from 'react-native';
 import { theme } from '../../utils/theme';
 import MatchCard from '../../components/match/MatchCard';
 import Sidebar from '../../components/navigation/Sidebar';
 import { Ionicons } from '@expo/vector-icons';
+import api from '../../services/api';
 
 export default function MatchesScreen() {
     const [activeTab, setActiveTab] = useState('Upcoming');
     const [sidebarVisible, setSidebarVisible] = useState(false);
+    const [matches, setMatches] = useState([]);
+    const [loading, setLoading] = useState(false);
 
     const TABS = ['Live', 'Upcoming', 'Results'];
 
-    const MOCK_UPCOMING = [
-        {
-            id: 'u1',
-            league: 'Premier League',
-            status: 'Scheduled',
-            sport: 'football',
-            homeTeam: { name: 'Arsenal', logo: null, score: '' },
-            awayTeam: { name: 'Liverpool', logo: null, score: '' },
-            timer: '20:00',
-            date: 'Tomorrow'
-        },
-        {
-            id: 'u2',
-            league: 'IPL',
-            status: 'Scheduled',
-            sport: 'cricket',
-            homeTeam: { name: 'CSK', logo: null, score: '' },
-            awayTeam: { name: 'RCB', logo: null, score: '' },
-            timer: '19:30',
-            date: 'Today'
-        }
-    ];
+    useEffect(() => {
+        fetchMatches();
+    }, [activeTab]);
 
-    const MOCK_RESULTS = [
-        {
-            id: 'r1',
-            league: 'NBA',
-            status: 'Finished',
-            sport: 'basketball',
-            homeTeam: { name: 'Celtics', logo: null, score: '112' },
-            awayTeam: { name: 'Heat', logo: null, score: '108' },
-            timer: 'FT'
-        },
-        {
-            id: 'r2',
-            league: 'La Liga',
-            status: 'Finished',
-            sport: 'football',
-            homeTeam: { name: 'Barcelona', logo: null, score: '2' },
-            awayTeam: { name: 'Real Madrid', logo: null, score: '1' },
-            timer: 'FT'
+    const fetchMatches = async () => {
+        setLoading(true);
+        try {
+            let endpoint = '/matches/upcoming';
+            if (activeTab === 'Live') endpoint = '/matches/live';
+            else if (activeTab === 'Upcoming') endpoint = '/matches/upcoming';
+            else if (activeTab === 'Results') endpoint = '/matches?status=finished';
+
+            const response = await api.get(endpoint);
+            setMatches(response.data.data || []);
+        } catch (error) {
+            console.log('Error fetching matches:', error);
+            setMatches([]);
+        } finally {
+            setLoading(false);
         }
-    ];
+    };
 
     const renderMatchItem = ({ item }) => (
         <View style={{ marginBottom: 16 }}>
@@ -63,17 +44,14 @@ export default function MatchesScreen() {
                 league={item.league}
                 homeTeam={item.homeTeam}
                 awayTeam={item.awayTeam}
-                score={item.status === 'Finished' ? `${item.homeTeam.score} - ${item.awayTeam.score}` : null}
-                timer={item.timer}
+                score={item.status === 'finished' || item.status === 'live' ?
+                    (item.homeTeam.score && item.awayTeam.score ? `${item.homeTeam.score} - ${item.awayTeam.score}` : 'vs')
+                    : null
+                }
+                timer={item.currentMinute || (item.scheduledAt ? new Date(item.scheduledAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '')}
             />
         </View>
     );
-
-    const getData = () => {
-        if (activeTab === 'Upcoming') return MOCK_UPCOMING;
-        if (activeTab === 'Results') return MOCK_RESULTS;
-        return []; // Live handled by Home, or mock empty here
-    };
 
     return (
         <SafeAreaView style={styles.container}>
@@ -104,17 +82,23 @@ export default function MatchesScreen() {
             </View>
 
             {/* Content */}
-            <FlatList
-                data={getData()}
-                keyExtractor={item => item.id}
-                renderItem={renderMatchItem}
-                contentContainerStyle={styles.listContent}
-                ListEmptyComponent={
-                    <View style={styles.emptyContainer}>
-                        <Text style={styles.emptyText}>No matches found for {activeTab}</Text>
-                    </View>
-                }
-            />
+            {loading ? (
+                <View style={styles.loadingContainer}>
+                    <ActivityIndicator size="large" color={theme.colors.primary} />
+                </View>
+            ) : (
+                <FlatList
+                    data={matches}
+                    keyExtractor={item => item._id}
+                    renderItem={renderMatchItem}
+                    contentContainerStyle={styles.listContent}
+                    ListEmptyComponent={
+                        <View style={styles.emptyContainer}>
+                            <Text style={styles.emptyText}>No matches found for {activeTab}</Text>
+                        </View>
+                    }
+                />
+            )}
         </SafeAreaView>
     );
 }
@@ -177,5 +161,10 @@ const styles = StyleSheet.create({
     },
     menuBtn: {
         marginRight: 16,
+    },
+    loadingContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center'
     }
 });
