@@ -8,8 +8,7 @@ import { useNavigation } from '@react-navigation/native';
 export default function ProfileScreen() {
     const { user, logout } = useContext(AuthContext);
     const navigation = useNavigation();
-
-    const handleLogout = async () => {
+    const handleLogout = () => {
         Alert.alert(
             "Logout",
             "Are you sure you want to logout?",
@@ -19,14 +18,18 @@ export default function ProfileScreen() {
                     text: "Logout",
                     style: "destructive",
                     onPress: async () => {
-                        await logout();
-                        // Navigation is handled by state change usually, or remain on profile as guest?
-                        // If guest, show login button
-                    }
-                }
+                        try {
+                            await logout();
+                            navigation.navigate('Login');
+                        } catch (err) {
+                            console.log("Logout error", err);
+                        }
+                    },
+                },
             ]
         );
     };
+
 
     const MENU_ITEMS = [
         { icon: 'person-outline', label: 'Edit Profile' },
@@ -108,7 +111,7 @@ export default function ProfileScreen() {
                 </View>
 
                 {/* Logout */}
-                <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout}>
+                <TouchableOpacity style={styles.logoutBtn} onPress={logout}>
                     <Ionicons name="log-out-outline" size={20} color="#EF4444" />
                     <Text style={styles.logoutText}>Logout</Text>
                 </TouchableOpacity>

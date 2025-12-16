@@ -77,7 +77,6 @@ export const AuthProvider = ({ children }) => {
     };
 
     const logout = async () => {
-        setLoading(true);
         try {
             await AsyncStorage.removeItem('token');
             await AsyncStorage.removeItem('user');
@@ -86,8 +85,6 @@ export const AuthProvider = ({ children }) => {
             delete api.defaults.headers.common['Authorization'];
         } catch (error) {
             console.log('Logout error', error);
-        } finally {
-            setLoading(false);
         }
     };
 
