@@ -5,7 +5,10 @@ import { theme } from '../../utils/theme';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, { useSharedValue, useAnimatedStyle, withRepeat, withTiming, withSequence } from 'react-native-reanimated';
 
-export default function MatchCard({ sport, status, league, homeTeam, awayTeam, score, timer, onPress }) {
+// ⚡ Bolt: Using React.memo to prevent unnecessary re-renders of the MatchCard component.
+// This is a performance optimization that avoids re-rendering the card when parent
+// component's state changes, but the props passed to MatchCard remain the same.
+const MatchCard = React.memo(function MatchCard({ sport, status, league, homeTeam, awayTeam, score, timer, onPress }) {
 
     // Determine Colors based on Sport
     const getSportColor = () => {
@@ -112,7 +115,9 @@ export default function MatchCard({ sport, status, league, homeTeam, awayTeam, s
             </LinearGradient>
         </TouchableOpacity>
     );
-}
+});
+
+export default MatchCard;
 
 const styles = StyleSheet.create({
     card: {
