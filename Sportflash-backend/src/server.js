@@ -18,26 +18,59 @@ const io = new Server(server, {
     }
 });
 
-// Fetch Cricket Live Scores (Cricbuzz)
+// Fetch Cricket Live Scores (CricketData.org)
 const fetchCricketScores = async () => {
-    console.log('Fetching cricket live scores...');
+    console.log('📊 Fetching cricket live scores...');
+    const apiKey = process.env.CRICKET_API_KEY || '32501aba-64c8-4611-9c82-fb0f8affd04b';
+
+    // Using CricketData.org API
     const options = {
         method: 'GET',
-        url: 'https://cricbuzz-cricket.p.rapidapi.com/matches/v1/live',
-        headers: {
-            'x-rapidapi-key': process.env.RAPIDAPI_KEY || '862dfe30b0msh36b3afa6b8fed96p1bc544jsnfa5dce3dce15',
-            'x-rapidapi-host': 'cricbuzz-cricket.p.rapidapi.com'
+        url: 'https://api.cricapi.com/v1/currentMatches',
+        params: {
+            apikey: apiKey,
+            offset: 0
         }
     };
 
     try {
         const response = await axios.request(options);
-        const cricketMatches = response.data;
+        const data = response.data;
 
-        if (cricketMatches) {
-            io.emit('cricket_update', cricketMatches);
-            console.log('Cricket scores updated:', cricketMatches.typeMatches?.length || 0, 'matches');
-            return cricketMatches;
+        if (data && data.status === 'success') {
+            const matches = data.data;
+
+            // Map to our unified format
+            const mappedMatches = matches.map(match => ({
+                id: match.id,
+                sport: 'cricket',
+                status: match.matchStarted ? (match.matchEnded ? 'finished' : 'live') : 'upcoming',
+                league: match.series_id, // or match.matchType
+                homeTeam: {
+                    name: match.teamInfo?.[0]?.name || match.teams[0],
+                    logo: match.teamInfo?.[0]?.img,
+                    score: match.score?.[0]?.r ? `${match.score[0].r}/${match.score[0].w}` : null
+                },
+                awayTeam: {
+                    name: match.teamInfo?.[1]?.name || match.teams[1],
+                    logo: match.teamInfo?.[1]?.img,
+                    score: match.score?.[1]?.r ? `${match.score[1].r}/${match.score[1].w}` : null
+                },
+                currentMinute: match.status, // Using status text for display
+                cricketData: {
+                    overs: match.score?.[0]?.o  // Add overs info
+                }
+            }));
+
+            io.emit('cricket_update', mappedMatches);
+            console.log('✅ Cricket scores updated:', mappedMatches.length, 'matches');
+            if (data.info) {
+                console.log('ℹ️  Hits Used:', data.info.hitsUsed, '/', data.info.hitsLimit);
+            }
+            return mappedMatches;
+        } else {
+            console.log('⚠️ Cricket API Error:', data.status);
+            return null;
         }
     } catch (error) {
         console.error('Error fetching cricket scores:', error.response?.data?.message || error.message);
@@ -147,8 +180,8 @@ const fetchAllLiveScores = async () => {
 // Fetch scores immediately on server start
 fetchAllLiveScores();
 
-// Fetch scores every 30 seconds
-setInterval(fetchAllLiveScores, 30000);
+// Fetch scores every 5 minutes (to save API credits)
+setInterval(fetchAllLiveScores, 300000);
 
 // Connect to Database
 const connectDB = require('./config/database');

@@ -9,6 +9,7 @@ import api from '../../services/api';
 import { AuthContext } from '../../context/AuthContext';
 import { useContext } from 'react';
 import { NotificationBell, NotificationPanel } from '../../components/notifications';
+import { useLiveScores } from '../../hooks/useSocket';
 
 import Sidebar, { SidebarContent } from '../../components/navigation/Sidebar';
 
@@ -55,9 +56,47 @@ export default function HomeScreen({ navigation }) {
         ? (contentWidth - padding - (gap * (numColumns - 1))) / numColumns
         : '100%';
 
+    // Get live scores from Socket.IO
+    const liveScores = useLiveScores();
+
     useEffect(() => {
         fetchMatches();
     }, []);
+
+    // Update matches when live cricket scores arrive
+    useEffect(() => {
+        if (liveScores.cricket && liveScores.cricket.length > 0) {
+            console.log('🔴 Live cricket scores received, updating UI...');
+
+            // Map live cricket scores to UI format
+            const liveCricketMatches = liveScores.cricket.map(match => ({
+                id: match.id,
+                sport: 'cricket',
+                status: match.status,
+                league: match.league,
+                homeTeam: {
+                    name: match.homeTeam.name,
+                    logo: match.homeTeam.logo,
+                    score: match.homeTeam.score
+                },
+                awayTeam: {
+                    name: match.awayTeam.name,
+                    logo: match.awayTeam.logo,
+                    score: match.awayTeam.score
+                },
+                score: match.homeTeam.score && match.awayTeam.score
+                    ? `${match.homeTeam.score} - ${match.awayTeam.score}`
+                    : null,
+                timer: match.cricketData?.overs ? `${match.cricketData.overs} Overs` : match.currentMinute || ''
+            }));
+
+            // Merge with existing matches (replace cricket, keep others)
+            setMatches(prevMatches => {
+                const nonCricket = prevMatches.filter(m => m.sport !== 'cricket');
+                return [...liveCricketMatches, ...nonCricket];
+            });
+        }
+    }, [liveScores.cricket]);
 
     const fetchMatches = async () => {
         try {
