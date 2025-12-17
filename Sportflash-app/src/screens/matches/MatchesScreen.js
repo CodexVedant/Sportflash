@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, FlatList } from 'react-native';
 import { theme } from '../../utils/theme';
 import MatchCard from '../../components/match/MatchCard';
@@ -8,8 +8,10 @@ import api from '../../services/api';
 import { SkeletonList, EmptyState, NetworkError } from '../../components/common';
 import { FilterPanel } from '../../components/filter';
 import { NotificationBell, NotificationPanel } from '../../components/notifications';
+import { AuthContext } from '../../context/AuthContext';
 
 export default function MatchesScreen() {
+    const { user } = useContext(AuthContext);
     const [activeTab, setActiveTab] = useState('Upcoming');
     const [sidebarVisible, setSidebarVisible] = useState(false);
     const [matches, setMatches] = useState([]);
@@ -113,10 +115,12 @@ export default function MatchesScreen() {
                     <TouchableOpacity onPress={() => setFilterVisible(true)} style={styles.iconBtn}>
                         <Ionicons name="options-outline" size={24} color={theme.colors.text} />
                     </TouchableOpacity>
-                    <NotificationBell
-                        count={unreadCount}
-                        onPress={() => setNotificationVisible(true)}
-                    />
+                    {user && (
+                        <NotificationBell
+                            count={unreadCount}
+                            onPress={() => setNotificationVisible(true)}
+                        />
+                    )}
                 </View>
             </View>
 

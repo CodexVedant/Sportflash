@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, ScrollView, ActivityIndicator } from 'react-native';
 import { theme } from '../../utils/theme';
 import { Ionicons } from '@expo/vector-icons';
@@ -6,8 +6,10 @@ import Sidebar from '../../components/navigation/Sidebar';
 import { StandingsTable } from '../../components/standings';
 import { NotificationBell, NotificationPanel } from '../../components/notifications';
 import { EmptyState } from '../../components/common';
+import { AuthContext } from '../../context/AuthContext';
 
 export default function StandingsScreen() {
+    const { user } = useContext(AuthContext);
     const [sidebarVisible, setSidebarVisible] = useState(false);
     const [notificationVisible, setNotificationVisible] = useState(false);
     const [selectedSport, setSelectedSport] = useState('cricket');
@@ -178,10 +180,12 @@ export default function StandingsScreen() {
                     </TouchableOpacity>
                     <Text style={styles.headerTitle}>Standings</Text>
                 </View>
-                <NotificationBell
-                    count={unreadCount}
-                    onPress={() => setNotificationVisible(true)}
-                />
+                {user && (
+                    <NotificationBell
+                        count={unreadCount}
+                        onPress={() => setNotificationVisible(true)}
+                    />
+                )}
             </View>
 
             {/* Sport Selector */}
