@@ -68,27 +68,29 @@ export default function HomeScreen({ navigation }) {
         if (liveScores.cricket && liveScores.cricket.length > 0) {
             console.log('🔴 Live cricket scores received, updating UI...');
 
-            // Map live cricket scores to UI format
-            const liveCricketMatches = liveScores.cricket.map(match => ({
-                id: match.id,
-                sport: 'cricket',
-                status: match.status,
-                league: match.league,
-                homeTeam: {
-                    name: match.homeTeam.name,
-                    logo: match.homeTeam.logo,
-                    score: match.homeTeam.score
-                },
-                awayTeam: {
-                    name: match.awayTeam.name,
-                    logo: match.awayTeam.logo,
-                    score: match.awayTeam.score
-                },
-                score: match.homeTeam.score && match.awayTeam.score
-                    ? `${match.homeTeam.score} - ${match.awayTeam.score}`
-                    : null,
-                timer: match.cricketData?.overs ? `${match.cricketData.overs} Overs` : match.currentMinute || ''
-            }));
+            // Map live cricket scores to UI format and filter only LIVE matches
+            const liveCricketMatches = liveScores.cricket
+                .filter(match => match.status === 'live') // Only show live matches
+                .map(match => ({
+                    id: match.id,
+                    sport: 'cricket',
+                    status: match.status,
+                    league: match.league,
+                    homeTeam: {
+                        name: match.homeTeam.name,
+                        logo: match.homeTeam.logo,
+                        score: match.homeTeam.score
+                    },
+                    awayTeam: {
+                        name: match.awayTeam.name,
+                        logo: match.awayTeam.logo,
+                        score: match.awayTeam.score
+                    },
+                    score: match.homeTeam.score && match.awayTeam.score
+                        ? `${match.homeTeam.score} - ${match.awayTeam.score}`
+                        : null,
+                    timer: match.cricketData?.overs ? `${match.cricketData.overs} Overs` : match.currentMinute || ''
+                }));
 
             // Merge with existing matches (replace cricket, keep others)
             setMatches(prevMatches => {
@@ -138,7 +140,10 @@ export default function HomeScreen({ navigation }) {
                 };
             });
 
-            setMatches(mappedMatches);
+            // Filter to show only LIVE matches
+            const liveMatches = mappedMatches.filter(match => match.status === 'live');
+
+            setMatches(liveMatches);
         } catch (error) {
             console.log('Error fetching matches:', error);
         } finally {

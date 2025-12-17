@@ -20,7 +20,7 @@ const io = new Server(server, {
 
 // Fetch Cricket Live Scores (CricketData.org)
 const fetchCricketScores = async () => {
-    console.log('📊 Fetching cricket live scores...');
+    console.log(' Fetching cricket live scores...');
     const apiKey = process.env.CRICKET_API_KEY || '32501aba-64c8-4611-9c82-fb0f8affd04b';
 
     // Using CricketData.org API
@@ -63,13 +63,13 @@ const fetchCricketScores = async () => {
             }));
 
             io.emit('cricket_update', mappedMatches);
-            console.log('✅ Cricket scores updated:', mappedMatches.length, 'matches');
+            console.log(' Cricket scores updated:', mappedMatches.length, 'matches');
             if (data.info) {
-                console.log('ℹ️  Hits Used:', data.info.hitsUsed, '/', data.info.hitsLimit);
+                console.log('Hits Used:', data.info.hitsUsed, '/', data.info.hitsLimit);
             }
             return mappedMatches;
         } else {
-            console.log('⚠️ Cricket API Error:', data.status);
+            console.log(' Cricket API Error:', data.status);
             return null;
         }
     } catch (error) {
@@ -181,7 +181,7 @@ const fetchAllLiveScores = async () => {
 fetchAllLiveScores();
 
 // Fetch scores every 5 minutes (to save API credits)
-setInterval(fetchAllLiveScores, 300000);
+setInterval(fetchAllLiveScores, 500000);
 
 // Connect to Database
 const connectDB = require('./config/database');
