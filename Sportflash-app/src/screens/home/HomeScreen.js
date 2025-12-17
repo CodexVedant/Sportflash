@@ -8,16 +8,38 @@ import SearchModal from '../../components/common/SearchModal';
 import api from '../../services/api';
 import { AuthContext } from '../../context/AuthContext';
 import { useContext } from 'react';
+import { NotificationBell, NotificationPanel } from '../../components/notifications';
 
 import Sidebar, { SidebarContent } from '../../components/navigation/Sidebar';
 
 export default function HomeScreen({ navigation }) {
     const [searchVisible, setSearchVisible] = useState(false);
     const [sidebarVisible, setSidebarVisible] = useState(false);
+    const [notificationVisible, setNotificationVisible] = useState(false);
     const [matches, setMatches] = useState([]);
     const [loading, setLoading] = useState(true);
     const { width } = useWindowDimensions();
     const { user } = useContext(AuthContext);
+
+    // Mock notifications
+    const [notifications] = useState([
+        {
+            id: 1,
+            type: 'match_start',
+            title: 'Match Starting Soon',
+            message: 'India vs Australia starts in 15 minutes',
+            timestamp: new Date(),
+            read: false,
+        },
+        {
+            id: 2,
+            type: 'goal',
+            title: 'GOAL!',
+            message: 'Manchester United scored! 1-0',
+            timestamp: new Date(Date.now() - 300000),
+            read: false,
+        },
+    ]);
 
     // Responsive Logic
     const isDesktop = width > 768;
@@ -89,6 +111,15 @@ export default function HomeScreen({ navigation }) {
         <SafeAreaView style={styles.container}>
             <SearchModal visible={searchVisible} onClose={() => setSearchVisible(false)} />
             <Sidebar visible={sidebarVisible} onClose={() => setSidebarVisible(false)} />
+            <NotificationPanel
+                visible={notificationVisible}
+                onClose={() => setNotificationVisible(false)}
+                notifications={notifications}
+                onNotificationPress={(notification) => {
+                    console.log('Notification pressed:', notification);
+                    setNotificationVisible(false);
+                }}
+            />
 
             {/* Header */}
             <View style={[styles.header, isDesktop && styles.headerDesktop]}>
@@ -107,7 +138,10 @@ export default function HomeScreen({ navigation }) {
                     </TouchableOpacity>
 
                     {user ? (
-                        <Ionicons name="notifications-outline" size={24} color={theme.colors.text} />
+                        <NotificationBell
+                            count={notifications.filter(n => !n.read).length}
+                            onPress={() => setNotificationVisible(true)}
+                        />
                     ) : (
                         <TouchableOpacity
                             style={styles.loginBtn}

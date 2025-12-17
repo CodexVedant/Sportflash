@@ -18,35 +18,137 @@ const io = new Server(server, {
     }
 });
 
-// Fetch and broadcast live scores
-const fetchLiveScores = async () => {
-    console.log('Attempting to fetch live scores...');
+// Fetch Cricket Live Scores (Cricbuzz)
+const fetchCricketScores = async () => {
+    console.log('Fetching cricket live scores...');
     const options = {
         method: 'GET',
-        url: 'https://cricket-live-score10.p.rapidapi.com/live',
+        url: 'https://cricbuzz-cricket.p.rapidapi.com/matches/v1/live',
         headers: {
-            'x-rapidapi-key': process.env.RAPIDAPI_KEY || 'YOUR_RAPIDAPI_KEY',
-            'x-rapidapi-host': 'cricket-live-score10.p.rapidapi.com'
+            'x-rapidapi-key': process.env.RAPIDAPI_KEY || '862dfe30b0msh36b3afa6b8fed96p1bc544jsnfa5dce3dce15',
+            'x-rapidapi-host': 'cricbuzz-cricket.p.rapidapi.com'
         }
     };
 
     try {
         const response = await axios.request(options);
-        const matches = response.data;
+        const cricketMatches = response.data;
 
-        if (matches && matches.length > 0) {
-            io.emit('score_update', matches);
-            console.log('Live scores updated and broadcasted.');
-        } else {
-            console.log('No live matches found or data is empty.');
+        if (cricketMatches) {
+            io.emit('cricket_update', cricketMatches);
+            console.log('Cricket scores updated:', cricketMatches.typeMatches?.length || 0, 'matches');
+            return cricketMatches;
         }
     } catch (error) {
-        console.error('Error fetching live scores:', error.response ? error.response.data : error.message);
+        console.error('Error fetching cricket scores:', error.response?.data?.message || error.message);
+        return null;
     }
 };
 
-// Fetch scores every 30 second
-setInterval(fetchLiveScores, 30000);
+// Fetch Football Live Scores (API-Football)
+const fetchFootballScores = async () => {
+    console.log('Fetching football live scores...');
+
+    // Get today's date for live fixtures
+    const today = new Date().toISOString().split('T')[0];
+
+    const options = {
+        method: 'GET',
+        url: 'https://api-football-v1.p.rapidapi.com/v3/fixtures',
+        params: {
+            live: 'all', // Get all live matches
+            // Alternatively, you can use: date: today, status: 'LIVE'
+        },
+        headers: {
+            'x-rapidapi-key': process.env.RAPIDAPI_KEY || '862dfe30b0msh36b3afa6b8fed96p1bc544jsnfa5dce3dce15',
+            'x-rapidapi-host': 'api-football-v1.p.rapidapi.com'
+        }
+    };
+
+    try {
+        const response = await axios.request(options);
+        const footballMatches = response.data;
+
+        if (footballMatches?.response) {
+            io.emit('football_update', footballMatches);
+            console.log('Football scores updated:', footballMatches.response.length, 'matches');
+            return footballMatches;
+        }
+    } catch (error) {
+        console.error('Error fetching football scores:', error.response?.data?.message || error.message);
+        return null;
+    }
+};
+
+// Fetch Basketball Live Scores (API-NBA)
+const fetchBasketballScores = async () => {
+    console.log('   Fetching basketball live scores...');
+
+    // Get today's date
+    const today = new Date().toISOString().split('T')[0];
+
+    const options = {
+        method: 'GET',
+        url: 'https://api-nba-v1.p.rapidapi.com/games',
+        params: {
+            date: today,
+            // You can also use: live: 'all' for only live games
+        },
+        headers: {
+            'x-rapidapi-key': process.env.RAPIDAPI_KEY || '862dfe30b0msh36b3afa6b8fed96p1bc544jsnfa5dce3dce15',
+            'x-rapidapi-host': 'api-nba-v1.p.rapidapi.com'
+        }
+    };
+
+    try {
+        const response = await axios.request(options);
+        const basketballMatches = response.data;
+
+        if (basketballMatches?.response) {
+            io.emit('basketball_update', basketballMatches);
+            console.log('Basketball scores updated:', basketballMatches.response.length, 'games');
+            return basketballMatches;
+        }
+    } catch (error) {
+        console.error('Error fetching basketball scores:', error.response?.data?.message || error.message);
+        return null;
+    }
+};
+
+// Fetch all live scores
+const fetchAllLiveScores = async () => {
+    console.log('\n ========== Fetching All Live Scores ==========');
+
+    try {
+        // Fetch all sports in parallel
+        const [cricket, football, basketball] = await Promise.allSettled([
+            fetchCricketScores(),
+            fetchFootballScores(),
+            fetchBasketballScores()
+        ]);
+
+        // Combine all scores
+        const allScores = {
+            cricket: cricket.status === 'fulfilled' ? cricket.value : null,
+            football: football.status === 'fulfilled' ? football.value : null,
+            basketball: basketball.status === 'fulfilled' ? basketball.value : null,
+            timestamp: new Date().toISOString()
+        };
+
+        // Broadcast combined scores
+        io.emit('all_scores_update', allScores);
+        console.log('All scores broadcasted successfully\n');
+
+    } catch (error) {
+        console.error('Error in fetchAllLiveScores:', error.message);
+    }
+};
+
+// Fetch scores immediately on server start
+fetchAllLiveScores();
+
+// Fetch scores every 30 seconds
+setInterval(fetchAllLiveScores, 30000);
 
 // Connect to Database
 const connectDB = require('./config/database');

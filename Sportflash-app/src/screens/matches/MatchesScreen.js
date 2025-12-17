@@ -1,39 +1,82 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, FlatList, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, FlatList } from 'react-native';
 import { theme } from '../../utils/theme';
 import MatchCard from '../../components/match/MatchCard';
 import Sidebar from '../../components/navigation/Sidebar';
 import { Ionicons } from '@expo/vector-icons';
 import api from '../../services/api';
+import { SkeletonList, EmptyState, NetworkError } from '../../components/common';
+import { FilterPanel } from '../../components/filter';
+import { NotificationBell, NotificationPanel } from '../../components/notifications';
 
 export default function MatchesScreen() {
     const [activeTab, setActiveTab] = useState('Upcoming');
     const [sidebarVisible, setSidebarVisible] = useState(false);
     const [matches, setMatches] = useState([]);
     const [loading, setLoading] = useState(false);
+    const [error, setError] = useState(null);
+    const [filterVisible, setFilterVisible] = useState(false);
+    const [notificationVisible, setNotificationVisible] = useState(false);
+    const [filters, setFilters] = useState({
+        sport: 'all',
+        status: 'all',
+        league: 'all',
+        dateRange: { start: null, end: null },
+    });
+
+    // Mock notifications
+    const [notifications] = useState([
+        {
+            id: 1,
+            type: 'match_start',
+            title: 'Match Starting Soon',
+            message: 'India vs Australia starts in 15 minutes',
+            timestamp: new Date(),
+            read: false,
+        },
+        {
+            id: 2,
+            type: 'goal',
+            title: 'GOAL!',
+            message: 'Manchester United scored! 1-0',
+            timestamp: new Date(Date.now() - 300000),
+            read: false,
+        },
+    ]);
 
     const TABS = ['Live', 'Upcoming', 'Results'];
 
     useEffect(() => {
         fetchMatches();
-    }, [activeTab]);
+    }, [activeTab, filters]);
 
     const fetchMatches = async () => {
         setLoading(true);
+        setError(null);
+
         try {
             let endpoint = '/matches/upcoming';
             if (activeTab === 'Live') endpoint = '/matches/live';
             else if (activeTab === 'Upcoming') endpoint = '/matches/upcoming';
             else if (activeTab === 'Results') endpoint = '/matches?status=finished';
 
-            const response = await api.get(endpoint);
+            const response = await api.get(endpoint, { params: filters });
             setMatches(response.data.data || []);
-        } catch (error) {
-            console.log('Error fetching matches:', error);
+        } catch (err) {
+            console.log('Error fetching matches:', err);
+            if (!err.response) {
+                setError({ type: 'network' });
+            } else {
+                setError({ type: 'api', message: err.message });
+            }
             setMatches([]);
         } finally {
             setLoading(false);
         }
+    };
+
+    const handleApplyFilters = (newFilters) => {
+        setFilters(newFilters);
     };
 
     const renderMatchItem = ({ item }) => (
@@ -53,6 +96,8 @@ export default function MatchesScreen() {
         </View>
     );
 
+    const unreadCount = notifications.filter(n => !n.read).length;
+
     return (
         <SafeAreaView style={styles.container}>
             <Sidebar visible={sidebarVisible} onClose={() => setSidebarVisible(false)} />
@@ -63,6 +108,15 @@ export default function MatchesScreen() {
                         <Ionicons name="menu" size={28} color={theme.colors.text} />
                     </TouchableOpacity>
                     <Text style={styles.headerTitle}>Matches</Text>
+                </View>
+                <View style={styles.headerActions}>
+                    <TouchableOpacity onPress={() => setFilterVisible(true)} style={styles.iconBtn}>
+                        <Ionicons name="options-outline" size={24} color={theme.colors.text} />
+                    </TouchableOpacity>
+                    <NotificationBell
+                        count={unreadCount}
+                        onPress={() => setNotificationVisible(true)}
+                    />
                 </View>
             </View>
 
@@ -83,9 +137,9 @@ export default function MatchesScreen() {
 
             {/* Content */}
             {loading ? (
-                <View style={styles.loadingContainer}>
-                    <ActivityIndicator size="large" color={theme.colors.primary} />
-                </View>
+                <SkeletonList type="match" count={5} />
+            ) : error?.type === 'network' ? (
+                <NetworkError onRetry={fetchMatches} />
             ) : (
                 <FlatList
                     data={matches}
@@ -93,12 +147,38 @@ export default function MatchesScreen() {
                     renderItem={renderMatchItem}
                     contentContainerStyle={styles.listContent}
                     ListEmptyComponent={
-                        <View style={styles.emptyContainer}>
-                            <Text style={styles.emptyText}>No matches found for {activeTab}</Text>
-                        </View>
+                        <EmptyState
+                            variant="noMatches"
+                            actionLabel="Clear Filters"
+                            onAction={() => setFilters({
+                                sport: 'all',
+                                status: 'all',
+                                league: 'all',
+                                dateRange: { start: null, end: null },
+                            })}
+                        />
                     }
                 />
             )}
+
+            {/* Filter Panel */}
+            <FilterPanel
+                visible={filterVisible}
+                onClose={() => setFilterVisible(false)}
+                onApply={handleApplyFilters}
+                initialFilters={filters}
+            />
+
+            {/* Notification Panel */}
+            <NotificationPanel
+                visible={notificationVisible}
+                onClose={() => setNotificationVisible(false)}
+                notifications={notifications}
+                onNotificationPress={(notification) => {
+                    console.log('Notification pressed:', notification);
+                    setNotificationVisible(false);
+                }}
+            />
         </SafeAreaView>
     );
 }
@@ -109,15 +189,33 @@ const styles = StyleSheet.create({
         backgroundColor: theme.colors.background,
     },
     header: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
         paddingHorizontal: theme.spacing.lg,
         paddingVertical: theme.spacing.md,
         borderBottomWidth: 1,
         borderBottomColor: 'rgba(255,255,255,0.05)',
     },
+    headerRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
     headerTitle: {
         fontSize: theme.sizes.xl,
         fontFamily: theme.fonts.display,
         color: theme.colors.text,
+    },
+    headerActions: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 8,
+    },
+    iconBtn: {
+        padding: 8,
+    },
+    menuBtn: {
+        marginRight: 16,
     },
     tabsContainer: {
         flexDirection: 'row',
@@ -147,24 +245,4 @@ const styles = StyleSheet.create({
         padding: theme.spacing.lg,
         paddingBottom: 100,
     },
-    emptyContainer: {
-        alignItems: 'center',
-        marginTop: 50,
-    },
-    emptyText: {
-        color: theme.colors.textMuted,
-        fontSize: 16,
-    },
-    headerRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-    },
-    menuBtn: {
-        marginRight: 16,
-    },
-    loadingContainer: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center'
-    }
 });

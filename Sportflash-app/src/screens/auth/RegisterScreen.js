@@ -4,6 +4,7 @@ import { AuthContext } from '../../context/AuthContext';
 import { theme } from '../../utils/theme';
 import Input from '../../components/common/Input';
 import Button from '../../components/common/Button';
+import { ErrorMessage } from '../../components/common';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 
@@ -12,6 +13,7 @@ export default function RegisterScreen({ navigation }) {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
+    const [error, setError] = useState(null);
     const { register } = useContext(AuthContext);
     const { width } = useWindowDimensions();
 
@@ -20,8 +22,27 @@ export default function RegisterScreen({ navigation }) {
     const cardWidth = isDesktop ? 450 : width * 0.9;
 
     const handleRegister = async () => {
+        setError(null); // Clear previous errors
+
+        // Client-side validation
         if (!name || !email || !password) {
-            Alert.alert('Error', 'Please fill in all fields');
+            setError('Please fill in all fields');
+            return;
+        }
+
+        if (name.length < 2) {
+            setError('Name must be at least 2 characters');
+            return;
+        }
+
+        if (password.length < 6) {
+            setError('Password must be at least 6 characters');
+            return;
+        }
+
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            setError('Please enter a valid email address');
             return;
         }
 
@@ -30,7 +51,7 @@ export default function RegisterScreen({ navigation }) {
         setLoading(false);
 
         if (!result.success) {
-            Alert.alert('Registration Failed', result.message);
+            setError(result.message || 'Registration failed. Please try again.');
         } else {
             navigation.goBack();
         }
@@ -70,6 +91,14 @@ export default function RegisterScreen({ navigation }) {
                             </View>
 
                             <View style={styles.form}>
+                                {error && (
+                                    <ErrorMessage
+                                        message={error}
+                                        type="error"
+                                        onDismiss={() => setError(null)}
+                                    />
+                                )}
+
                                 <Input
                                     label="Full Name"
                                     placeholder="John Doe"

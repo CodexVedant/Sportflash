@@ -1,0 +1,320 @@
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, ScrollView, ActivityIndicator } from 'react-native';
+import { theme } from '../../utils/theme';
+import { Ionicons } from '@expo/vector-icons';
+import Sidebar from '../../components/navigation/Sidebar';
+import { StandingsTable } from '../../components/standings';
+import { NotificationBell, NotificationPanel } from '../../components/notifications';
+import { EmptyState } from '../../components/common';
+
+export default function StandingsScreen() {
+    const [sidebarVisible, setSidebarVisible] = useState(false);
+    const [notificationVisible, setNotificationVisible] = useState(false);
+    const [selectedSport, setSelectedSport] = useState('cricket');
+    const [loading, setLoading] = useState(false);
+
+    // Mock notifications
+    const [notifications] = useState([
+        {
+            id: 1,
+            type: 'team_update',
+            title: 'Team Update',
+            message: 'Mumbai Indians moved to 2nd position',
+            timestamp: new Date(),
+            read: false,
+        },
+    ]);
+
+    // Mock standings data
+    const standingsData = {
+        cricket: {
+            league: 'IPL 2024',
+            teams: [
+                {
+                    id: 1,
+                    position: 1,
+                    name: 'Mumbai Indians',
+                    logo: null,
+                    played: 14,
+                    won: 10,
+                    lost: 4,
+                    nrr: 1.25,
+                    points: 20,
+                },
+                {
+                    id: 2,
+                    position: 2,
+                    name: 'Chennai Super Kings',
+                    logo: null,
+                    played: 14,
+                    won: 9,
+                    lost: 5,
+                    nrr: 0.85,
+                    points: 18,
+                },
+                {
+                    id: 3,
+                    position: 3,
+                    name: 'Royal Challengers',
+                    logo: null,
+                    played: 14,
+                    won: 8,
+                    lost: 6,
+                    nrr: 0.45,
+                    points: 16,
+                },
+                {
+                    id: 4,
+                    position: 4,
+                    name: 'Delhi Capitals',
+                    logo: null,
+                    played: 14,
+                    won: 7,
+                    lost: 7,
+                    nrr: -0.15,
+                    points: 14,
+                },
+            ],
+        },
+        football: {
+            league: 'Premier League',
+            teams: [
+                {
+                    id: 1,
+                    position: 1,
+                    name: 'Manchester City',
+                    logo: null,
+                    played: 20,
+                    won: 15,
+                    drawn: 3,
+                    lost: 2,
+                    gd: 25,
+                    points: 48,
+                },
+                {
+                    id: 2,
+                    position: 2,
+                    name: 'Arsenal',
+                    logo: null,
+                    played: 20,
+                    won: 14,
+                    drawn: 4,
+                    lost: 2,
+                    gd: 22,
+                    points: 46,
+                },
+                {
+                    id: 3,
+                    position: 3,
+                    name: 'Liverpool',
+                    logo: null,
+                    played: 20,
+                    won: 13,
+                    drawn: 5,
+                    lost: 2,
+                    gd: 20,
+                    points: 44,
+                },
+            ],
+        },
+        basketball: {
+            league: 'NBA Western Conference',
+            teams: [
+                {
+                    id: 1,
+                    position: 1,
+                    name: 'LA Lakers',
+                    logo: null,
+                    played: 50,
+                    won: 35,
+                    lost: 15,
+                    winPct: 0.700,
+                    streak: 'W5',
+                },
+                {
+                    id: 2,
+                    position: 2,
+                    name: 'Golden State Warriors',
+                    logo: null,
+                    played: 50,
+                    won: 33,
+                    lost: 17,
+                    winPct: 0.660,
+                    streak: 'W3',
+                },
+                {
+                    id: 3,
+                    position: 3,
+                    name: 'Phoenix Suns',
+                    logo: null,
+                    played: 50,
+                    won: 30,
+                    lost: 20,
+                    winPct: 0.600,
+                    streak: 'L2',
+                },
+            ],
+        },
+    };
+
+    const sports = [
+        { id: 'cricket', name: 'Cricket', icon: 'baseball-outline' },
+        { id: 'football', name: 'Football', icon: 'football-outline' },
+        { id: 'basketball', name: 'Basketball', icon: 'basketball-outline' },
+    ];
+
+    const currentStandings = standingsData[selectedSport];
+    const unreadCount = notifications.filter(n => !n.read).length;
+
+    return (
+        <SafeAreaView style={styles.container}>
+            <Sidebar visible={sidebarVisible} onClose={() => setSidebarVisible(false)} />
+
+            {/* Header */}
+            <View style={styles.header}>
+                <View style={styles.headerRow}>
+                    <TouchableOpacity onPress={() => setSidebarVisible(true)} style={styles.menuBtn}>
+                        <Ionicons name="menu" size={28} color={theme.colors.text} />
+                    </TouchableOpacity>
+                    <Text style={styles.headerTitle}>Standings</Text>
+                </View>
+                <NotificationBell
+                    count={unreadCount}
+                    onPress={() => setNotificationVisible(true)}
+                />
+            </View>
+
+            {/* Sport Selector */}
+            <View style={styles.sportSelector}>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12 }}>
+                    {sports.map(sport => (
+                        <TouchableOpacity
+                            key={sport.id}
+                            style={[
+                                styles.sportChip,
+                                selectedSport === sport.id && styles.sportChipActive
+                            ]}
+                            onPress={() => setSelectedSport(sport.id)}
+                        >
+                            <Ionicons
+                                name={sport.icon}
+                                size={18}
+                                color={selectedSport === sport.id ? '#fff' : theme.colors.textMuted}
+                            />
+                            <Text style={[
+                                styles.sportChipText,
+                                selectedSport === sport.id && styles.sportChipTextActive
+                            ]}>
+                                {sport.name}
+                            </Text>
+                        </TouchableOpacity>
+                    ))}
+                </ScrollView>
+            </View>
+
+            {/* Standings Table */}
+            <ScrollView style={styles.content} contentContainerStyle={styles.contentContainer}>
+                {loading ? (
+                    <View style={styles.loadingContainer}>
+                        <ActivityIndicator size="large" color={theme.colors.primary} />
+                    </View>
+                ) : currentStandings ? (
+                    <StandingsTable
+                        teams={currentStandings.teams}
+                        sport={selectedSport}
+                        league={currentStandings.league}
+                        onTeamPress={(team) => {
+                            console.log('Team pressed:', team);
+                        }}
+                    />
+                ) : (
+                    <EmptyState
+                        icon="trophy-outline"
+                        title="No Standings Available"
+                        subtitle="Standings for this sport will be available soon"
+                    />
+                )}
+            </ScrollView>
+
+            {/* Notification Panel */}
+            <NotificationPanel
+                visible={notificationVisible}
+                onClose={() => setNotificationVisible(false)}
+                notifications={notifications}
+                onNotificationPress={(notification) => {
+                    console.log('Notification pressed:', notification);
+                    setNotificationVisible(false);
+                }}
+            />
+        </SafeAreaView>
+    );
+}
+
+const styles = StyleSheet.create({
+    container: {
+        flex: 1,
+        backgroundColor: theme.colors.background,
+    },
+    header: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingHorizontal: theme.spacing.lg,
+        paddingVertical: theme.spacing.md,
+        borderBottomWidth: 1,
+        borderBottomColor: 'rgba(255,255,255,0.05)',
+    },
+    headerRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    headerTitle: {
+        fontSize: theme.sizes.xl,
+        fontFamily: theme.fonts.display,
+        color: theme.colors.text,
+    },
+    menuBtn: {
+        marginRight: 16,
+    },
+    sportSelector: {
+        padding: theme.spacing.md,
+        borderBottomWidth: 1,
+        borderBottomColor: 'rgba(255,255,255,0.05)',
+    },
+    sportChip: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingHorizontal: 16,
+        paddingVertical: 10,
+        borderRadius: 20,
+        backgroundColor: 'rgba(255,255,255,0.05)',
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.1)',
+        gap: 8,
+    },
+    sportChipActive: {
+        backgroundColor: theme.colors.primary,
+        borderColor: theme.colors.primary,
+    },
+    sportChipText: {
+        fontSize: 14,
+        fontFamily: theme.fonts.medium,
+        color: theme.colors.textMuted,
+    },
+    sportChipTextActive: {
+        color: '#fff',
+    },
+    content: {
+        flex: 1,
+    },
+    contentContainer: {
+        padding: theme.spacing.lg,
+        paddingBottom: 100,
+    },
+    loadingContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        minHeight: 300,
+    },
+});

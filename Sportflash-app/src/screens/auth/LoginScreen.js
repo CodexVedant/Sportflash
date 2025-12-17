@@ -4,6 +4,7 @@ import { AuthContext } from '../../context/AuthContext';
 import { theme } from '../../utils/theme';
 import Input from '../../components/common/Input';
 import Button from '../../components/common/Button';
+import { ErrorMessage } from '../../components/common';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 
@@ -11,6 +12,7 @@ export default function LoginScreen({ navigation, route }) {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
+    const [error, setError] = useState(null);
     const { login } = useContext(AuthContext);
     const { width, height } = useWindowDimensions();
 
@@ -19,8 +21,17 @@ export default function LoginScreen({ navigation, route }) {
     const cardWidth = isDesktop ? 450 : width * 0.9;
 
     const handleLogin = async () => {
+        setError(null); // Clear previous errors
+
+        // Client-side validation
         if (!email || !password) {
-            Alert.alert('Error', 'Please fill in all fields');
+            setError('Please fill in all fields');
+            return;
+        }
+
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            setError('Please enter a valid email address');
             return;
         }
 
@@ -29,7 +40,7 @@ export default function LoginScreen({ navigation, route }) {
         setLoading(false);
 
         if (!result.success) {
-            Alert.alert('Login Failed', result.message);
+            setError(result.message || 'Login failed. Please check your credentials.');
         } else {
             navigation.goBack();
         }
@@ -69,6 +80,14 @@ export default function LoginScreen({ navigation, route }) {
                             </View>
 
                             <View style={styles.form}>
+                                {error && (
+                                    <ErrorMessage
+                                        message={error}
+                                        type="error"
+                                        onDismiss={() => setError(null)}
+                                    />
+                                )}
+
                                 <Input
                                     label="Email"
                                     placeholder="Enter your email"
