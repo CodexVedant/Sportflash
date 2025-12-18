@@ -138,7 +138,9 @@ export default function MatchDetailScreen({ navigation, route }) {
                         </View>
                         {['Virat Kohli', 'Rohit Sharma', 'Shubman Gill'].map((p, i) => (
                             <View key={i} style={styles.statRow}>
-                                <Text style={styles.playerName}>{p}</Text>
+                                <TouchableOpacity onPress={() => navigation.navigate('PlayerProfile', { player: { name: p, team: initialMatch.homeTeam.name } })}>
+                                    <Text style={styles.playerName}>{p}</Text>
+                                </TouchableOpacity>
                                 <Text style={styles.statValue}>{45 + i * 12} (32)</Text>
                             </View>
                         ))}

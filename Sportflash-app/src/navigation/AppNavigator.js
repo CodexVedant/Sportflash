@@ -15,6 +15,7 @@ import SeriesScreen from '../screens/series/SeriesScreen';
 import FollowingScreen from '../screens/following/FollowingScreen';
 import BookmarksScreen from '../screens/bookmarks/BookmarksScreen';
 import SettingsScreen from '../screens/settings/SettingsScreen';
+import PlayerProfileScreen from '../screens/player/PlayerProfileScreen';
 
 import { AuthContext } from '../context/AuthContext';
 import { theme } from '../utils/theme';
@@ -51,6 +52,7 @@ export default function AppNavigator() {
                 <Stack.Screen name="Following" component={FollowingScreen} />
                 <Stack.Screen name="Bookmarks" component={BookmarksScreen} />
                 <Stack.Screen name="Settings" component={SettingsScreen} />
+                <Stack.Screen name="PlayerProfile" component={PlayerProfileScreen} />
             </Stack.Navigator>
         </NavigationContainer>
     );
