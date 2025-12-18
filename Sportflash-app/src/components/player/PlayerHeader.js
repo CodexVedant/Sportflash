@@ -1,19 +1,10 @@
 import React from 'react';
-import { View, Text, StyleSheet, Image, TouchableOpacity, Share } from 'react-native';
+import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { theme } from '../../utils/theme';
 
 export default function PlayerHeader({ player, onFollow }) {
-    const handleShare = async () => {
-        try {
-            await Share.share({
-                message: `Check out ${player.name} on Sportflash!`,
-            });
-        } catch (error) {
-            console.log(error.message);
-        }
-    };
 
     return (
         <View style={styles.container}>
@@ -22,16 +13,9 @@ export default function PlayerHeader({ player, onFollow }) {
                 style={styles.gradient}
             />
 
-            {/* Top Bar (Share/Menu) */}
-            <View style={styles.topBar}>
-                <TouchableOpacity style={styles.iconButton} onPress={handleShare}>
-                    <Ionicons name="share-outline" size={22} color={theme.colors.text} />
-                </TouchableOpacity>
-            </View>
-
             {/* Profile Content */}
             <View style={styles.content}>
-                <View style={styles.imageContainer}>
+                <View style={[styles.imageContainer, { marginTop: 40 }]}>
                     {player.image ? (
                         <Image source={{ uri: player.image }} style={styles.image} />
                     ) : (
@@ -70,17 +54,10 @@ export default function PlayerHeader({ player, onFollow }) {
                         </Text>
                     </TouchableOpacity>
 
-                    <View style={styles.socialLinks}>
-                        <TouchableOpacity style={styles.socialButton}>
-                            <Ionicons name="logo-instagram" size={20} color={theme.colors.textMuted} />
-                        </TouchableOpacity>
-                        <TouchableOpacity style={styles.socialButton}>
-                            <Ionicons name="logo-twitter" size={20} color={theme.colors.textMuted} />
-                        </TouchableOpacity>
-                    </View>
                 </View>
             </View>
         </View>
+
     );
 }
 
@@ -95,21 +72,6 @@ const styles = StyleSheet.create({
         right: 0,
         top: 0,
         height: 200,
-    },
-    topBar: {
-        width: '100%',
-        flexDirection: 'row',
-        justifyContent: 'flex-end',
-        paddingHorizontal: theme.spacing.lg,
-        marginBottom: theme.spacing.md,
-    },
-    iconButton: {
-        width: 40,
-        height: 40,
-        borderRadius: 20,
-        backgroundColor: 'rgba(255,255,255,0.05)',
-        justifyContent: 'center',
-        alignItems: 'center',
     },
     content: {
         alignItems: 'center',
@@ -204,19 +166,5 @@ const styles = StyleSheet.create({
         color: '#fff',
         fontWeight: '600',
         fontSize: 16,
-    },
-    socialLinks: {
-        flexDirection: 'row',
-        gap: 12,
-    },
-    socialButton: {
-        width: 44,
-        height: 44,
-        borderRadius: 22,
-        backgroundColor: 'rgba(255,255,255,0.05)',
-        justifyContent: 'center',
-        alignItems: 'center',
-        borderWidth: 1,
-        borderColor: 'rgba(255,255,255,0.1)',
     },
 });

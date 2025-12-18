@@ -68,9 +68,7 @@ Based on FEATURE_CHECKLIST.md analysis, here are the frontend features that shou
 - [ ] Career stats section
 - [ ] Recent performance
 - [ ] Achievement badges
-- [ ] Social media links (placeholders)
 - [ ] Follow button (UI only)
-- [ ] Share button
 
 **Location**: New view accessible from match details
 
