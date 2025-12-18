@@ -1,61 +1,75 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, FlatList, Dimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { theme } from '../../utils/theme';
 import TeamRow from './TeamRow';
 import PositionBadge from './PositionBadge';
 
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+
 export default function StandingsTable({
     teams = [],
     sport = 'cricket',
     league = 'IPL',
+    followedTeams = [],
     onTeamPress
 }) {
     const [sortBy, setSortBy] = useState('position');
     const [sortOrder, setSortOrder] = useState('asc');
 
-    // Define columns based on sport
+    // Define columns based on sport with responsive widths
     const getColumns = () => {
+        const isMobile = SCREEN_WIDTH < 768;
+        const teamWidth = isMobile ? 140 : 180;
+        const smallColWidth = isMobile ? 35 : 40;
+        const mediumColWidth = isMobile ? 50 : 60;
+        const largeColWidth = isMobile ? 75 : 90;
+
         switch (sport) {
             case 'cricket':
                 return [
-                    { key: 'position', label: 'Pos', width: 50, sortable: true },
-                    { key: 'team', label: 'Team', width: 180, sortable: false },
-                    { key: 'played', label: 'P', width: 50, sortable: true },
-                    { key: 'won', label: 'W', width: 50, sortable: true },
-                    { key: 'lost', label: 'L', width: 50, sortable: true },
-                    { key: 'nrr', label: 'NRR', width: 70, sortable: true },
-                    { key: 'points', label: 'Pts', width: 60, sortable: true },
+                    { key: 'position', label: 'Pos', width: 45, sortable: true },
+                    { key: 'team', label: 'Team', width: teamWidth, sortable: false },
+                    { key: 'played', label: 'P', width: smallColWidth, sortable: true },
+                    { key: 'won', label: 'W', width: smallColWidth, sortable: true },
+                    { key: 'lost', label: 'L', width: smallColWidth, sortable: true },
+                    { key: 'for', label: 'For', width: largeColWidth, sortable: false },
+                    { key: 'against', label: 'Ag', width: largeColWidth, sortable: false },
+                    { key: 'nrr', label: 'NRR', width: mediumColWidth, sortable: true },
+                    { key: 'points', label: 'Pts', width: 45, sortable: true },
                 ];
             case 'football':
                 return [
-                    { key: 'position', label: 'Pos', width: 50, sortable: true },
-                    { key: 'team', label: 'Team', width: 180, sortable: false },
-                    { key: 'played', label: 'P', width: 50, sortable: true },
-                    { key: 'won', label: 'W', width: 50, sortable: true },
-                    { key: 'drawn', label: 'D', width: 50, sortable: true },
-                    { key: 'lost', label: 'L', width: 50, sortable: true },
-                    { key: 'gd', label: 'GD', width: 60, sortable: true },
-                    { key: 'points', label: 'Pts', width: 60, sortable: true },
+                    { key: 'position', label: 'Pos', width: 45, sortable: true },
+                    { key: 'team', label: 'Team', width: teamWidth, sortable: false },
+                    { key: 'played', label: 'P', width: smallColWidth, sortable: true },
+                    { key: 'won', label: 'W', width: smallColWidth, sortable: true },
+                    { key: 'drawn', label: 'D', width: smallColWidth, sortable: true },
+                    { key: 'lost', label: 'L', width: smallColWidth, sortable: true },
+                    { key: 'gf', label: 'GF', width: smallColWidth, sortable: true },
+                    { key: 'ga', label: 'GA', width: smallColWidth, sortable: true },
+                    { key: 'gd', label: 'GD', width: 45, sortable: true },
+                    { key: 'points', label: 'Pts', width: 45, sortable: true },
                 ];
             case 'basketball':
                 return [
-                    { key: 'position', label: 'Pos', width: 50, sortable: true },
-                    { key: 'team', label: 'Team', width: 180, sortable: false },
-                    { key: 'played', label: 'P', width: 50, sortable: true },
-                    { key: 'won', label: 'W', width: 50, sortable: true },
-                    { key: 'lost', label: 'L', width: 50, sortable: true },
-                    { key: 'winPct', label: 'Win%', width: 70, sortable: true },
-                    { key: 'streak', label: 'Streak', width: 70, sortable: false },
+                    { key: 'position', label: 'Pos', width: 45, sortable: true },
+                    { key: 'team', label: 'Team', width: teamWidth, sortable: false },
+                    { key: 'played', label: 'P', width: smallColWidth, sortable: true },
+                    { key: 'won', label: 'W', width: smallColWidth, sortable: true },
+                    { key: 'lost', label: 'L', width: smallColWidth, sortable: true },
+                    { key: 'winPct', label: 'Win%', width: mediumColWidth, sortable: true },
+                    { key: 'ppg', label: 'PPG', width: mediumColWidth, sortable: true },
+                    { key: 'streak', label: 'Streak', width: mediumColWidth, sortable: false },
                 ];
             default:
                 return [
-                    { key: 'position', label: 'Pos', width: 50, sortable: true },
-                    { key: 'team', label: 'Team', width: 180, sortable: false },
-                    { key: 'played', label: 'P', width: 50, sortable: true },
-                    { key: 'won', label: 'W', width: 50, sortable: true },
-                    { key: 'lost', label: 'L', width: 50, sortable: true },
-                    { key: 'points', label: 'Pts', width: 60, sortable: true },
+                    { key: 'position', label: 'Pos', width: 45, sortable: true },
+                    { key: 'team', label: 'Team', width: teamWidth, sortable: false },
+                    { key: 'played', label: 'P', width: smallColWidth, sortable: true },
+                    { key: 'won', label: 'W', width: smallColWidth, sortable: true },
+                    { key: 'lost', label: 'L', width: smallColWidth, sortable: true },
+                    { key: 'points', label: 'Pts', width: 45, sortable: true },
                 ];
         }
     };
@@ -82,9 +96,52 @@ export default function StandingsTable({
         return 0;
     });
 
+    const renderHeader = () => (
+        <View style={styles.tableHeader}>
+            {columns.map(column => (
+                <TouchableOpacity
+                    key={column.key}
+                    style={[
+                        styles.headerCell,
+                        { width: column.width },
+                        column.key === 'team' ? styles.alignLeft : styles.alignCenter
+                    ]}
+                    onPress={() => column.sortable && handleSort(column.key)}
+                    disabled={!column.sortable}
+                >
+                    <Text style={styles.headerCellText}>{column.label}</Text>
+                    {column.sortable && sortBy === column.key && (
+                        <Ionicons
+                            name={sortOrder === 'asc' ? 'chevron-up' : 'chevron-down'}
+                            size={14}
+                            color={theme.colors.primary}
+                        />
+                    )}
+                </TouchableOpacity>
+            ))}
+        </View>
+    );
+
+    const renderLegend = () => (
+        <View style={styles.legend}>
+            <View style={styles.legendItem}>
+                <PositionBadge position={1} size="small" />
+                <Text style={styles.legendText}>Champions League</Text>
+            </View>
+            <View style={styles.legendItem}>
+                <PositionBadge position={5} size="small" />
+                <Text style={styles.legendText}>Europa League</Text>
+            </View>
+            <View style={styles.legendItem}>
+                <PositionBadge position={18} size="small" />
+                <Text style={styles.legendText}>Relegation</Text>
+            </View>
+        </View>
+    );
+
     return (
         <View style={styles.container}>
-            {/* Header */}
+            {/* Header Title Section (Outside Horizontal scroll) */}
             <View style={styles.header}>
                 <Text style={styles.headerTitle}>{league} Standings</Text>
                 <View style={styles.headerBadge}>
@@ -93,64 +150,34 @@ export default function StandingsTable({
                 </View>
             </View>
 
-            {/* Table */}
+            {/* Horizontal Scroll for Table Content */}
             <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                <View style={styles.table}>
-                    {/* Table Header */}
-                    <View style={styles.tableHeader}>
-                        {columns.map(column => (
-                            <TouchableOpacity
-                                key={column.key}
-                                style={[styles.headerCell, { width: column.width }]}
-                                onPress={() => column.sortable && handleSort(column.key)}
-                                disabled={!column.sortable}
-                            >
-                                <Text style={styles.headerCellText}>{column.label}</Text>
-                                {column.sortable && sortBy === column.key && (
-                                    <Ionicons
-                                        name={sortOrder === 'asc' ? 'chevron-up' : 'chevron-down'}
-                                        size={14}
-                                        color={theme.colors.primary}
-                                    />
-                                )}
-                            </TouchableOpacity>
-                        ))}
-                    </View>
-
-                    {/* Table Rows */}
-                    {sortedTeams.map((team, index) => (
-                        <TeamRow
-                            key={team.id || index}
-                            team={team}
-                            columns={columns}
-                            sport={sport}
-                            onPress={() => onTeamPress && onTeamPress(team)}
-                        />
-                    ))}
+                <View style={styles.tableContainer}>
+                    {renderHeader()}
+                    <FlatList
+                        data={sortedTeams}
+                        keyExtractor={(item) => (item.id || item.position).toString()}
+                        renderItem={({ item }) => (
+                            <TeamRow
+                                team={item}
+                                columns={columns}
+                                sport={sport}
+                                isFollowed={followedTeams.includes(item.id)}
+                                onPress={() => onTeamPress && onTeamPress(item)}
+                            />
+                        )}
+                        ListFooterComponent={renderLegend}
+                        showsVerticalScrollIndicator={false}
+                    />
                 </View>
             </ScrollView>
-
-            {/* Legend */}
-            <View style={styles.legend}>
-                <View style={styles.legendItem}>
-                    <PositionBadge position={1} size="small" />
-                    <Text style={styles.legendText}>Champions League</Text>
-                </View>
-                <View style={styles.legendItem}>
-                    <PositionBadge position={5} size="small" />
-                    <Text style={styles.legendText}>Europa League</Text>
-                </View>
-                <View style={styles.legendItem}>
-                    <PositionBadge position={18} size="small" />
-                    <Text style={styles.legendText}>Relegation</Text>
-                </View>
-            </View>
         </View>
     );
 }
 
 const styles = StyleSheet.create({
     container: {
+        flexShrink: 1,
         backgroundColor: '#1E293B',
         borderRadius: 16,
         overflow: 'hidden',
@@ -161,7 +188,8 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        padding: 16,
+        paddingHorizontal: SCREEN_WIDTH < 768 ? theme.spacing.sm : theme.spacing.md,
+        paddingVertical: theme.spacing.sm,
         borderBottomWidth: 1,
         borderBottomColor: 'rgba(255, 255, 255, 0.05)',
     },
@@ -184,21 +212,29 @@ const styles = StyleSheet.create({
         fontFamily: theme.fonts?.medium || 'System',
         color: theme.colors.primary,
     },
-    table: {
-        minWidth: '100%',
+    tableContainer: {
+        flex: 1,
     },
     tableHeader: {
         flexDirection: 'row',
-        backgroundColor: 'rgba(255, 255, 255, 0.03)',
-        paddingVertical: 12,
-        paddingHorizontal: 16,
+        backgroundColor: '#1E293B', // Same as background to prevent flicker when sticking
+        paddingVertical: theme.spacing.sm,
+        paddingHorizontal: SCREEN_WIDTH < 768 ? theme.spacing.sm : theme.spacing.md,
         borderBottomWidth: 1,
-        borderBottomColor: 'rgba(255, 255, 255, 0.05)',
+        borderBottomColor: 'rgba(255, 255, 255, 0.1)',
     },
     headerCell: {
         flexDirection: 'row',
-        alignItems: 'center',
         gap: 4,
+        justifyContent: 'center',
+    },
+    alignLeft: {
+        alignItems: 'flex-start',
+        justifyContent: 'flex-start',
+    },
+    alignCenter: {
+        alignItems: 'center',
+        justifyContent: 'center',
     },
     headerCellText: {
         fontSize: 12,
@@ -209,10 +245,11 @@ const styles = StyleSheet.create({
     legend: {
         flexDirection: 'row',
         flexWrap: 'wrap',
-        padding: 16,
+        padding: theme.spacing.md,
         gap: 16,
         borderTopWidth: 1,
         borderTopColor: 'rgba(255, 255, 255, 0.05)',
+        backgroundColor: '#1E293B',
     },
     legendItem: {
         flexDirection: 'row',

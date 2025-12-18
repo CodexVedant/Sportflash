@@ -36,44 +36,52 @@ export default function StandingsScreen() {
                     id: 1,
                     position: 1,
                     name: 'Mumbai Indians',
-                    logo: null,
+                    logo: 'https://scores.cricketdata.org/teams/mumbai-indians.png',
                     played: 14,
                     won: 10,
                     lost: 4,
                     nrr: 1.25,
+                    for: '2450/135',
+                    against: '2200/140',
                     points: 20,
                 },
                 {
                     id: 2,
                     position: 2,
                     name: 'Chennai Super Kings',
-                    logo: null,
+                    logo: 'https://scores.cricketdata.org/teams/csk.png',
                     played: 14,
                     won: 9,
                     lost: 5,
                     nrr: 0.85,
+                    for: '2380/138',
+                    against: '2250/142',
                     points: 18,
                 },
                 {
                     id: 3,
                     position: 3,
                     name: 'Royal Challengers',
-                    logo: null,
+                    logo: 'https://scores.cricketdata.org/teams/rcb.png',
                     played: 14,
                     won: 8,
                     lost: 6,
                     nrr: 0.45,
+                    for: '2500/145',
+                    against: '2400/140',
                     points: 16,
                 },
                 {
                     id: 4,
                     position: 4,
                     name: 'Delhi Capitals',
-                    logo: null,
+                    logo: 'https://scores.cricketdata.org/teams/delhi-capitals.png',
                     played: 14,
                     won: 7,
                     lost: 7,
                     nrr: -0.15,
+                    for: '2200/142',
+                    against: '2250/138',
                     points: 14,
                 },
             ],
@@ -82,38 +90,44 @@ export default function StandingsScreen() {
             league: 'Premier League',
             teams: [
                 {
-                    id: 1,
+                    id: 101,
                     position: 1,
                     name: 'Manchester City',
-                    logo: null,
+                    logo: 'https://media.api-sports.io/football/teams/50.png',
                     played: 20,
                     won: 15,
                     drawn: 3,
                     lost: 2,
+                    gf: 52,
+                    ga: 27,
                     gd: 25,
                     points: 48,
                 },
                 {
-                    id: 2,
+                    id: 102,
                     position: 2,
                     name: 'Arsenal',
-                    logo: null,
+                    logo: 'https://media.api-sports.io/football/teams/42.png',
                     played: 20,
                     won: 14,
                     drawn: 4,
                     lost: 2,
+                    gf: 48,
+                    ga: 26,
                     gd: 22,
                     points: 46,
                 },
                 {
-                    id: 3,
+                    id: 103,
                     position: 3,
                     name: 'Liverpool',
-                    logo: null,
+                    logo: 'https://media.api-sports.io/football/teams/40.png',
                     played: 20,
                     won: 13,
                     drawn: 5,
                     lost: 2,
+                    gf: 45,
+                    ga: 25,
                     gd: 20,
                     points: 44,
                 },
@@ -123,36 +137,39 @@ export default function StandingsScreen() {
             league: 'NBA Western Conference',
             teams: [
                 {
-                    id: 1,
+                    id: 201,
                     position: 1,
                     name: 'LA Lakers',
-                    logo: null,
+                    logo: 'https://media.api-sports.io/basketball/teams/145.png',
                     played: 50,
                     won: 35,
                     lost: 15,
                     winPct: 0.700,
+                    ppg: 115.5,
                     streak: 'W5',
                 },
                 {
-                    id: 2,
+                    id: 202,
                     position: 2,
                     name: 'Golden State Warriors',
-                    logo: null,
+                    logo: 'https://media.api-sports.io/basketball/teams/141.png',
                     played: 50,
                     won: 33,
                     lost: 17,
                     winPct: 0.660,
+                    ppg: 118.2,
                     streak: 'W3',
                 },
                 {
-                    id: 3,
+                    id: 203,
                     position: 3,
                     name: 'Phoenix Suns',
-                    logo: null,
+                    logo: 'https://media.api-sports.io/basketball/teams/154.png',
                     played: 50,
                     won: 30,
                     lost: 20,
                     winPct: 0.600,
+                    ppg: 112.8,
                     streak: 'L2',
                 },
             ],
@@ -216,8 +233,8 @@ export default function StandingsScreen() {
                 </ScrollView>
             </View>
 
-            {/* Standings Table */}
-            <ScrollView style={styles.content} contentContainerStyle={styles.contentContainer}>
+            {/* Standings Table - Wrapped in View instead of ScrollView to allow internal scrolling/sticky headers */}
+            <View style={styles.content}>
                 {loading ? (
                     <View style={styles.loadingContainer}>
                         <ActivityIndicator size="large" color={theme.colors.primary} />
@@ -227,6 +244,7 @@ export default function StandingsScreen() {
                         teams={currentStandings.teams}
                         sport={selectedSport}
                         league={currentStandings.league}
+                        followedTeams={user?.preferences?.favoriteTeams || []}
                         onTeamPress={(team) => {
                             console.log('Team pressed:', team);
                         }}
@@ -238,7 +256,7 @@ export default function StandingsScreen() {
                         subtitle="Standings for this sport will be available soon"
                     />
                 )}
-            </ScrollView>
+            </View>
 
             {/* Notification Panel */}
             <NotificationPanel
@@ -310,6 +328,7 @@ const styles = StyleSheet.create({
     },
     content: {
         flex: 1,
+        padding: theme.spacing.lg,
     },
     contentContainer: {
         padding: theme.spacing.lg,
