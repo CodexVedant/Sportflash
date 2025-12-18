@@ -75,7 +75,6 @@ Based on FEATURE_CHECKLIST.md analysis, here are the frontend features that shou
 ---
 
 ### 5. **Enhanced News Section**
-**Status**: ⚠️ Basic news exists
 
 **What to Add**:
 - [ ] Full article view
@@ -96,7 +95,6 @@ Based on FEATURE_CHECKLIST.md analysis, here are the frontend features that shou
 ---
 
 ### 6. **User Profile Page (UI)**
-**Status**: ❌ Not implemented
 
 **What to Add**:
 - [ ] Profile header
@@ -163,8 +161,6 @@ Based on FEATURE_CHECKLIST.md analysis, here are the frontend features that shou
   - Tabs: Teams, Players, Matches
 - [ ] Follow/Unfollow buttons
 - [ ] Following counter
-- [ ] Personalized feed preview
-- [ ] Suggested follows
 - [ ] Empty state with suggestions
 - [ ] localStorage persistence
 
@@ -173,8 +169,6 @@ Based on FEATURE_CHECKLIST.md analysis, here are the frontend features that shou
 ---
 
 ### 10. **Settings Page**
-**Status**: ❌ Nav item placeholder only
-
 **What to Add**:
 - [ ] Settings view with sections:
   - Account (placeholder)
