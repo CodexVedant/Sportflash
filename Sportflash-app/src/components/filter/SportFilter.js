@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { theme } from '../../utils/theme';
+import { theme } from '@utils/theme';
 
 export default function SportFilter({ selected, onSelect }) {
     const sports = [

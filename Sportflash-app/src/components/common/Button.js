@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
-import { theme } from '../../utils/theme';
+import { theme } from '@utils/theme';
 import { Ionicons } from '@expo/vector-icons';
 
 export default function Button({

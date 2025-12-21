@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, Modal, ScrollView, TouchableOpacity, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { theme } from '../../utils/theme';
+import { theme } from '@utils/theme';
 import { BlurView } from 'expo-blur';
 import NotificationItem from './NotificationItem';
-import EmptyState from '../common/EmptyState';
+import EmptyState from '@components/common/EmptyState';
 
 export default function NotificationPanel({ visible, onClose, notifications = [], onNotificationPress }) {
     const [localNotifications, setLocalNotifications] = useState(notifications);

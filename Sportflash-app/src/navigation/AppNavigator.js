@@ -6,19 +6,19 @@ import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 
 // Navigators
-import MainNavigator from './MainNavigator';
+import MainNavigator from '@navigation/MainNavigator';
 // Screens
-import LoginScreen from '../screens/auth/LoginScreen';
-import RegisterScreen from '../screens/auth/RegisterScreen';
-import MatchDetailScreen from '../screens/matches/MatchDetailScreen';
-import SeriesScreen from '../screens/series/SeriesScreen';
-import FollowingScreen from '../screens/following/FollowingScreen';
-import BookmarksScreen from '../screens/bookmarks/BookmarksScreen';
-import SettingsScreen from '../screens/settings/SettingsScreen';
-import PlayerProfileScreen from '../screens/player/PlayerProfileScreen';
+import LoginScreen from '@screens/auth/LoginScreen';
+import RegisterScreen from '@screens/auth/RegisterScreen';
+import MatchDetailScreen from '@screens/matches/MatchDetailScreen';
+import SeriesScreen from '@screens/series/SeriesScreen';
+import FollowingScreen from '@screens/following/FollowingScreen';
+import BookmarksScreen from '@screens/bookmarks/BookmarksScreen';
+import SettingsScreen from '@screens/settings/SettingsScreen';
+import PlayerProfileScreen from '@screens/player/PlayerProfileScreen';
 
-import { AuthContext } from '../context/AuthContext';
-import { theme } from '../utils/theme';
+import { AuthContext } from '@context/AuthContext';
+import { theme } from '@utils/theme';
 
 const Stack = createNativeStackNavigator();
 

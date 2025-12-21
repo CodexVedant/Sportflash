@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { theme } from '../../utils/theme';
+import { theme } from '@utils/theme';
 import DateTimePicker from '@react-native-community/datetimepicker';
 
 export default function DatePicker({ dateRange, onDateChange }) {

@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { View, StyleSheet, Animated, Easing } from 'react-native';
-import { theme } from '../../utils/theme';
+import { theme } from '@utils/theme';
 
 // Shimmer animation component
 const ShimmerPlaceholder = ({ width, height, borderRadius = 8, style }) => {

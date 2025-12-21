@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
-import { theme } from '../../utils/theme';
+import { theme } from '@utils/theme';
 
 export default function PlayerHeader({ player, onFollow }) {
 

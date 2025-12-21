@@ -5,14 +5,14 @@ import { BlurView } from 'expo-blur';
 import { View, StyleSheet } from 'react-native';
 
 // Screens
-import HomeScreen from '../screens/home/HomeScreen';
-import MatchesScreen from '../screens/matches/MatchesScreen';
-import NewsScreen from '../screens/news/NewsScreen';
-import StandingsScreen from '../screens/standings/StandingsScreen';
-import ProfileScreen from '../screens/profile/ProfileScreen';
+import HomeScreen from '@screens/home/HomeScreen';
+import MatchesScreen from '@screens/matches/MatchesScreen';
+import NewsScreen from '@screens/news/NewsScreen';
+import StandingsScreen from '@screens/standings/StandingsScreen';
+import ProfileScreen from '@screens/profile/ProfileScreen';
 
 // Theme
-import { theme } from '../utils/theme';
+import { theme } from '@utils/theme';
 
 const Tab = createBottomTabNavigator();
 

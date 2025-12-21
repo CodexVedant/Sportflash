@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { theme } from '../../utils/theme';
+import { theme } from '@utils/theme';
 
 export default function PlayerCard({ player, onPress, compact = false }) {
     if (compact) {

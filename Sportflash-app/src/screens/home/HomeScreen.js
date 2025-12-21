@@ -1,17 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, ScrollView, Animated, TouchableOpacity, useWindowDimensions, Platform, ActivityIndicator } from 'react-native';
-import { theme } from '../../utils/theme';
+import { View, Text, StyleSheet, ScrollView, Animated, TouchableOpacity, useWindowDimensions, Platform, ActivityIndicator } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { theme } from '@utils/theme';
 import { LinearGradient } from 'expo-linear-gradient';
-import MatchCard from '../../components/match/MatchCard';
+import MatchCard from '@components/match/MatchCard';
 import { Ionicons } from '@expo/vector-icons';
-import SearchModal from '../../components/common/SearchModal';
-import api from '../../services/api';
-import { AuthContext } from '../../context/AuthContext';
+import SearchModal from '@components/common/SearchModal';
+import api from '@services/api';
+import { AuthContext } from '@context/AuthContext';
 import { useContext } from 'react';
-import { NotificationBell, NotificationPanel } from '../../components/notifications';
-import { useLiveScores } from '../../hooks/useSocket';
+import { NotificationBell, NotificationPanel } from '@components/notifications';
+import { useLiveScores } from '@hooks/useSocket';
 
-import Sidebar, { SidebarContent } from '../../components/navigation/Sidebar';
+import Sidebar, { SidebarContent } from '@components/navigation/Sidebar';
 
 export default function HomeScreen({ navigation }) {
     const [searchVisible, setSearchVisible] = useState(false);

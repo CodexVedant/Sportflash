@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, StyleSheet, Platform } from 'react-native';
 import { BlurView } from 'expo-blur';
-import { theme } from '../../utils/theme';
+import { theme } from '@utils/theme';
 
 export default function Card({ children, style, variant = 'glass' }) {
 

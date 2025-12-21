@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity, Image } from 'react-native';
-import { theme } from '../../utils/theme';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { theme } from '@utils/theme';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import Sidebar from '../../components/navigation/Sidebar';
+import Sidebar from '@components/navigation/Sidebar';
 
 export default function NewsScreen() {
     const [sidebarVisible, setSidebarVisible] = useState(false);

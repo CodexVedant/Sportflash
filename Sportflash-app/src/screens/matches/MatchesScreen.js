@@ -1,14 +1,15 @@
 import React, { useState, useEffect, useContext } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, FlatList } from 'react-native';
-import { theme } from '../../utils/theme';
-import MatchCard from '../../components/match/MatchCard';
-import Sidebar from '../../components/navigation/Sidebar';
+import { View, Text, StyleSheet, TouchableOpacity, FlatList } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { theme } from '@utils/theme';
+import MatchCard from '@components/match/MatchCard';
+import Sidebar from '@components/navigation/Sidebar';
 import { Ionicons } from '@expo/vector-icons';
-import api from '../../services/api';
-import { SkeletonList, EmptyState, NetworkError } from '../../components/common';
-import { FilterPanel } from '../../components/filter';
-import { NotificationBell, NotificationPanel } from '../../components/notifications';
-import { AuthContext } from '../../context/AuthContext';
+import api from '@services/api';
+import { SkeletonList, EmptyState, NetworkError } from '@components/common';
+import { FilterPanel } from '@components/filter';
+import { NotificationBell, NotificationPanel } from '@components/notifications';
+import { AuthContext } from '@context/AuthContext';
 
 export default function MatchesScreen() {
     const { user } = useContext(AuthContext);

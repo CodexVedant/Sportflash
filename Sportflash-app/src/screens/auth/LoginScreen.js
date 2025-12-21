@@ -1,10 +1,11 @@
 import React, { useState, useContext } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, KeyboardAvoidingView, Platform, Alert, useWindowDimensions, ScrollView } from 'react-native';
-import { AuthContext } from '../../context/AuthContext';
-import { theme } from '../../utils/theme';
-import Input from '../../components/common/Input';
-import Button from '../../components/common/Button';
-import { ErrorMessage } from '../../components/common';
+import { View, Text, StyleSheet, TouchableOpacity, KeyboardAvoidingView, Platform, Alert, useWindowDimensions, ScrollView } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { AuthContext } from '@context/AuthContext';
+import { theme } from '@utils/theme';
+import Input from '@components/common/Input';
+import Button from '@components/common/Button';
+import { ErrorMessage } from '@components/common';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 

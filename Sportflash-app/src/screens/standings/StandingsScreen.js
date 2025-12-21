@@ -1,12 +1,13 @@
 import React, { useState, useEffect, useContext } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, ScrollView, ActivityIndicator } from 'react-native';
-import { theme } from '../../utils/theme';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { theme } from '@utils/theme';
 import { Ionicons } from '@expo/vector-icons';
-import Sidebar from '../../components/navigation/Sidebar';
-import { StandingsTable } from '../../components/standings';
-import { NotificationBell, NotificationPanel } from '../../components/notifications';
-import { EmptyState } from '../../components/common';
-import { AuthContext } from '../../context/AuthContext';
+import Sidebar from '@components/navigation/Sidebar';
+import { StandingsTable } from '@components/standings';
+import { NotificationBell, NotificationPanel } from '@components/notifications';
+import { EmptyState } from '@components/common';
+import { AuthContext } from '@context/AuthContext';
 
 export default function StandingsScreen() {
     const { user } = useContext(AuthContext);

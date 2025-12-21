@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { theme } from '../../utils/theme';
+import { theme } from '@utils/theme';
 
 export default function PositionBadge({ position, size = 'normal' }) {
     const getPositionStyle = () => {

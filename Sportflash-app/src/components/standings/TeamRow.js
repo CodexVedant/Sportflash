@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image, Dimensions } from 'react-native';
-import { theme } from '../../utils/theme';
+import { theme } from '@utils/theme';
 import PositionBadge from './PositionBadge';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');

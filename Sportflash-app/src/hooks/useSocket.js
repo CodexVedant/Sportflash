@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import socket, { connectSocket, disconnectSocket } from '../services/socket';
+import socket, { connectSocket, disconnectSocket } from '@services/socket';
 
 /**
  * Hook to listen for live cricket score updates via Socket.IO

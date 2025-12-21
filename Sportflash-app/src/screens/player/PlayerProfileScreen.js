@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, ScrollView, SafeAreaView, TouchableOpacity } from 'react-native';
-import { theme } from '../../utils/theme';
+import { View, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { theme } from '@utils/theme';
 import { Ionicons } from '@expo/vector-icons';
-import PlayerHeader from '../../components/player/PlayerHeader';
-import PlayerStats from '../../components/player/PlayerStats';
+import PlayerHeader from '@components/player/PlayerHeader';
+import PlayerStats from '@components/player/PlayerStats';
 
 export default function PlayerProfileScreen({ route, navigation }) {
     // Get player from params or use mock

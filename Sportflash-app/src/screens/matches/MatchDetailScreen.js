@@ -1,12 +1,13 @@
 import React, { useState, useEffect, useContext } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, ScrollView, useWindowDimensions, Platform } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, useWindowDimensions, Platform } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import { theme } from '../../utils/theme';
+import { theme } from '@utils/theme';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, { useSharedValue, useAnimatedStyle, withSequence, withTiming, withSpring, interpolateColor } from 'react-native-reanimated';
-import { useToast } from '../../context/ToastContext';
-import { AuthContext } from '../../context/AuthContext';
-import socket from '../../services/socket';
+import { useToast } from '@context/ToastContext';
+import { AuthContext } from '@context/AuthContext';
+import socket from '@services/socket';
 
 export default function MatchDetailScreen({ navigation, route }) {
     const { match } = route.params || {};
@@ -60,7 +61,7 @@ export default function MatchDetailScreen({ navigation, route }) {
     };
 
     // Animation Shared Value for Flash Effect
-    const scoreColorAnim = useSharedValue(0);
+    // const scoreColorAnim = useSharedValue(0);
 
     const getSportColor = () => {
         switch (initialMatch.sport?.toLowerCase()) {
@@ -73,15 +74,9 @@ export default function MatchDetailScreen({ navigation, route }) {
 
     const activeColor = getSportColor();
 
-    const scoreAnimatedStyle = useAnimatedStyle(() => {
-        return {
-            color: interpolateColor(
-                scoreColorAnim.value,
-                [0, 1],
-                ['#FFFFFF', theme.colors.cricket]
-            )
-        };
-    });
+    // Removed interpolated color animation due to Android crash (String -> Double cast error)
+    // We will simple use the activeColor or white
+
 
     // Real-time Socket Connection
     useEffect(() => {
@@ -97,10 +92,10 @@ export default function MatchDetailScreen({ navigation, route }) {
                 if (data.homeScore !== homeScore) {
                     setHomeScore(data.homeScore);
                     // Flash animation on score change
-                    scoreColorAnim.value = withSequence(
-                        withTiming(1, { duration: 100 }),
-                        withTiming(0, { duration: 500 })
-                    );
+                    // scoreColorAnim.value = withSequence(
+                    //    withTiming(1, { duration: 100 }),
+                    //    withTiming(0, { duration: 500 })
+                    // );
                 }
 
                 if (data.awayScore) setAwayScore(data.awayScore);
@@ -211,7 +206,7 @@ export default function MatchDetailScreen({ navigation, route }) {
                         </View>
 
                         <View style={styles.scoreBoard}>
-                            <Animated.Text style={[styles.mainScore, scoreAnimatedStyle]}>
+                            <Animated.Text style={[styles.mainScore]}>
                                 {homeScore}
                             </Animated.Text>
                             <Text style={styles.vsText}>VS</Text>

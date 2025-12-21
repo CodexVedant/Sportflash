@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator } from 'react-native';
-import { theme } from '../utils/theme';
-import api from '../services/api';
-import socket, { connectSocket, disconnectSocket } from '../services/socket';
+import { theme } from '@utils/theme';
+import api from '@services/api';
+import socket, { connectSocket, disconnectSocket } from '@services/socket';
 import { Ionicons } from '@expo/vector-icons';
 
 /**

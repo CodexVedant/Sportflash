@@ -1,8 +1,9 @@
 import React, { useContext, useState } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity } from 'react-native';
-import { theme } from '../../utils/theme';
-import { AuthContext } from '../../context/AuthContext';
-import Sidebar from '../../components/navigation/Sidebar';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { theme } from '@utils/theme';
+import { AuthContext } from '@context/AuthContext';
+import Sidebar from '@components/navigation/Sidebar';
 import { Ionicons } from '@expo/vector-icons';
 
 export default function SettingsScreen() {
