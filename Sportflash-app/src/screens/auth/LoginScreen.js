@@ -178,8 +178,6 @@ const styles = StyleSheet.create({
         backgroundColor: 'rgba(30, 41, 59, 0.8)', // Semi-transparent card
         borderRadius: 24,
         padding: 32,
-        borderWidth: 1,
-        borderColor: 'rgba(255,255,255,0.05)',
         shadowColor: "#000",
         shadowOffset: {
             width: 0,
@@ -221,8 +219,6 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         marginTop: theme.spacing.xl,
         paddingTop: theme.spacing.lg,
-        borderTopWidth: 1,
-        borderTopColor: 'rgba(255,255,255,0.05)',
     },
     footerText: {
         color: theme.colors.textMuted,

@@ -73,18 +73,18 @@ const styles = StyleSheet.create({
     inputWrapper: {
         backgroundColor: 'rgba(255,255,255,0.05)',
         borderRadius: theme.borderRadius.md,
-        borderWidth: 1,
-        borderColor: 'transparent',
         flexDirection: 'row',
         alignItems: 'center',
         paddingHorizontal: 16,
         height: 50,
     },
     focused: {
+        borderWidth: 1,
         borderColor: theme.colors.primary,
-        backgroundColor: 'rgba(255,255,255,0.08)',
+        backgroundColor: 'rgba(30, 132, 246, 0.1)',
     },
     errorBorder: {
+        borderWidth: 1,
         borderColor: theme.colors.danger,
     },
     icon: {
@@ -96,6 +96,12 @@ const styles = StyleSheet.create({
         fontFamily: theme.fonts.regular,
         fontSize: 16,
         height: '100%',
+        backgroundColor: 'transparent',
+        ...Platform.select({
+            web: {
+                outlineStyle: 'none',
+            },
+        }),
     },
     errorText: {
         color: theme.colors.danger,
