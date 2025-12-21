@@ -2,8 +2,8 @@ import io from 'socket.io-client';
 import { SOCKET_URL } from '@config';
 
 const socket = io(SOCKET_URL, {
-    autoConnect: false,
-    transports: ['websocket'], // Force websocket
+    autoConnect: true,
+    transports: ['polling', 'websocket'],
 });
 
 export const connectSocket = () => {

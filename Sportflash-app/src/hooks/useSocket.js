@@ -9,9 +9,6 @@ export const useLiveCricketScores = () => {
     const [cricketMatches, setCricketMatches] = useState([]);
 
     useEffect(() => {
-        // Connect to socket
-        connectSocket();
-
         // Listen for cricket updates
         const handleCricketUpdate = (matches) => {
             console.log('📊 Received cricket update:', matches?.length || 0, 'matches');
@@ -42,9 +39,6 @@ export const useLiveScores = () => {
     });
 
     useEffect(() => {
-        // Connect to socket
-        connectSocket();
-
         // Listen for all scores update
         const handleAllScoresUpdate = (allScores) => {
             console.log('🔄 Received all scores update');

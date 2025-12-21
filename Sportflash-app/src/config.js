@@ -1,6 +1,6 @@
 import { Platform } from 'react-native';
 
-const DEV_API_URL = 'http://localhost:5000';
+const DEV_API_URL = 'http://127.0.0.1:5000';
 const ANDROID_API_URL = 'http://10.0.2.2:5000';
 
 const getBaseUrl = () => {
