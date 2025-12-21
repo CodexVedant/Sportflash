@@ -709,7 +709,7 @@ sportflash-app/
 │   │   ├── team/
 │   │   │   └── TeamDetailScreen.js    // Team profile
 │   │   └── player/
-│   │       └── PlayerDetailScreen.js  // Player profile
+│   │       └── PlayerProfileScreen.js  // Player profile
 │   ├── navigation/
 │   │   ├── AppNavigator.js            // Root navigator
 │   │   ├── AuthNavigator.js           // Auth stack
