@@ -6,7 +6,6 @@ import { LinearGradient } from 'expo-linear-gradient';
 import MatchCard from '@components/match/MatchCard';
 import { Ionicons } from '@expo/vector-icons';
 import SearchModal from '@components/common/SearchModal';
-// import api from '@services/api'; // Legacy Axios removed
 import { useGetLiveMatchesQuery } from '@store/api/matchesApi';
 import { AuthContext } from '@context/AuthContext';
 import { useContext } from 'react';
@@ -15,6 +14,7 @@ import { useLiveScores } from '@hooks/useSocket';
 import LiveMatchesWidget from '@screens/home/LiveMatchesWidget';
 import TrendingNewsWidget from '@screens/home/TrendingNewsWidget';
 import MenuToggle from '@components/navigation/MenuToggle';
+import TopBar from '@components/navigation/TopBar';
 
 import Sidebar, { SidebarContent } from '@components/navigation/Sidebar';
 
@@ -23,7 +23,9 @@ export default function HomeScreen({ navigation }) {
     const [sidebarVisible, setSidebarVisible] = useState(false);
     const [notificationVisible, setNotificationVisible] = useState(false);
     const [matches, setMatches] = useState([]);
+    const [filteredMatches, setFilteredMatches] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [activeSport, setActiveSport] = useState('all');
     const { width } = useWindowDimensions();
     const { user } = useContext(AuthContext);
 
@@ -46,6 +48,13 @@ export default function HomeScreen({ navigation }) {
             read: false,
         },
     ]);
+
+    const SPORT_TABS = [
+        { id: 'all', label: 'All Sports', icon: 'globe-outline' },
+        { id: 'cricket', label: 'Cricket', icon: 'baseball-outline' },
+        { id: 'football', label: 'Football', icon: 'football-outline' },
+        { id: 'basketball', label: 'Basketball', icon: 'basketball-outline' },
+    ];
 
     // Responsive Logic
     const isDesktop = width > 768;
@@ -79,6 +88,15 @@ export default function HomeScreen({ navigation }) {
         }
     }, [initialMatches, isMatchesLoading]);
 
+    // Filter matches by sport
+    useEffect(() => {
+        if (activeSport === 'all') {
+            setFilteredMatches(matches);
+        } else {
+            const filtered = matches.filter(match => match.sport?.toLowerCase() === activeSport);
+            setFilteredMatches(filtered);
+        }
+    }, [matches, activeSport]);
 
     // Update matches when live cricket scores arrive
     useEffect(() => {
@@ -197,13 +215,20 @@ export default function HomeScreen({ navigation }) {
                 </View>
             </View>
 
+            {/* Sport Tabs */}
+            <TopBar
+                activeTab={activeSport}
+                onTabChange={setActiveSport}
+                tabs={SPORT_TABS}
+            />
+
             <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
 
                 <View style={[styles.contentContainer, isDesktop && styles.contentContainerDesktop]}>
 
                     {/* Live Section */}
                     <LiveMatchesWidget
-                        matches={matches}
+                        matches={filteredMatches}
                         loading={loading}
                         width={width}
                         navigation={navigation}
