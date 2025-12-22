@@ -1,31 +1,21 @@
-import React, { useState, useEffect, useContext } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, FlatList } from 'react-native';
+import React, { useState, useContext } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { theme } from '@utils/theme';
-import MatchCard from '@components/match/MatchCard';
 import Sidebar from '@components/navigation/Sidebar';
 import { Ionicons } from '@expo/vector-icons';
-import api from '@services/api';
-import { SkeletonList, EmptyState, NetworkError } from '@components/common';
-import { FilterPanel } from '@components/filter';
 import { NotificationBell, NotificationPanel } from '@components/notifications';
 import { AuthContext } from '@context/AuthContext';
+import TopBar from '@components/navigation/TopBar';
+import CricketMatchScreen from './CricketMatchScreen';
+import FootballMatchScreen from './FootballMatchScreen';
+import BasketballMatchScreen from './BasketballMatchScreen';
 
-export default function MatchesScreen() {
+export default function MatchesScreen({ navigation }) {
     const { user } = useContext(AuthContext);
-    const [activeTab, setActiveTab] = useState('Upcoming');
     const [sidebarVisible, setSidebarVisible] = useState(false);
-    const [matches, setMatches] = useState([]);
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState(null);
-    const [filterVisible, setFilterVisible] = useState(false);
     const [notificationVisible, setNotificationVisible] = useState(false);
-    const [filters, setFilters] = useState({
-        sport: 'all',
-        status: 'all',
-        league: 'all',
-        dateRange: { start: null, end: null },
-    });
+    const [activeSport, setActiveSport] = useState('cricket');
 
     // Mock notifications
     const [notifications] = useState([
@@ -47,59 +37,26 @@ export default function MatchesScreen() {
         },
     ]);
 
-    const TABS = ['Live', 'Upcoming', 'Results'];
-
-    useEffect(() => {
-        fetchMatches();
-    }, [activeTab, filters]);
-
-    const fetchMatches = async () => {
-        setLoading(true);
-        setError(null);
-
-        try {
-            let endpoint = '/matches/upcoming';
-            if (activeTab === 'Live') endpoint = '/matches/live';
-            else if (activeTab === 'Upcoming') endpoint = '/matches/upcoming';
-            else if (activeTab === 'Results') endpoint = '/matches?status=finished';
-
-            const response = await api.get(endpoint, { params: filters });
-            setMatches(response.data.data || []);
-        } catch (err) {
-            console.log('Error fetching matches:', err);
-            if (!err.response) {
-                setError({ type: 'network' });
-            } else {
-                setError({ type: 'api', message: err.message });
-            }
-            setMatches([]);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const handleApplyFilters = (newFilters) => {
-        setFilters(newFilters);
-    };
-
-    const renderMatchItem = ({ item }) => (
-        <View style={{ marginBottom: 16 }}>
-            <MatchCard
-                sport={item.sport}
-                status={item.status}
-                league={item.league}
-                homeTeam={item.homeTeam}
-                awayTeam={item.awayTeam}
-                score={item.status === 'finished' || item.status === 'live' ?
-                    (item.homeTeam.score && item.awayTeam.score ? `${item.homeTeam.score} - ${item.awayTeam.score}` : 'vs')
-                    : null
-                }
-                timer={item.currentMinute || (item.scheduledAt ? new Date(item.scheduledAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '')}
-            />
-        </View>
-    );
+    const SPORT_TABS = [
+        { id: 'cricket', label: 'Cricket', icon: 'baseball-outline' },
+        { id: 'football', label: 'Football', icon: 'football-outline' },
+        { id: 'basketball', label: 'Basketball', icon: 'basketball-outline' },
+    ];
 
     const unreadCount = notifications.filter(n => !n.read).length;
+
+    const renderSportScreen = () => {
+        switch (activeSport) {
+            case 'cricket':
+                return <CricketMatchScreen navigation={navigation} />;
+            case 'football':
+                return <FootballMatchScreen navigation={navigation} />;
+            case 'basketball':
+                return <BasketballMatchScreen navigation={navigation} />;
+            default:
+                return <CricketMatchScreen navigation={navigation} />;
+        }
+    };
 
     return (
         <SafeAreaView style={styles.container}>
@@ -113,9 +70,6 @@ export default function MatchesScreen() {
                     <Text style={styles.headerTitle}>Matches</Text>
                 </View>
                 <View style={styles.headerActions}>
-                    <TouchableOpacity onPress={() => setFilterVisible(true)} style={styles.iconBtn}>
-                        <Ionicons name="options-outline" size={24} color={theme.colors.text} />
-                    </TouchableOpacity>
                     {user && (
                         <NotificationBell
                             count={unreadCount}
@@ -125,54 +79,15 @@ export default function MatchesScreen() {
                 </View>
             </View>
 
-            {/* Tabs */}
-            <View style={styles.tabsContainer}>
-                {TABS.map(tab => (
-                    <TouchableOpacity
-                        key={tab}
-                        style={[styles.tab, activeTab === tab && styles.activeTab]}
-                        onPress={() => setActiveTab(tab)}
-                    >
-                        <Text style={[styles.tabText, activeTab === tab && styles.activeTabText]}>
-                            {tab}
-                        </Text>
-                    </TouchableOpacity>
-                ))}
-            </View>
-
-            {/* Content */}
-            {loading ? (
-                <SkeletonList type="match" count={5} />
-            ) : error?.type === 'network' ? (
-                <NetworkError onRetry={fetchMatches} />
-            ) : (
-                <FlatList
-                    data={matches}
-                    keyExtractor={item => item._id}
-                    renderItem={renderMatchItem}
-                    contentContainerStyle={styles.listContent}
-                    ListEmptyComponent={
-                        <EmptyState
-                            variant="noMatches"
-                            actionLabel="Clear Filters"
-                            onAction={() => setFilters({
-                                sport: 'all',
-                                status: 'all',
-                                league: 'all',
-                                dateRange: { start: null, end: null },
-                            })}
-                        />
-                    }
-                />
-            )}
-
-            {/* Filter Panel */}
-            <FilterPanel
-                visible={filterVisible}
-                onClose={() => setFilterVisible(false)}
-                onApply={handleApplyFilters}
-                initialFilters={filters}
+            {/* Sport Tabs */}
+            <TopBar
+                activeTab={activeSport}
+                onTabChange={setActiveSport}
+                tabs={SPORT_TABS}
             />
+
+            {/* Sport-specific Content */}
+            {renderSportScreen()}
 
             {/* Notification Panel */}
             <NotificationPanel
@@ -216,38 +131,8 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         gap: 8,
     },
-    iconBtn: {
-        padding: 8,
-    },
     menuBtn: {
         marginRight: 16,
     },
-    tabsContainer: {
-        flexDirection: 'row',
-        padding: theme.spacing.md,
-        gap: 12,
-    },
-    tab: {
-        paddingVertical: 8,
-        paddingHorizontal: 16,
-        borderRadius: 20,
-        backgroundColor: 'rgba(255,255,255,0.05)',
-        borderWidth: 1,
-        borderColor: 'rgba(255,255,255,0.1)',
-    },
-    activeTab: {
-        backgroundColor: theme.colors.primary,
-        borderColor: theme.colors.primary,
-    },
-    tabText: {
-        color: theme.colors.textMuted,
-        fontFamily: theme.fonts.medium,
-    },
-    activeTabText: {
-        color: '#fff',
-    },
-    listContent: {
-        padding: theme.spacing.lg,
-        paddingBottom: 100,
-    },
 });
+
