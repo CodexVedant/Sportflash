@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { theme } from '@utils/theme';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
+import { CommonActions } from '@react-navigation/native';
 import { AuthContext } from '@context/AuthContext';
 
 export default function ProfileScreen() {
@@ -22,7 +23,12 @@ export default function ProfileScreen() {
                     onPress: async () => {
                         try {
                             await logout();
-                            // No need to navigate, the app will handle this automatically
+                            navigation.dispatch(
+                                CommonActions.reset({
+                                    index: 0,
+                                    routes: [{ name: 'Login' }],
+                                })
+                            );
                         } catch (err) {
                             console.log("Logout error", err);
                         }
