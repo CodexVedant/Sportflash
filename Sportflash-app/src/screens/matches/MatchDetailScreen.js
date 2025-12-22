@@ -5,6 +5,9 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { theme } from '@utils/theme';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, { useSharedValue, useAnimatedStyle, withSequence, withTiming, withSpring, interpolateColor } from 'react-native-reanimated';
+import MatchHeader from '@components/match/MatchHeader';
+import Scorecard from '@components/match/Scorecard';
+import Commentary from '@components/match/Commentary';
 import { useToast } from '@context/ToastContext';
 import { AuthContext } from '@context/AuthContext';
 import socket from '@services/socket';
@@ -127,38 +130,15 @@ export default function MatchDetailScreen({ navigation, route }) {
         switch (activeTab) {
             case 'Scorecard':
                 return (
-                    <View style={styles.tabContent}>
-                        <View style={styles.sectionHeader}>
-                            <Text style={styles.sectionTitle}>Batting - India</Text>
-                        </View>
-                        {['Virat Kohli', 'Rohit Sharma', 'Shubman Gill'].map((p, i) => (
-                            <View key={i} style={styles.statRow}>
-                                <TouchableOpacity onPress={() => navigation.navigate('PlayerProfile', { player: { name: p, team: initialMatch.homeTeam.name } })}>
-                                    <Text style={styles.playerName}>{p}</Text>
-                                </TouchableOpacity>
-                                <Text style={styles.statValue}>{45 + i * 12} (32)</Text>
-                            </View>
-                        ))}
-                    </View>
+                    <Scorecard
+                        homeTeamName={initialMatch.homeTeam.name}
+                        awayTeamName={initialMatch.awayTeam.name}
+                        onPlayerPress={(player) => navigation.navigate('PlayerProfile', { player })}
+                    />
                 );
             case 'Commentary':
                 return (
-                    <View style={styles.tabContent}>
-                        {liveCommentary.length === 0 ? (
-                            <View style={{ padding: 20, alignItems: 'center' }}>
-                                <Text style={{ color: theme.colors.textMuted }}>Waiting for live updates...</Text>
-                            </View>
-                        ) : (
-                            liveCommentary.map((item, i) => (
-                                <View key={i} style={styles.commBubble}>
-                                    <View style={styles.overBadge}>
-                                        <Text style={styles.overText}>{item.time || 'Live'}</Text>
-                                    </View>
-                                    <Text style={styles.commText}>{item.text}</Text>
-                                </View>
-                            ))
-                        )}
-                    </View>
+                    <Commentary commentary={liveCommentary} />
                 );
             default:
                 return (
@@ -194,36 +174,15 @@ export default function MatchDetailScreen({ navigation, route }) {
                     </View>
 
                     {/* Match Score Hero */}
-                    <View style={styles.scoreHero}>
-                        <View style={styles.teamContainer}>
-                            <View style={styles.logoLg}><Text style={{ fontSize: 32 }}>{initialMatch.homeTeam.logo}</Text></View>
-                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                                <Text style={styles.teamNameHero}>{initialMatch.homeTeam.name}</Text>
-                                <TouchableOpacity onPress={() => handleFollow(initialMatch.homeTeam.name)}>
-                                    <Ionicons name={isFollowingHome ? "star" : "star-outline"} size={16} color={isFollowingHome ? theme.colors.warning : theme.colors.textMuted} />
-                                </TouchableOpacity>
-                            </View>
-                        </View>
-
-                        <View style={styles.scoreBoard}>
-                            <Animated.Text style={[styles.mainScore]}>
-                                {homeScore}
-                            </Animated.Text>
-                            <Text style={styles.vsText}>VS</Text>
-                            <Text style={styles.mainScore}>{awayScore}</Text>
-                            <Text style={styles.statusBadge}>{timer || initialMatch.status.toUpperCase()}</Text>
-                        </View>
-
-                        <View style={styles.teamContainer}>
-                            <View style={styles.logoLg}><Text style={{ fontSize: 32 }}>{initialMatch.awayTeam.logo}</Text></View>
-                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                                <Text style={styles.teamNameHero}>{initialMatch.awayTeam.name}</Text>
-                                <TouchableOpacity onPress={() => handleFollow(initialMatch.awayTeam.name)}>
-                                    <Ionicons name={isFollowingAway ? "star" : "star-outline"} size={16} color={isFollowingAway ? theme.colors.warning : theme.colors.textMuted} />
-                                </TouchableOpacity>
-                            </View>
-                        </View>
-                    </View>
+                    <MatchHeader
+                        match={initialMatch}
+                        homeScore={homeScore}
+                        awayScore={awayScore}
+                        timer={timer}
+                        onFollow={handleFollow}
+                        isFollowingHome={isFollowingHome}
+                        isFollowingAway={isFollowingAway}
+                    />
 
                     {/* Tabs */}
                     <View style={styles.tabBar}>

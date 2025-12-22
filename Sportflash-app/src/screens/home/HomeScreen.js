@@ -11,6 +11,9 @@ import { AuthContext } from '@context/AuthContext';
 import { useContext } from 'react';
 import { NotificationBell, NotificationPanel } from '@components/notifications';
 import { useLiveScores } from '@hooks/useSocket';
+import LiveMatchesWidget from '@screens/home/LiveMatchesWidget';
+import TrendingNewsWidget from '@screens/home/TrendingNewsWidget';
+import MenuToggle from '@components/navigation/MenuToggle';
 
 import Sidebar, { SidebarContent } from '@components/navigation/Sidebar';
 
@@ -169,9 +172,7 @@ export default function HomeScreen({ navigation }) {
             {/* Header */}
             <View style={[styles.header, isDesktop && styles.headerDesktop]}>
                 {/* Menu Icon (Always Visible) */}
-                <TouchableOpacity onPress={() => setSidebarVisible(true)} style={styles.menuBtn}>
-                    <Ionicons name="menu" size={28} color={theme.colors.text} />
-                </TouchableOpacity>
+                <MenuToggle onPress={() => setSidebarVisible(true)} />
 
                 <View style={[styles.logoContainer, isDesktop && styles.logoContainerDesktop]}>
                     <Text style={styles.logoText}>Sport<Text style={styles.highlight}>Flash</Text></Text>
@@ -203,42 +204,16 @@ export default function HomeScreen({ navigation }) {
                 <View style={[styles.contentContainer, isDesktop && styles.contentContainerDesktop]}>
 
                     {/* Live Section */}
-                    <View style={styles.section}>
-                        <Text style={styles.sectionTitle}>TOP LIVE MATCHES</Text>
-
-                        {loading ? (
-                            <ActivityIndicator size="large" color={theme.colors.primary} />
-                        ) : matches.length === 0 ? (
-                            <View style={styles.emptyContainer}>
-                                <Text style={styles.emptyText}>No live matches right now.</Text>
-                            </View>
-                        ) : (
-                            <View style={[styles.gridContainer, isDesktop && { flexDirection: 'row', flexWrap: 'wrap', gap: gap }]}>
-                                {matches.map(match => (
-                                    <View key={match.id} style={{ width: cardWidth, marginBottom: isDesktop ? 0 : 16 }}>
-                                        <MatchCard
-                                            sport={match.sport}
-                                            status={match.status}
-                                            league={match.league}
-                                            homeTeam={match.homeTeam}
-                                            awayTeam={match.awayTeam}
-                                            score={match.score}
-                                            timer={match.timer}
-                                            onPress={() => navigation.navigate('MatchDetail', { match })}
-                                        />
-                                    </View>
-                                ))}
-                            </View>
-                        )}
-                    </View>
+                    <LiveMatchesWidget
+                        matches={matches}
+                        loading={loading}
+                        width={width}
+                        navigation={navigation}
+                        gap={theme.spacing.md}
+                    />
 
                     {/* Trending News Placeholder */}
-                    <View style={styles.section}>
-                        <Text style={styles.sectionTitle}>TRENDING NEWS</Text>
-                        <View style={styles.newsPlaceholder}>
-                            <Text style={{ color: theme.colors.textMuted }}>News feed coming in Phase 1B...</Text>
-                        </View>
-                    </View>
+                    <TrendingNewsWidget />
 
                     {/* Bottom spacing for TabBar */}
                     <View style={{ height: 80 }} />
