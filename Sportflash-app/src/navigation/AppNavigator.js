@@ -13,9 +13,12 @@ import RegisterScreen from '@screens/auth/RegisterScreen';
 import MatchDetailScreen from '@screens/matches/MatchDetailScreen';
 import SeriesScreen from '@screens/series/SeriesScreen';
 import FollowingScreen from '@screens/following/FollowingScreen';
-import BookmarksScreen from '@screens/bookmarks/BookmarksScreen';
-import SettingsScreen from '@screens/settings/SettingsScreen';
+import BookmarksScreen from '@screens/profile/BookmarksScreen';
+import SettingsScreen from '@screens/profile/SettingsScreen';
 import PlayerProfileScreen from '@screens/player/PlayerProfileScreen';
+import NotificationsScreen from '@screens/profile/NotificationsScreen';
+import PreferencesScreen from '@screens/profile/PreferencesScreen';
+import NewsDetailScreen from '@screens/news/NewsDetailScreen';
 
 import { AuthContext } from '@context/AuthContext';
 import { theme } from '@utils/theme';
@@ -53,6 +56,9 @@ export default function AppNavigator() {
                 <Stack.Screen name="Bookmarks" component={BookmarksScreen} />
                 <Stack.Screen name="Settings" component={SettingsScreen} />
                 <Stack.Screen name="PlayerProfile" component={PlayerProfileScreen} />
+                <Stack.Screen name="Notifications" component={NotificationsScreen} />
+                <Stack.Screen name="Preferences" component={PreferencesScreen} />
+                <Stack.Screen name="NewsDetail" component={NewsDetailScreen} />
             </Stack.Navigator>
         </NavigationContainer>
     );
