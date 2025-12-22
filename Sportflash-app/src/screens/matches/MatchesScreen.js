@@ -1,21 +1,34 @@
-import React, { useState, useContext } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import React, { useState, useEffect, useContext } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, FlatList } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { theme } from '@utils/theme';
+import MatchCard from '@components/match/MatchCard';
 import Sidebar from '@components/navigation/Sidebar';
 import { Ionicons } from '@expo/vector-icons';
+import { SkeletonList, EmptyState, NetworkError } from '@components/common';
+import { FilterPanel } from '@components/filter';
 import { NotificationBell, NotificationPanel } from '@components/notifications';
 import { AuthContext } from '@context/AuthContext';
 import TopBar from '@components/navigation/TopBar';
-import CricketMatchScreen from './CricketMatchScreen';
-import FootballMatchScreen from './FootballMatchScreen';
-import BasketballMatchScreen from './BasketballMatchScreen';
+import { useGetLiveMatchesQuery } from '@store/api/matchesApi';
 
 export default function MatchesScreen({ navigation }) {
     const { user } = useContext(AuthContext);
+    const [activeSport, setActiveSport] = useState('all');
+    const [activeTab, setActiveTab] = useState('Live');
     const [sidebarVisible, setSidebarVisible] = useState(false);
+    const [filterVisible, setFilterVisible] = useState(false);
     const [notificationVisible, setNotificationVisible] = useState(false);
-    const [activeSport, setActiveSport] = useState('cricket');
+    const [filters, setFilters] = useState({
+        sport: 'all',
+        status: 'all',
+        league: 'all',
+        dateRange: { start: null, end: null },
+    });
+
+    // Fetch matches using RTK Query
+    const { data: allMatches = [], isLoading, error: apiError, refetch } = useGetLiveMatchesQuery();
+    const [filteredMatches, setFilteredMatches] = useState([]);
 
     // Mock notifications
     const [notifications] = useState([
@@ -38,25 +51,70 @@ export default function MatchesScreen({ navigation }) {
     ]);
 
     const SPORT_TABS = [
+        { id: 'all', label: 'All Sports', icon: 'globe-outline' },
         { id: 'cricket', label: 'Cricket', icon: 'baseball-outline' },
         { id: 'football', label: 'Football', icon: 'football-outline' },
         { id: 'basketball', label: 'Basketball', icon: 'basketball-outline' },
     ];
 
-    const unreadCount = notifications.filter(n => !n.read).length;
+    const STATUS_TABS = ['Live', 'Upcoming', 'Results'];
 
-    const renderSportScreen = () => {
-        switch (activeSport) {
-            case 'cricket':
-                return <CricketMatchScreen navigation={navigation} />;
-            case 'football':
-                return <FootballMatchScreen navigation={navigation} />;
-            case 'basketball':
-                return <BasketballMatchScreen navigation={navigation} />;
-            default:
-                return <CricketMatchScreen navigation={navigation} />;
+    // Filter matches based on sport and status
+    useEffect(() => {
+        let matches = [...allMatches];
+
+        // Filter by sport
+        if (activeSport !== 'all') {
+            matches = matches.filter(match => match.sport?.toLowerCase() === activeSport);
         }
+
+        // Filter by status
+        if (activeTab === 'Live') {
+            matches = matches.filter(match => match.status === 'live');
+        } else if (activeTab === 'Upcoming') {
+            matches = matches.filter(match => match.status === 'upcoming');
+        } else if (activeTab === 'Results') {
+            matches = matches.filter(match => match.status === 'finished');
+        }
+
+        // Apply additional filters
+        if (filters.league !== 'all') {
+            matches = matches.filter(match => match.league?.toLowerCase().includes(filters.league.toLowerCase()));
+        }
+
+        setFilteredMatches(matches);
+    }, [allMatches, activeSport, activeTab, filters]);
+
+    const handleApplyFilters = (newFilters) => {
+        setFilters(newFilters);
+        setFilterVisible(false);
     };
+
+    const renderMatchItem = ({ item }) => (
+        <View style={{ marginBottom: 16 }}>
+            <MatchCard
+                sport={item.sport}
+                status={item.status}
+                league={item.league}
+                homeTeam={item.homeTeam}
+                awayTeam={item.awayTeam}
+                score={item.status === 'finished' || item.status === 'live' ?
+                    (item.homeTeam.score && item.awayTeam.score ? `${item.homeTeam.score} - ${item.awayTeam.score}` : 'vs')
+                    : null
+                }
+                timer={
+                    item.sport === 'cricket'
+                        ? (item.cricketData?.overs ? `${item.cricketData.overs} Overs` : '')
+                        : item.sport === 'basketball'
+                            ? (item.basketballData?.quarter ? `Q${item.basketballData.quarter}` : '')
+                            : item.currentMinute || (item.scheduledAt ? new Date(item.scheduledAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '')
+                }
+                onPress={() => navigation.navigate('MatchDetail', { match: item })}
+            />
+        </View>
+    );
+
+    const unreadCount = notifications.filter(n => !n.read).length;
 
     return (
         <SafeAreaView style={styles.container}>
@@ -70,6 +128,9 @@ export default function MatchesScreen({ navigation }) {
                     <Text style={styles.headerTitle}>Matches</Text>
                 </View>
                 <View style={styles.headerActions}>
+                    <TouchableOpacity onPress={() => setFilterVisible(true)} style={styles.iconBtn}>
+                        <Ionicons name="options-outline" size={24} color={theme.colors.text} />
+                    </TouchableOpacity>
                     {user && (
                         <NotificationBell
                             count={unreadCount}
@@ -86,8 +147,58 @@ export default function MatchesScreen({ navigation }) {
                 tabs={SPORT_TABS}
             />
 
-            {/* Sport-specific Content */}
-            {renderSportScreen()}
+            {/* Status Tabs */}
+            <View style={styles.tabsContainer}>
+                {STATUS_TABS.map(tab => (
+                    <TouchableOpacity
+                        key={tab}
+                        style={[styles.tab, activeTab === tab && styles.activeTab]}
+                        onPress={() => setActiveTab(tab)}
+                    >
+                        <Text style={[styles.tabText, activeTab === tab && styles.activeTabText]}>
+                            {tab}
+                        </Text>
+                    </TouchableOpacity>
+                ))}
+            </View>
+
+            {/* Content */}
+            {isLoading ? (
+                <SkeletonList type="match" count={5} />
+            ) : apiError ? (
+                <NetworkError onRetry={refetch} />
+            ) : (
+                <FlatList
+                    data={filteredMatches}
+                    keyExtractor={item => item._id}
+                    renderItem={renderMatchItem}
+                    contentContainerStyle={styles.listContent}
+                    ListEmptyComponent={
+                        <EmptyState
+                            variant="noMatches"
+                            message={`No ${activeTab.toLowerCase()} matches found for ${activeSport === 'all' ? 'all sports' : activeSport}`}
+                            actionLabel="Clear Filters"
+                            onAction={() => {
+                                setActiveSport('all');
+                                setFilters({
+                                    sport: 'all',
+                                    status: 'all',
+                                    league: 'all',
+                                    dateRange: { start: null, end: null },
+                                });
+                            }}
+                        />
+                    }
+                />
+            )}
+
+            {/* Filter Panel */}
+            <FilterPanel
+                visible={filterVisible}
+                onClose={() => setFilterVisible(false)}
+                onApply={handleApplyFilters}
+                initialFilters={filters}
+            />
 
             {/* Notification Panel */}
             <NotificationPanel
@@ -131,8 +242,39 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         gap: 8,
     },
+    iconBtn: {
+        padding: 8,
+    },
     menuBtn: {
         marginRight: 16,
+    },
+    tabsContainer: {
+        flexDirection: 'row',
+        padding: theme.spacing.md,
+        gap: 12,
+    },
+    tab: {
+        paddingVertical: 8,
+        paddingHorizontal: 16,
+        borderRadius: 20,
+        backgroundColor: 'rgba(255,255,255,0.05)',
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.1)',
+    },
+    activeTab: {
+        backgroundColor: theme.colors.primary,
+        borderColor: theme.colors.primary,
+    },
+    tabText: {
+        color: theme.colors.textMuted,
+        fontFamily: theme.fonts.medium,
+    },
+    activeTabText: {
+        color: '#fff',
+    },
+    listContent: {
+        padding: theme.spacing.lg,
+        paddingBottom: 100,
     },
 });
 
