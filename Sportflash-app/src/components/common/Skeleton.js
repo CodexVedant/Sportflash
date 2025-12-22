@@ -27,7 +27,7 @@ const ShimmerPlaceholder = ({ width, height, borderRadius = 8, style }) => {
 
     const translateX = animatedValue.interpolate({
         inputRange: [0, 1],
-        outputRange: [-width, width],
+        outputRange: ['-100%', '100%'],
     });
 
     return (
