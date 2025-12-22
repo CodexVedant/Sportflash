@@ -6,7 +6,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 import MatchCard from '@components/match/MatchCard';
 import { Ionicons } from '@expo/vector-icons';
 import SearchModal from '@components/common/SearchModal';
-import api from '@services/api';
+// import api from '@services/api'; // Legacy Axios removed
+import { useGetLiveMatchesQuery } from '@store/api/matchesApi';
 import { AuthContext } from '@context/AuthContext';
 import { useContext } from 'react';
 import { NotificationBell, NotificationPanel } from '@components/notifications';
@@ -60,21 +61,33 @@ export default function HomeScreen({ navigation }) {
         ? (contentWidth - padding - (gap * (numColumns - 1))) / numColumns
         : '100%';
 
-    // Get live scores from Socket.IO
+    // Get live matches from Redux RTK Query
+    const { data: initialMatches = [], isLoading: isMatchesLoading, refetch } = useGetLiveMatchesQuery();
+
+    // Get live scores from socket
     const liveScores = useLiveScores();
 
     useEffect(() => {
-        fetchMatches();
-    }, []);
+        if (initialMatches.length > 0) {
+            // Map backend data to UI format
+            const formattedMatches = initialMatches.map(mapMatchToUI);
+            const liveMatchesOnly = formattedMatches.filter(m => m.status === 'live');
+            setMatches(liveMatchesOnly);
+            setLoading(false);
+        } else if (!isMatchesLoading) {
+            setLoading(false);
+        }
+    }, [initialMatches, isMatchesLoading]);
+
 
     // Update matches when live cricket scores arrive
     useEffect(() => {
         if (liveScores.cricket && liveScores.cricket.length > 0) {
             console.log('🔴 Live cricket scores received, updating UI...');
 
-            // Map live cricket scores to UI format and filter only LIVE matches
+            // Map live cricket scores to UI format
             const liveCricketMatches = liveScores.cricket
-                .filter(match => match.status === 'live') // Only show live matches
+                .filter(match => match.status === 'live')
                 .map(match => ({
                     id: match.id,
                     sport: 'cricket',
@@ -96,7 +109,7 @@ export default function HomeScreen({ navigation }) {
                     timer: match.cricketData?.overs ? `${match.cricketData.overs} Overs` : match.currentMinute || ''
                 }));
 
-            // Merge with existing matches (replace cricket, keep others)
+            // Merge with existing matches
             setMatches(prevMatches => {
                 const nonCricket = prevMatches.filter(m => m.sport !== 'cricket');
                 return [...liveCricketMatches, ...nonCricket];
@@ -104,55 +117,40 @@ export default function HomeScreen({ navigation }) {
         }
     }, [liveScores.cricket]);
 
-    const fetchMatches = async () => {
-        try {
-            const response = await api.get('/matches/live');
 
-            // Map backend data to UI format
-            const mappedMatches = response.data.data.map(match => {
-                let timer = match.currentMinute;
-                let centerInfo = null;
+    const mapMatchToUI = (match) => {
+        let timer = match.currentMinute;
+        let centerInfo = null;
 
-                if (match.sport === 'cricket') {
-                    timer = match.cricketData?.overs ? `${match.cricketData.overs} Overs` : '';
-                } else if (match.sport === 'basketball') {
-                    timer = match.basketballData?.quarter ? `Q${match.basketballData.quarter}` : '';
-                    centerInfo = 'Live';
-                } else if (match.sport === 'football') {
-                    if (match.homeTeam.score && match.awayTeam.score) {
-                        centerInfo = `${match.homeTeam.score} - ${match.awayTeam.score}`;
-                    }
-                }
-
-                return {
-                    id: match._id,
-                    sport: match.sport,
-                    status: match.status,
-                    league: match.league,
-                    homeTeam: {
-                        name: match.homeTeam.name,
-                        logo: match.homeTeam.logo,
-                        score: match.homeTeam.score
-                    },
-                    awayTeam: {
-                        name: match.awayTeam.name,
-                        logo: match.awayTeam.logo,
-                        score: match.awayTeam.score
-                    },
-                    score: centerInfo,
-                    timer: timer
-                };
-            });
-
-            // Filter to show only LIVE matches
-            const liveMatches = mappedMatches.filter(match => match.status === 'live');
-
-            setMatches(liveMatches);
-        } catch (error) {
-            console.log('Error fetching matches:', error);
-        } finally {
-            setLoading(false);
+        if (match.sport === 'cricket') {
+            timer = match.cricketData?.overs ? `${match.cricketData.overs} Overs` : '';
+        } else if (match.sport === 'basketball') {
+            timer = match.basketballData?.quarter ? `Q${match.basketballData.quarter}` : '';
+            centerInfo = 'Live';
+        } else if (match.sport === 'football') {
+            if (match.homeTeam.score && match.awayTeam.score) {
+                centerInfo = `${match.homeTeam.score} - ${match.awayTeam.score}`;
+            }
         }
+
+        return {
+            id: match._id,
+            sport: match.sport,
+            status: match.status,
+            league: match.league,
+            homeTeam: {
+                name: match.homeTeam.name,
+                logo: match.homeTeam.logo,
+                score: match.homeTeam.score
+            },
+            awayTeam: {
+                name: match.awayTeam.name,
+                logo: match.awayTeam.logo,
+                score: match.awayTeam.score
+            },
+            score: centerInfo,
+            timer: timer
+        };
     };
 
     return (

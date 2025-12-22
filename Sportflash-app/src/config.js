@@ -1,13 +1,29 @@
 import { Platform } from 'react-native';
-
-const DEV_API_URL = 'http://127.0.0.1:5000';
-const ANDROID_API_URL = 'http://10.0.2.2:5000';
+import Constants from 'expo-constants';
 
 const getBaseUrl = () => {
-    if (Platform.OS === 'android') {
-        return ANDROID_API_URL;
+    // Try to get the host from Expo config (works for LAN IP on physical devices)
+    const hostUri = Constants.expoConfig?.hostUri || Constants.manifest?.debuggerHost;
+    let host = '10.0.2.2'; // Default Android Emulator
+
+    if (hostUri) {
+        host = hostUri.split(':')[0];
     }
-    return DEV_API_URL;
+
+    const PORT = '5000';
+
+    if (Platform.OS === 'android') {
+        // If on emulator, 10.0.2.2 is safe. If on device, use host IP.
+        // Determining if emulator vs device is tricky, but hostUri usually exists in development.
+        return `http://${host}:${PORT}`;
+    }
+
+    // iOS or other
+    if (hostUri) {
+        return `http://${host}:${PORT}`;
+    }
+
+    return `http://127.0.0.1:${PORT}`;
 };
 
 export const API_BASE_URL = `${getBaseUrl()}/api`;
