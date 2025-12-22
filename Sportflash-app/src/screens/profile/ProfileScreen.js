@@ -1,16 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { theme } from '@utils/theme';
 import { Ionicons } from '@expo/vector-icons';
-import { useDispatch, useSelector } from 'react-redux';
 import { useNavigation } from '@react-navigation/native';
-import { logout } from '@store/slices/authSlice';
+import { AuthContext } from '@context/AuthContext';
 
 export default function ProfileScreen() {
-    const dispatch = useDispatch();
     const navigation = useNavigation();
-    const user = useSelector(state => state.auth.user);
+    const { user, logout } = useContext(AuthContext);
 
     const handleLogout = () => {
         Alert.alert(
@@ -23,8 +21,8 @@ export default function ProfileScreen() {
                     style: "destructive",
                     onPress: async () => {
                         try {
-                            await dispatch(logout()).unwrap();
-                            navigation.navigate('Login');
+                            await logout();
+                            // No need to navigate, the app will handle this automatically
                         } catch (err) {
                             console.log("Logout error", err);
                         }
@@ -91,7 +89,7 @@ export default function ProfileScreen() {
                 {/* Profile Header */}
                 <View style={styles.profileHeader}>
                     <View style={styles.avatarContainer}>
-                        <Text style={styles.avatarText}>{user?.name?.charAt(0) || 'U'}</Text>
+                        <Text style={styles.avatarText}>{user?.name?.charAt(0).toUpperCase() || 'U'}</Text>
                     </View>
                     <View style={styles.userInfo}>
                         <Text style={styles.userName}>{user?.name || 'User'}</Text>
