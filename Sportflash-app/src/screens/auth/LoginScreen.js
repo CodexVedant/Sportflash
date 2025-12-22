@@ -104,6 +104,7 @@ export default function LoginScreen({ navigation, route }) {
                                     onChangeText={setPassword}
                                     secureTextEntry
                                     icon="lock-closed-outline"
+                                    autoComplete="off"
                                 />
 
                                 <TouchableOpacity style={styles.forgotBtn}>

@@ -10,7 +10,9 @@ export default function Input({
     secureTextEntry,
     icon,
     label,
-    error
+    label,
+    error,
+    ...props
 }) {
     const [isFocused, setIsFocused] = useState(false);
     const [isPasswordVisible, setIsPasswordVisible] = useState(false);
@@ -42,6 +44,7 @@ export default function Input({
                     secureTextEntry={secureTextEntry && !isPasswordVisible}
                     onFocus={() => setIsFocused(true)}
                     onBlur={() => setIsFocused(false)}
+                    {...props}
                 />
 
                 {secureTextEntry && (
@@ -100,6 +103,11 @@ const styles = StyleSheet.create({
         ...Platform.select({
             web: {
                 outlineStyle: 'none',
+                // Hack to cover webkit autofill background
+                boxShadow: '0 0 0px 1000px #1e293b inset',
+                WebkitBoxShadow: '0 0 0px 1000px #1e293b inset',
+                WebkitTextFillColor: theme.colors.text,
+                caretColor: theme.colors.text, // ensure caret is visible
             },
         }),
     },
