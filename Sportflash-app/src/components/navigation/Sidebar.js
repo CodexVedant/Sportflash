@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { View, Text, StyleSheet, Modal, TouchableOpacity, ScrollView, Animated, Dimensions, TouchableWithoutFeedback, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { theme } from '@utils/theme';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const { width } = Dimensions.get('window');
@@ -34,23 +34,25 @@ const MENU_SECTIONS = [
     }
 ];
 
+
+
 export function SidebarContent({ onClose, style, showClose = true }) {
     const navigation = useNavigation();
-    const [activeRoute, setActiveRoute] = useState('Home'); // Simulate active route or use explicit prop. For now default to 'Home'
+    const route = useRoute();
+    const activeRoute = route.name;
 
-    const handleNavigation = (route) => {
-        setActiveRoute(route);
+    const handleNavigation = (targetRoute) => {
         if (onClose) onClose();
 
         // Handle Tab Navigation vs Stack Navigation
         const TAB_ROUTES = ['Home', 'Matches', 'News', 'Profile'];
 
-        if (TAB_ROUTES.includes(route)) {
+        if (TAB_ROUTES.includes(targetRoute)) {
             // If target is a tab, navigate to Main navigator first
-            navigation.navigate('Main', { screen: route });
+            navigation.navigate('Main', { screen: targetRoute });
         } else {
             // Otherwise navigate directly (for Stack screens)
-            navigation.navigate(route);
+            navigation.navigate(targetRoute);
         }
     };
 
