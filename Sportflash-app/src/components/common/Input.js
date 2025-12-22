@@ -10,7 +10,6 @@ export default function Input({
     secureTextEntry,
     icon,
     label,
-    label,
     error,
     ...props
 }) {
@@ -74,17 +73,19 @@ const styles = StyleSheet.create({
         marginLeft: 4,
     },
     inputWrapper: {
-        backgroundColor: 'rgba(255,255,255,0.05)',
-        borderRadius: theme.borderRadius.md,
+        backgroundColor: 'rgba(164, 163, 194, 0.05)',
+        borderRadius: 12,
         flexDirection: 'row',
         alignItems: 'center',
         paddingHorizontal: 16,
-        height: 50,
+        height: 52,
+        borderWidth: 1,
+        borderColor: 'transparent', // Prepare for border transition
     },
     focused: {
         borderWidth: 1,
         borderColor: theme.colors.primary,
-        backgroundColor: 'rgba(30, 132, 246, 0.1)',
+        backgroundColor: 'rgba(30, 41, 59, 1)', // Darker background on focus
     },
     errorBorder: {
         borderWidth: 1,
@@ -103,11 +104,6 @@ const styles = StyleSheet.create({
         ...Platform.select({
             web: {
                 outlineStyle: 'none',
-                // Hack to cover webkit autofill background
-                boxShadow: '0 0 0px 1000px #1e293b inset',
-                WebkitBoxShadow: '0 0 0px 1000px #1e293b inset',
-                WebkitTextFillColor: theme.colors.text,
-                caretColor: theme.colors.text, // ensure caret is visible
             },
         }),
     },
