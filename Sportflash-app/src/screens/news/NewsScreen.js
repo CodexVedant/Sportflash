@@ -1,21 +1,25 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { theme } from '@utils/theme';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import Sidebar from '@components/navigation/Sidebar';
+import MenuToggle from '@components/navigation/MenuToggle';
+import { useGetTrendingNewsQuery } from '@store/api/newsApi';
 
-export default function NewsScreen() {
+export default function NewsScreen({ navigation }) {
     const [sidebarVisible, setSidebarVisible] = useState(false);
+    const { data: newsItems = [], isLoading } = useGetTrendingNewsQuery();
 
-    const NEWS_DATA = [
+    // Use fetched data or fallback to mock if API returns empty (for demo)
+    const displayData = newsItems.length > 0 ? newsItems : [
         {
             id: 1,
             title: "World Cup Final: India vs Australia Preview",
             category: "Cricket",
             time: "2h ago",
-            image: null // Placeholder
+            image: null
         },
         {
             id: 2,
@@ -23,62 +27,63 @@ export default function NewsScreen() {
             category: "Football",
             time: "4h ago",
             image: null
-        },
-        {
-            id: 3,
-            title: "NBA Playoffs: Lakers advance to Conference Finals",
-            category: "Basketball",
-            time: "6h ago",
-            image: null
-        },
-        {
-            id: 4,
-            title: "IPL Auction 2024: Top buys and surprises",
-            category: "Cricket",
-            time: "1d ago",
-            image: null
-        },
-        {
-            id: 5,
-            title: "Verstappen wins Monaco GP in dominant fashion",
-            category: "Motorsport",
-            time: "1d ago",
-            image: null
         }
     ];
+
+    const featuredArticle = displayData[0];
+    const otherNews = displayData.slice(1);
 
     return (
         <SafeAreaView style={styles.container}>
             <Sidebar visible={sidebarVisible} onClose={() => setSidebarVisible(false)} />
             <View style={styles.header}>
                 <View style={styles.headerRow}>
-                    <TouchableOpacity onPress={() => setSidebarVisible(true)} style={styles.menuBtn}>
-                        <Ionicons name="menu" size={28} color={theme.colors.text} />
-                    </TouchableOpacity>
+                    <MenuToggle onPress={() => setSidebarVisible(true)} style={styles.menuBtn} />
                     <Text style={styles.headerTitle}>Trending News</Text>
                 </View>
             </View>
             <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+
+                {isLoading && (
+                    <ActivityIndicator size="small" color={theme.colors.primary} style={{ marginBottom: 20 }} />
+                )}
+
                 {/* Featured News */}
-                <TouchableOpacity style={styles.featuredCard}>
-                    <LinearGradient
-                        colors={['transparent', 'rgba(0,0,0,0.8)']}
-                        style={styles.featuredGradient}
-                    />
-                    <View style={styles.featuredContent}>
-                        <View style={styles.categoryBadge}>
-                            <Text style={styles.categoryText}>Featured</Text>
+                {featuredArticle && (
+                    <TouchableOpacity
+                        style={styles.featuredCard}
+                        onPress={() => navigation.navigate('NewsDetail', { newsId: featuredArticle.id })}
+                    >
+                        <LinearGradient
+                            colors={['transparent', 'rgba(0,0,0,0.8)']}
+                            style={styles.featuredGradient}
+                        />
+                        {featuredArticle.image && (
+                            <Image source={{ uri: featuredArticle.image }} style={[StyleSheet.absoluteFillObject, { zIndex: -1 }]} />
+                        )}
+                        <View style={styles.featuredContent}>
+                            <View style={styles.categoryBadge}>
+                                <Text style={styles.categoryText}>{featuredArticle.category}</Text>
+                            </View>
+                            <Text style={styles.featuredTitle}>{featuredArticle.title}</Text>
+                            <Text style={styles.featuredTime}>{featuredArticle.time}</Text>
                         </View>
-                        <Text style={styles.featuredTitle}>Olympics 2024: Complete Schedule Announced</Text>
-                        <Text style={styles.featuredTime}>Just Now</Text>
-                    </View>
-                </TouchableOpacity>
+                    </TouchableOpacity>
+                )}
 
                 {/* News List */}
-                {NEWS_DATA.map(item => (
-                    <TouchableOpacity key={item.id} style={styles.newsItem}>
+                {otherNews.map(item => (
+                    <TouchableOpacity
+                        key={item.id}
+                        style={styles.newsItem}
+                        onPress={() => navigation.navigate('NewsDetail', { newsId: item.id })}
+                    >
                         <View style={styles.newsImagePlaceholder}>
-                            <Ionicons name="image-outline" size={24} color={theme.colors.textMuted} />
+                            {item.image ? (
+                                <Image source={{ uri: item.image }} style={styles.listImage} />
+                            ) : (
+                                <Ionicons name="image-outline" size={24} color={theme.colors.textMuted} />
+                            )}
                         </View>
                         <View style={styles.newsContent}>
                             <View style={styles.metaRow}>
@@ -167,6 +172,11 @@ const styles = StyleSheet.create({
         backgroundColor: 'rgba(255,255,255,0.05)',
         justifyContent: 'center',
         alignItems: 'center',
+    },
+    listImage: {
+        width: 100,
+        height: 100,
+        resizeMode: 'cover'
     },
     newsContent: {
         flex: 1,
