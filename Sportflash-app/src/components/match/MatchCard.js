@@ -4,6 +4,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { theme } from '@utils/theme';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, { useSharedValue, useAnimatedStyle, withRepeat, withTiming, withSequence } from 'react-native-reanimated';
+import LiveBadge from './LiveBadge';
+import TeamLogo from './TeamLogo';
 
 export default function MatchCard({ sport, status, league, homeTeam, awayTeam, score, timer, onPress }) {
 
@@ -19,25 +21,7 @@ export default function MatchCard({ sport, status, league, homeTeam, awayTeam, s
 
     const sportColor = getSportColor();
 
-    // Pulsing Animation for 'LIVE'
-    const opacity = useSharedValue(0.5);
-
-    useEffect(() => {
-        if (status === 'live') {
-            opacity.value = withRepeat(
-                withSequence(
-                    withTiming(1, { duration: 1000 }),
-                    withTiming(0.5, { duration: 1000 })
-                ),
-                -1, // Infinite
-                true // Reverse
-            );
-        }
-    }, [status]);
-
-    const animatedStyle = useAnimatedStyle(() => ({
-        opacity: opacity.value,
-    }));
+    // Pulsing Animation for 'LIVE' - Handled inside LiveBadge now
 
     return (
         <TouchableOpacity activeOpacity={0.9} onPress={onPress}>
@@ -52,14 +36,15 @@ export default function MatchCard({ sport, status, league, homeTeam, awayTeam, s
             >
                 {/* Header: Live Badge + League */}
                 <View style={styles.header}>
-                    <View style={styles.badgeContainer}>
-                        {status === 'live' && (
-                            <Animated.View style={[styles.dot, { backgroundColor: theme.colors.danger }, animatedStyle]} />
-                        )}
-                        <Text style={[styles.statusText, { color: status === 'live' ? theme.colors.danger : theme.colors.textMuted }]}>
-                            {status === 'live' ? `LIVE ${sport.toUpperCase()}` : status.toUpperCase()}
-                        </Text>
-                    </View>
+                    {status === 'live' ? (
+                        <LiveBadge sport={sport} />
+                    ) : (
+                        <View style={styles.badgeContainer}>
+                            <Text style={[styles.statusText, { color: theme.colors.textMuted }]}>
+                                {status.toUpperCase()}
+                            </Text>
+                        </View>
+                    )}
                     <Text style={styles.league}>{league}</Text>
                 </View>
 
@@ -67,13 +52,7 @@ export default function MatchCard({ sport, status, league, homeTeam, awayTeam, s
                 <View style={styles.scoreContainer}>
                     {/* Home Team */}
                     <View style={styles.team}>
-                        <View style={styles.logoPlaceholder}>
-                            {homeTeam.logo?.startsWith('http') ? (
-                                <Image source={{ uri: homeTeam.logo }} style={{ width: 32, height: 32, resizeMode: 'contain' }} />
-                            ) : (
-                                <Text style={{ fontSize: 24 }}>{homeTeam.logo}</Text>
-                            )}
-                        </View>
+                        <TeamLogo logo={homeTeam.logo} />
                         <Text style={styles.teamName}>{homeTeam.name}</Text>
                         <Text style={styles.score}>{homeTeam.score}</Text>
                     </View>
@@ -92,13 +71,7 @@ export default function MatchCard({ sport, status, league, homeTeam, awayTeam, s
 
                     {/* Away Team */}
                     <View style={styles.team}>
-                        <View style={styles.logoPlaceholder}>
-                            {awayTeam.logo?.startsWith('http') ? (
-                                <Image source={{ uri: awayTeam.logo }} style={{ width: 32, height: 32, resizeMode: 'contain' }} />
-                            ) : (
-                                <Text style={{ fontSize: 24 }}>{awayTeam.logo}</Text>
-                            )}
-                        </View>
+                        <TeamLogo logo={awayTeam.logo} />
                         <Text style={styles.teamName}>{awayTeam.name}</Text>
                         <Text style={styles.score}>{awayTeam.score}</Text>
                     </View>
@@ -108,7 +81,6 @@ export default function MatchCard({ sport, status, league, homeTeam, awayTeam, s
                 <View style={styles.footer}>
                     <Text style={[styles.footerText, { color: sportColor }]}>Click to view Dashboard</Text>
                 </View>
-
             </LinearGradient>
         </TouchableOpacity>
     );
