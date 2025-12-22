@@ -276,8 +276,6 @@ const styles = StyleSheet.create({
         borderRadius: 12,
         paddingHorizontal: 12,
         height: 48,
-        borderWidth: 1,
-        borderColor: 'rgba(255,255,255,0.1)',
         gap: 10,
     },
     input: {
@@ -286,6 +284,12 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontFamily: theme.fonts?.medium || 'System',
         height: '100%',
+        backgroundColor: 'transparent',
+        ...Platform.select({
+            web: {
+                outlineStyle: 'none',
+            },
+        }),
     },
     closeBtn: {
         padding: 8,
