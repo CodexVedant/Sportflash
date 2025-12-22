@@ -1,5 +1,5 @@
 import { Provider } from 'react-redux';
-import { store } from './src/store/store';
+import { store } from '@store/store';
 import AppNavigator from '@navigation/AppNavigator';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { ToastProvider } from '@context/ToastContext';
