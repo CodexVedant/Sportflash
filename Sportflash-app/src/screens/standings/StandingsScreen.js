@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { theme } from '@utils/theme';
@@ -7,10 +7,10 @@ import Sidebar from '@components/navigation/Sidebar';
 import { StandingsTable } from '@components/standings';
 import { NotificationBell, NotificationPanel } from '@components/notifications';
 import { EmptyState } from '@components/common';
-import { AuthContext } from '@context/AuthContext';
+import { useSelector } from 'react-redux';
 
 export default function StandingsScreen() {
-    const { user } = useContext(AuthContext);
+    const { user } = useSelector(state => state.auth);
     const [sidebarVisible, setSidebarVisible] = useState(false);
     const [notificationVisible, setNotificationVisible] = useState(false);
     const [selectedSport, setSelectedSport] = useState('cricket');

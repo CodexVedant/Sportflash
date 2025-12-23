@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, useWindowDimensions, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -9,14 +9,16 @@ import MatchHeader from '@components/match/MatchHeader';
 import Scorecard from '@components/match/Scorecard';
 import Commentary from '@components/match/Commentary';
 import { useToast } from '@context/ToastContext';
-import { AuthContext } from '@context/AuthContext';
+import { useDispatch, useSelector } from 'react-redux';
+import { updateUserPreferences } from '@store/slices/authSlice';
 import socket from '@services/socket';
 
 export default function MatchDetailScreen({ navigation, route }) {
     const { match } = route.params || {};
     const [activeTab, setActiveTab] = useState('Scorecard');
     const { showToast } = useToast();
-    const { user, updateUserPreferences } = useContext(AuthContext);
+    const dispatch = useDispatch();
+    const { user } = useSelector(state => state.auth);
     const { width } = useWindowDimensions();
     const isDesktop = width > 768;
 
@@ -57,7 +59,7 @@ export default function MatchDetailScreen({ navigation, route }) {
                 showToast(`Following ${teamName}`);
             }
 
-            await updateUserPreferences({ favoriteTeams: newTeams });
+            await dispatch(updateUserPreferences({ favoriteTeams: newTeams })).unwrap();
         } catch (error) {
             showToast('Failed to update favorites', 'error');
         }
@@ -131,8 +133,7 @@ export default function MatchDetailScreen({ navigation, route }) {
             case 'Scorecard':
                 return (
                     <Scorecard
-                        homeTeamName={initialMatch.homeTeam.name}
-                        awayTeamName={initialMatch.awayTeam.name}
+                        match={initialMatch}
                         onPlayerPress={(player) => navigation.navigate('PlayerProfile', { player })}
                     />
                 );

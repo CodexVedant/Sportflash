@@ -1,7 +1,7 @@
-import React, { useState, useContext } from 'react';
+import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, KeyboardAvoidingView, Platform, Alert, useWindowDimensions, ScrollView } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { AuthContext } from '@context/AuthContext';
+import { useDispatch } from 'react-redux';
+import { login } from '@store/slices/authSlice';
 import { theme } from '@utils/theme';
 import Input from '@components/common/Input';
 import Button from '@components/common/Button';
@@ -14,7 +14,7 @@ export default function LoginScreen({ navigation, route }) {
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
-    const { login } = useContext(AuthContext);
+    const dispatch = useDispatch();
     const { width, height } = useWindowDimensions();
 
     // Responsive: Card width
@@ -37,13 +37,13 @@ export default function LoginScreen({ navigation, route }) {
         }
 
         setLoading(true);
-        const result = await login(email, password);
-        setLoading(false);
-
-        if (!result.success) {
-            setError(result.message || 'Login failed. Please check your credentials.');
-        } else {
+        try {
+            await dispatch(login({ email, password })).unwrap();
             navigation.goBack();
+        } catch (err) {
+            setError(err || 'Login failed. Please check your credentials.');
+        } finally {
+            setLoading(false);
         }
     };
 

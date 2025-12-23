@@ -1,15 +1,17 @@
-import React, { useState, useContext } from 'react';
+import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { theme } from '@utils/theme';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { CommonActions } from '@react-navigation/native';
-import { AuthContext } from '@context/AuthContext';
+import { useDispatch, useSelector } from 'react-redux';
+import { logout } from '@store/slices/authSlice';
 
 export default function ProfileScreen() {
     const navigation = useNavigation();
-    const { user, logout } = useContext(AuthContext);
+    const dispatch = useDispatch();
+    const { user } = useSelector(state => state.auth);
 
     const handleLogout = () => {
         Alert.alert(
@@ -22,7 +24,7 @@ export default function ProfileScreen() {
                     style: "destructive",
                     onPress: async () => {
                         try {
-                            await logout();
+                            await dispatch(logout());
                             navigation.dispatch(
                                 CommonActions.reset({
                                     index: 0,

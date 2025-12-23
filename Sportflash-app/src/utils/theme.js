@@ -1,33 +1,42 @@
-export const theme = {
-    colors: {
-        // Core Colors
+const palette = {
+    dark: {
         background: '#0f172a',
         surface: 'rgba(30, 41, 59, 0.7)',
         text: '#f8fafc',
         textMuted: '#94a3b8',
         border: 'rgba(255, 255, 255, 0.1)',
         danger: '#ef4444',
-        active: '#3b82f6', // Added active color
-
-        // Sport Specific
-        cricket: '#3b82f6',
-        football: '#22c55e',
-        basketball: '#f97316',
-
-        // Gradients & Overlays
-        glass: 'rgba(30, 41, 59, 0.7)',
-        overlay: 'rgba(0, 0, 0, 0.5)',
-
-        // UI Elements
-        primary: '#3b82f6',
-        secondary: '#64748b',
-        success: '#10b981',
-        warning: '#f59e0b',
-
-        // Tab Bar
         tabBarActive: '#3b82f6',
         tabBarInactive: '#94a3b8',
+        glass: 'rgba(30, 41, 59, 0.7)',
     },
+    light: {
+        background: '#f8fafc',
+        surface: '#ffffff',
+        text: '#1e293b',
+        textMuted: '#64748b',
+        border: 'rgba(0, 0, 0, 0.1)',
+        danger: '#ef4444',
+        tabBarActive: '#2563eb', // slightly darker blue for contrast
+        tabBarInactive: '#94a3b8',
+        glass: 'rgba(255, 255, 255, 0.9)',
+    }
+};
+
+const sharedColors = {
+    primary: '#3b82f6',
+    secondary: '#64748b',
+    success: '#10b981',
+    warning: '#f59e0b',
+    football: '#22c55e',
+    basketball: '#f97316',
+    cricket: '#3b82f6',
+    overlay: 'rgba(0, 0, 0, 0.5)',
+    active: '#3b82f6', // Added active color
+};
+
+export const darkTheme = {
+    colors: { ...palette.dark, ...sharedColors },
 
     // Typography mapping - Fallback to system fonts
     fonts: {
@@ -91,5 +100,13 @@ export const theme = {
         })
     }
 };
+
+export const lightTheme = {
+    ...darkTheme,
+    colors: { ...palette.light, ...sharedColors },
+};
+
+// Default export for backward compatibility (defaults to dark for now)
+export const theme = darkTheme;
 
 export default theme;

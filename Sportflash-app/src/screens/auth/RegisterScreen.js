@@ -1,7 +1,7 @@
-import React, { useState, useContext } from 'react';
+import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, KeyboardAvoidingView, Platform, Alert, useWindowDimensions, ScrollView } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { AuthContext } from '@context/AuthContext';
+import { useDispatch } from 'react-redux';
+import { register } from '@store/slices/authSlice';
 import { theme } from '@utils/theme';
 import Input from '@components/common/Input';
 import Button from '@components/common/Button';
@@ -15,7 +15,7 @@ export default function RegisterScreen({ navigation }) {
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
-    const { register } = useContext(AuthContext);
+    const dispatch = useDispatch();
     const { width } = useWindowDimensions();
 
     // Responsive: Card width
@@ -48,13 +48,13 @@ export default function RegisterScreen({ navigation }) {
         }
 
         setLoading(true);
-        const result = await register(name, email, password);
-        setLoading(false);
-
-        if (!result.success) {
-            setError(result.message || 'Registration failed. Please try again.');
-        } else {
+        try {
+            await dispatch(register({ name, email, password })).unwrap();
             navigation.goBack();
+        } catch (err) {
+            setError(err || 'Registration failed. Please try again.');
+        } finally {
+            setLoading(false);
         }
     };
 

@@ -1,7 +1,7 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Switch } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { theme } from '@utils/theme';
+import { useTheme } from '@hooks/useTheme';
 import { Ionicons } from '@expo/vector-icons';
 import { useSelector, useDispatch } from 'react-redux';
 import { useNavigation } from '@react-navigation/native';
@@ -12,12 +12,11 @@ export default function SettingsScreen() {
     const navigation = useNavigation();
     const dispatch = useDispatch();
     const themeMode = useSelector(state => state.theme.mode);
+    const theme = useTheme();
+    const styles = useMemo(() => makeStyles(theme), [theme]);
 
     const handleLogout = () => {
         dispatch(logout());
-        // Simple navigation reset usually happens in AppNavigator based on auth state, 
-        // but if strictly stack based:
-        // navigation.reset(...)
     };
 
     return (
@@ -41,7 +40,8 @@ export default function SettingsScreen() {
                         <Switch
                             value={themeMode === 'dark'}
                             onValueChange={() => dispatch(toggleTheme())}
-                            trackColor={{ true: theme.colors.primary }}
+                            trackColor={{ true: theme.colors.primary, false: theme.colors.secondary }}
+                            thumbColor={'#fff'}
                         />
                     </View>
                 </View>
@@ -71,7 +71,7 @@ export default function SettingsScreen() {
     );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (theme) => StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: theme.colors.background,
@@ -82,7 +82,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: theme.spacing.lg,
         paddingVertical: theme.spacing.md,
         borderBottomWidth: 1,
-        borderBottomColor: 'rgba(255,255,255,0.05)',
+        borderBottomColor: theme.colors.border,
     },
     backBtn: {
         marginRight: 16,
@@ -112,7 +112,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         paddingVertical: 16,
         borderBottomWidth: 1,
-        borderBottomColor: 'rgba(255,255,255,0.05)',
+        borderBottomColor: theme.colors.border,
     },
     rowLabel: {
         color: theme.colors.text,

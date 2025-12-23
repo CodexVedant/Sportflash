@@ -52,7 +52,7 @@ export default function MatchCard({ sport, status, displayStatus, league, homeTe
                 <View style={styles.scoreContainer}>
                     {/* Home Team */}
                     <View style={styles.team}>
-                        <TeamLogo logo={homeTeam.logo} />
+                        <TeamLogo logo={homeTeam.logo} name={homeTeam.name} />
                         <Text style={styles.teamName}>{homeTeam.name}</Text>
                         <Text style={styles.score}>{homeTeam.score}</Text>
                     </View>
@@ -71,7 +71,7 @@ export default function MatchCard({ sport, status, displayStatus, league, homeTe
 
                     {/* Away Team */}
                     <View style={styles.team}>
-                        <TeamLogo logo={awayTeam.logo} />
+                        <TeamLogo logo={awayTeam.logo} name={awayTeam.name} />
                         <Text style={styles.teamName}>{awayTeam.name}</Text>
                         <Text style={styles.score}>{awayTeam.score}</Text>
                     </View>

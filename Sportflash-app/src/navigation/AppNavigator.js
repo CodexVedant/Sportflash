@@ -1,7 +1,9 @@
-import React, { useEffect, useContext } from 'react';
+import React, { useEffect } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { ActivityIndicator, View } from 'react-native';
+import { useDispatch, useSelector } from 'react-redux';
+import { loadUser } from '@store/slices/authSlice';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 
@@ -20,20 +22,21 @@ import NotificationsScreen from '@screens/profile/NotificationsScreen';
 import PreferencesScreen from '@screens/profile/PreferencesScreen';
 import NewsDetailScreen from '@screens/news/NewsDetailScreen';
 
-import { AuthContext } from '@context/AuthContext';
 import { theme } from '@utils/theme';
 
 const Stack = createNativeStackNavigator();
 
 export default function AppNavigator() {
-    const { loading } = useContext(AuthContext);
+    const dispatch = useDispatch();
+    const { loading } = useSelector(state => state.auth);
 
     useEffect(() => {
         async function prepare() {
+            await dispatch(loadUser());
             SplashScreen.hideAsync();
         }
         prepare();
-    }, []);
+    }, [dispatch]);
 
     if (loading) {
         return (

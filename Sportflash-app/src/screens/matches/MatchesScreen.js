@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, FlatList } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { theme } from '@utils/theme';
@@ -8,12 +8,12 @@ import { Ionicons } from '@expo/vector-icons';
 import { SkeletonList, EmptyState, NetworkError } from '@components/common';
 import { FilterPanel } from '@components/filter';
 import { NotificationBell, NotificationPanel } from '@components/notifications';
-import { AuthContext } from '@context/AuthContext';
+import { useSelector } from 'react-redux';
 import TopBar from '@components/navigation/TopBar';
 import { useGetLiveMatchesQuery } from '@store/api/matchesApi';
 
 export default function MatchesScreen({ navigation }) {
-    const { user } = useContext(AuthContext);
+    const { user } = useSelector(state => state.auth);
     const [activeSport, setActiveSport] = useState('cricket');
     const [activeTab, setActiveTab] = useState('Live');
     const [sidebarVisible, setSidebarVisible] = useState(false);
