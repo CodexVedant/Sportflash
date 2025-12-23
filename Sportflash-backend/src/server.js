@@ -40,7 +40,16 @@ const fetchFootballScores = async () => {
             // Map to unified format
             const mappedMatches = matches.map(mapFootballMatch).filter(m => m !== null);
 
+            // Broadcast global list update
             io.emit('football_update', mappedMatches);
+
+            // Broadcast specific match updates to rooms
+            mappedMatches.forEach(match => {
+                if (match?.id) {
+                    io.to(`match_${match.id}`).emit('score_update', match);
+                }
+            });
+
             console.log(`✅ Football scores updated: ${mappedMatches.length} matches`);
             return mappedMatches;
         } else {
@@ -67,7 +76,16 @@ const fetchBasketballScores = async () => {
             // Map to unified format
             const mappedMatches = matches.map(mapBasketballMatch).filter(m => m !== null);
 
+            // Broadcast global list update
             io.emit('basketball_update', mappedMatches);
+
+            // Broadcast specific match updates to rooms
+            mappedMatches.forEach(match => {
+                if (match?.id) {
+                    io.to(`match_${match.id}`).emit('score_update', match);
+                }
+            });
+
             console.log(`✅ Basketball scores updated: ${mappedMatches.length} games`);
             return mappedMatches;
         } else {
@@ -94,7 +112,16 @@ const fetchCricketScores = async () => {
             // Map to unified format
             const mappedMatches = matches.map(mapCricketMatch).filter(m => m !== null);
 
+            // Broadcast global list update
             io.emit('cricket_update', mappedMatches);
+
+            // Broadcast specific match updates to rooms
+            mappedMatches.forEach(match => {
+                if (match?.id) {
+                    io.to(`match_${match.id}`).emit('score_update', match);
+                }
+            });
+
             console.log(`✅ Cricket scores updated: ${mappedMatches.length} matches`);
             return mappedMatches;
         } else {
@@ -147,8 +174,8 @@ const fetchAllLiveScores = async () => {
 // Fetch scores immediately on server start
 fetchAllLiveScores();
 
-// Fetch scores every 1 hour
-setInterval(fetchAllLiveScores, 1000000);
+// Fetch scores every 15 seconds
+setInterval(fetchAllLiveScores, 15000);
 
 // Connect to Database
 const connectDB = require('./config/database');

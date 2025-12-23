@@ -8,6 +8,7 @@ const {
     getUpcomingMatches,
     getLeagues,
     getStandings,
+    getHeadToHead,
     createMatch,
     updateMatch
 } = require('../controllers/matchController');
@@ -19,6 +20,7 @@ router.get('/live', getLiveMatches);
 router.get('/upcoming', getUpcomingMatches);
 router.get('/leagues', getLeagues);
 router.get('/standings', getStandings);
+router.get('/h2h', getHeadToHead);
 router.get('/sport/:sport', getMatchesBySport);
 router.get('/:id', getMatch);
 

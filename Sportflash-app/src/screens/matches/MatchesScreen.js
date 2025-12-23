@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, FlatList } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, SectionList } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { theme } from '@utils/theme';
 import MatchCard from '@components/match/MatchCard';
@@ -89,6 +89,31 @@ export default function MatchesScreen({ navigation }) {
         setFilterVisible(false);
     };
 
+    // Group matches by league
+    const groupedMatches = React.useMemo(() => {
+        if (!filteredMatches.length) return [];
+
+        const groups = filteredMatches.reduce((acc, match) => {
+            const leagueName = match.league || 'Others';
+            if (!acc[leagueName]) {
+                acc[leagueName] = [];
+            }
+            acc[leagueName].push(match);
+            return acc;
+        }, {});
+
+        return Object.keys(groups).sort().map(league => ({
+            title: league,
+            data: groups[league]
+        }));
+    }, [filteredMatches]);
+
+    const renderSectionHeader = ({ section: { title } }) => (
+        <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>{title}</Text>
+        </View>
+    );
+
     const renderMatchItem = ({ item }) => (
         <View style={{ marginBottom: 16 }}>
             <MatchCard
@@ -168,11 +193,13 @@ export default function MatchesScreen({ navigation }) {
             ) : apiError ? (
                 <NetworkError onRetry={refetch} />
             ) : (
-                <FlatList
-                    data={filteredMatches}
+                <SectionList
+                    sections={groupedMatches}
                     keyExtractor={item => item._id}
                     renderItem={renderMatchItem}
+                    renderSectionHeader={renderSectionHeader}
                     contentContainerStyle={styles.listContent}
+                    stickySectionHeadersEnabled={true}
                     ListEmptyComponent={
                         <EmptyState
                             variant="noMatches"

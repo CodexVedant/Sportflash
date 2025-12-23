@@ -8,10 +8,13 @@ import Animated, { useSharedValue, useAnimatedStyle, withSequence, withTiming, w
 import MatchHeader from '@components/match/MatchHeader';
 import Scorecard from '@components/match/Scorecard';
 import Commentary from '@components/match/Commentary';
+import H2HStats from '@components/match/H2HStats';
+import StandingsWidget from '@components/match/StandingsWidget';
 import { useToast } from '@context/ToastContext';
 import { useDispatch, useSelector } from 'react-redux';
 import { updateUserPreferences } from '@store/slices/authSlice';
 import socket from '@services/socket';
+import { useGetMatchH2HQuery, useGetMatchStandingsQuery } from '@store/api/matchesApi';
 
 export default function MatchDetailScreen({ navigation, route }) {
     const { match } = route.params || {};
@@ -32,14 +35,17 @@ export default function MatchDetailScreen({ navigation, route }) {
         league: 'ICC World Cup 2026'
     };
 
-    const [homeScore, setHomeScore] = useState(initialMatch.homeTeam.score || '0/0');
-    const [awayScore, setAwayScore] = useState(initialMatch.awayTeam.score || '0/0');
+    const [matchData, setMatchData] = useState(initialMatch);
+
+    // Derived state for header (can also just use matchData directly)
+    const [homeScore, setHomeScore] = useState(initialMatch.homeTeam?.score || '0/0');
+    const [awayScore, setAwayScore] = useState(initialMatch.awayTeam?.score || '0/0');
     const [timer, setTimer] = useState(initialMatch.timer || '');
     const [liveCommentary, setLiveCommentary] = useState([]);
 
     // Logic to check if following
-    const isFollowingHome = user?.preferences?.favoriteTeams?.includes(initialMatch.homeTeam.name);
-    const isFollowingAway = user?.preferences?.favoriteTeams?.includes(initialMatch.awayTeam.name);
+    const isFollowingHome = user?.preferences?.favoriteTeams?.includes(matchData.homeTeam?.name);
+    const isFollowingAway = user?.preferences?.favoriteTeams?.includes(matchData.awayTeam?.name);
 
     const handleFollow = async (teamName) => {
         if (!user) {
@@ -65,11 +71,8 @@ export default function MatchDetailScreen({ navigation, route }) {
         }
     };
 
-    // Animation Shared Value for Flash Effect
-    // const scoreColorAnim = useSharedValue(0);
-
     const getSportColor = () => {
-        switch (initialMatch.sport?.toLowerCase()) {
+        switch (matchData.sport?.toLowerCase()) {
             case 'cricket': return theme.colors.cricket;
             case 'football': return theme.colors.football;
             case 'basketball': return theme.colors.basketball;
@@ -79,42 +82,36 @@ export default function MatchDetailScreen({ navigation, route }) {
 
     const activeColor = getSportColor();
 
-    // Removed interpolated color animation due to Android crash (String -> Double cast error)
-    // We will simple use the activeColor or white
-
-
     // Real-time Socket Connection
     useEffect(() => {
         // join match room
-        const matchId = initialMatch._id || initialMatch.id || '1';
+        const matchId = matchData._id || matchData.id || '1';
         socket.emit('join_match', matchId);
 
         const handleScoreUpdate = (data) => {
             console.log("Socket Update:", data);
 
             // Only update if match ID matches (or generic '1' for demo)
-            if (data.matchId === matchId || matchId === '1') {
-                if (data.homeScore !== homeScore) {
-                    setHomeScore(data.homeScore);
-                    // Flash animation on score change
-                    // scoreColorAnim.value = withSequence(
-                    //    withTiming(1, { duration: 100 }),
-                    //    withTiming(0, { duration: 500 })
-                    // );
-                }
+            if (data.id === matchId || data._id === matchId || matchId === '1') {
 
-                if (data.awayScore) setAwayScore(data.awayScore);
-                if (data.currentMinute) setTimer(data.currentMinute);
+                // Update full match data object to refresh Scorecards/Stats
+                setMatchData(prev => ({
+                    ...prev,
+                    ...data,
+                    // Preserve some fields if needed
+                }));
 
+                // Update individual states for Hero section if structure differs or for animation triggers
+                if (data.homeTeam?.score) setHomeScore(data.homeTeam.score);
+                if (data.awayTeam?.score) setAwayScore(data.awayTeam.score);
+                if (data.currentMinute || data.status) setTimer(data.currentMinute || data.status);
+
+                // Handle Commentary
                 if (data.commentary) {
                     setLiveCommentary(prev => {
                         const newComm = [{ text: data.commentary, time: data.currentMinute }, ...prev];
-                        return newComm.slice(0, 20); // Keep last 20
+                        return newComm.slice(0, 20);
                     });
-
-                    if (activeTab === 'Commentary') {
-                        // showToast('🎙️ New Commentary Update', 'info'); 
-                    }
                 }
             }
         };
@@ -128,13 +125,40 @@ export default function MatchDetailScreen({ navigation, route }) {
     }, []);
 
 
+    // Fetch Data for Tabs
+    const { data: h2hData } = useGetMatchH2HQuery({
+        sport: matchData.sport || 'football',
+        team1Id: matchData.homeTeam?.id,
+        team2Id: matchData.awayTeam?.id
+    }, { skip: !matchData.homeTeam?.id || !matchData.awayTeam?.id });
+
+    const { data: standingsData } = useGetMatchStandingsQuery({
+        sport: matchData.sport || 'football',
+        leagueId: matchData.leagueInfo?.id
+    }, { skip: !matchData.leagueInfo?.id });
+
     const renderTabContent = () => {
         switch (activeTab) {
             case 'Scorecard':
                 return (
                     <Scorecard
-                        match={initialMatch}
+                        match={matchData}
                         onPlayerPress={(player) => navigation.navigate('PlayerProfile', { player })}
+                    />
+                );
+            case 'H2H':
+                return (
+                    <H2HStats
+                        data={h2hData}
+                        team1={matchData.homeTeam}
+                        team2={matchData.awayTeam}
+                    />
+                );
+            case 'Standings':
+                return (
+                    <StandingsWidget
+                        data={standingsData}
+                        highlightTeams={[matchData.homeTeam?.id, matchData.awayTeam?.id]}
                     />
                 );
             case 'Commentary':
@@ -144,7 +168,21 @@ export default function MatchDetailScreen({ navigation, route }) {
             default:
                 return (
                     <View style={styles.tabContent}>
-                        <Text style={{ color: theme.colors.textMuted }}>Match Info Details...</Text>
+                        <View style={styles.sectionHeader}>
+                            <Text style={styles.sectionTitle}>Match Info</Text>
+                        </View>
+                        <View style={styles.statRow}>
+                            <Text style={styles.textMuted}>Venue</Text>
+                            <Text style={styles.text}>{matchData.venue?.name || 'Unknown'}</Text>
+                        </View>
+                        <View style={styles.statRow}>
+                            <Text style={styles.textMuted}>Referee</Text>
+                            <Text style={styles.text}>{matchData.venue?.referee || 'Unknown'}</Text>
+                        </View>
+                        <View style={styles.statRow}>
+                            <Text style={styles.textMuted}>Date</Text>
+                            <Text style={styles.text}>{matchData.date}</Text>
+                        </View>
                     </View>
                 );
         }
@@ -168,7 +206,7 @@ export default function MatchDetailScreen({ navigation, route }) {
                         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
                             <Ionicons name="arrow-back" size={24} color="#FFF" />
                         </TouchableOpacity>
-                        <Text style={styles.headerTitle}>{initialMatch.league}</Text>
+                        <Text style={styles.headerTitle}>{matchData.league}</Text>
                         <TouchableOpacity>
                             <Ionicons name="share-outline" size={24} color="#FFF" />
                         </TouchableOpacity>
@@ -176,7 +214,7 @@ export default function MatchDetailScreen({ navigation, route }) {
 
                     {/* Match Score Hero */}
                     <MatchHeader
-                        match={initialMatch}
+                        match={matchData}
                         homeScore={homeScore}
                         awayScore={awayScore}
                         timer={timer}
@@ -187,7 +225,7 @@ export default function MatchDetailScreen({ navigation, route }) {
 
                     {/* Tabs */}
                     <View style={styles.tabBar}>
-                        {['Scorecard', 'Commentary', 'Info'].map((tab) => (
+                        {['Scorecard', 'H2H', 'Standings', 'Commentary', 'Info'].map((tab) => (
                             <TouchableOpacity
                                 key={tab}
                                 style={[

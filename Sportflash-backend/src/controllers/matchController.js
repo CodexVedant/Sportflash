@@ -426,6 +426,59 @@ exports.getStandings = async (req, res) => {
 };
 
 /**
+ * @desc    Get head to head statistics
+ * @route   GET /api/matches/h2h
+ * @access  Public
+ */
+exports.getHeadToHead = async (req, res) => {
+    try {
+        const { sport, team1Id, team2Id } = req.query;
+
+        if (!sport || !team1Id || !team2Id) {
+            return res.status(400).json({
+                success: false,
+                message: 'Sport and both team IDs are required'
+            });
+        }
+
+        let h2hData = null;
+
+        switch (sport.toLowerCase()) {
+            case 'football':
+            case 'soccer':
+                h2hData = await allSportsApi.getFootballH2H(team1Id, team2Id);
+                break;
+            case 'basketball':
+                h2hData = await allSportsApi.getBasketballH2H(team1Id, team2Id);
+                break;
+            case 'cricket':
+                h2hData = await allSportsApi.getCricketH2H(team1Id, team2Id);
+                break;
+            default:
+                return res.status(400).json({
+                    success: false,
+                    message: 'Invalid sport specified'
+                });
+        }
+
+        // Map H2H data if needed (currently passing raw as structure usually generic)
+        // You might want to map this similarly to getMatches for consistency
+
+        res.json({
+            success: true,
+            data: h2hData
+        });
+    } catch (error) {
+        console.error('Error in getHeadToHead:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error fetching H2H data',
+            error: error.message
+        });
+    }
+};
+
+/**
  * @desc    Create a match (Admin only - for testing)
  * @route   POST /api/matches
  * @access  Private/Admin

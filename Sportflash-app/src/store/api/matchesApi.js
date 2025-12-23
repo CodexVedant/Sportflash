@@ -16,7 +16,15 @@ export const matchesApi = createApi({
         getMatchDetails: builder.query({
             query: (id) => `/matches/${id}`,
         }),
+        getMatchH2H: builder.query({
+            query: ({ sport, team1Id, team2Id }) => `/matches/h2h?sport=${sport}&team1Id=${team1Id}&team2Id=${team2Id}`,
+            transformResponse: (response) => response.data
+        }),
+        getMatchStandings: builder.query({
+            query: ({ sport, leagueId }) => `/matches/standings?sport=${sport}&league=${leagueId}`,
+            transformResponse: (response) => response.data
+        }),
     }),
 });
 
-export const { useGetLiveMatchesQuery, useGetMatchDetailsQuery } = matchesApi;
+export const { useGetLiveMatchesQuery, useGetMatchDetailsQuery, useGetMatchH2HQuery, useGetMatchStandingsQuery } = matchesApi;

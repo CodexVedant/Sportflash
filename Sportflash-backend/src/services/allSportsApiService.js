@@ -249,7 +249,8 @@ class AllSportsApiService {
      * @param {string} leagueId - League ID
      */
     async getCricketStandings(leagueId) {
-        return await this.makeRequest('cricket', 'Standings', { league_id: leagueId });
+        // Cricket API specific parameter naming
+        return await this.makeRequest('cricket', 'Standings', { leagueId: leagueId });
     }
 
     /**
