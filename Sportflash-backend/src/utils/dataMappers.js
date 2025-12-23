@@ -14,6 +14,7 @@ const mapFootballMatch = (match) => {
         //id: match.event_key,
         sport: 'football',
         status: mapMatchStatus(match.event_status, match.event_live),
+        displayStatus: match.event_status, // Decoupled raw status
         date: match.event_date,
         time: match.event_time,
         league: match.league_name,
@@ -70,6 +71,7 @@ const mapBasketballMatch = (match) => {
         id: match.event_key,
         sport: 'basketball',
         status: mapMatchStatus(match.event_status, match.event_live),
+        displayStatus: match.event_status, // Decoupled raw status
         date: match.event_date,
         time: match.event_time,
         league: match.league_name,
@@ -119,6 +121,7 @@ const mapCricketMatch = (match) => {
         id: match.event_key,
         sport: 'cricket',
         status: mapMatchStatus(match.event_status, match.event_live),
+        displayStatus: match.event_status, // Decoupled raw status
         statusInfo: match.event_status_info,
         dateStart: match.event_date_start,
         dateStop: match.event_date_stop,
