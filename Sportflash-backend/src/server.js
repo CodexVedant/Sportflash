@@ -8,7 +8,6 @@ require('dotenv').config();
 
 const app = express();
 const server = http.createServer(app);
-const axios = require('axios');
 
 // Socket.IO Setup
 const io = new Server(server, {
@@ -18,139 +17,102 @@ const io = new Server(server, {
     }
 });
 
-// Fetch Cricket Live Scores (CricketData.org)
-const fetchCricketScores = async () => {
-    console.log(' Fetching cricket live scores...');
-    const apiKey = process.env.CRICKET_API_KEY || '32501aba-64c8-4611-9c82-fb0f8affd04b';
+// Import AllSportsAPI Service
+const allSportsApi = require('./services/allSportsApiService');
+const {
+    mapFootballMatch,
+    mapBasketballMatch,
+    mapCricketMatch
+} = require('./utils/dataMappers');
 
-    // Using CricketData.org API
-    const options = {
-        method: 'GET',
-        url: 'https://api.cricapi.com/v1/currentMatches',
-        params: {
-            apikey: apiKey,
-            offset: 0
-        }
-    };
+// ==================== LIVE SCORE FETCHING ====================
+
+/**
+ * Fetch Football Live Scores from AllSportsAPI
+ */
+const fetchFootballScores = async () => {
+    console.log('⚽ Fetching football live scores...');
 
     try {
-        const response = await axios.request(options);
-        const data = response.data;
+        const matches = await allSportsApi.getFootballLiveScores();
 
-        if (data && data.status === 'success') {
-            const matches = data.data;
+        if (matches && matches.length > 0) {
+            // Map to unified format
+            const mappedMatches = matches.map(mapFootballMatch).filter(m => m !== null);
 
-            // Map to our unified format
-            const mappedMatches = matches.map(match => ({
-                id: match.id,
-                sport: 'cricket',
-                status: match.matchStarted ? (match.matchEnded ? 'finished' : 'live') : 'upcoming',
-                league: match.series_id, // or match.matchType
-                homeTeam: {
-                    name: match.teamInfo?.[0]?.name || match.teams[0],
-                    logo: match.teamInfo?.[0]?.img,
-                    score: match.score?.[0]?.r ? `${match.score[0].r}/${match.score[0].w}` : null
-                },
-                awayTeam: {
-                    name: match.teamInfo?.[1]?.name || match.teams[1],
-                    logo: match.teamInfo?.[1]?.img,
-                    score: match.score?.[1]?.r ? `${match.score[1].r}/${match.score[1].w}` : null
-                },
-                currentMinute: match.status, // Using status text for display
-                cricketData: {
-                    overs: match.score?.[0]?.o  // Add overs info
-                }
-            }));
-
-            io.emit('cricket_update', mappedMatches);
-            console.log(' Cricket scores updated:', mappedMatches.length, 'matches');
-            if (data.info) {
-                console.log('Hits Used:', data.info.hitsUsed, '/', data.info.hitsLimit);
-            }
+            io.emit('football_update', mappedMatches);
+            console.log(`✅ Football scores updated: ${mappedMatches.length} matches`);
             return mappedMatches;
         } else {
-            console.log(' Cricket API Error:', data.status);
-            return null;
+            console.log('ℹ️  No live football matches at the moment');
+            io.emit('football_update', []);
+            return [];
         }
     } catch (error) {
-        console.error('Error fetching cricket scores:', error.response?.data?.message || error.message);
+        console.error('❌ Error fetching football scores:', error.message);
         return null;
     }
 };
 
-// Fetch Football Live Scores (API-Football)
-const fetchFootballScores = async () => {
-    console.log('Fetching football live scores...');
-
-    // Get today's date for live fixtures
-    const today = new Date().toISOString().split('T')[0];
-
-    const options = {
-        method: 'GET',
-        url: 'https://api-football-v1.p.rapidapi.com/v3/fixtures',
-        params: {
-            live: 'all', // Get all live matches
-            // Alternatively, you can use: date: today, status: 'LIVE'
-        },
-        headers: {
-            'x-rapidapi-key': process.env.RAPIDAPI_KEY || '862dfe30b0msh36b3afa6b8fed96p1bc544jsnfa5dce3dce15',
-            'x-rapidapi-host': 'api-football-v1.p.rapidapi.com'
-        }
-    };
-
-    try {
-        const response = await axios.request(options);
-        const footballMatches = response.data;
-
-        if (footballMatches?.response) {
-            io.emit('football_update', footballMatches);
-            console.log('Football scores updated:', footballMatches.response.length, 'matches');
-            return footballMatches;
-        }
-    } catch (error) {
-        console.error('Error fetching football scores:', error.response?.data?.message || error.message);
-        return null;
-    }
-};
-
-// Fetch Basketball Live Scores (API-NBA)
+/**
+ * Fetch Basketball Live Scores from AllSportsAPI
+ */
 const fetchBasketballScores = async () => {
-    console.log('   Fetching basketball live scores...');
-
-    // Get today's date
-    const today = new Date().toISOString().split('T')[0];
-
-    const options = {
-        method: 'GET',
-        url: 'https://api-nba-v1.p.rapidapi.com/games',
-        params: {
-            date: today,
-            // You can also use: live: 'all' for only live games
-        },
-        headers: {
-            'x-rapidapi-key': process.env.RAPIDAPI_KEY || '862dfe30b0msh36b3afa6b8fed96p1bc544jsnfa5dce3dce15',
-            'x-rapidapi-host': 'api-nba-v1.p.rapidapi.com'
-        }
-    };
+    console.log('🏀 Fetching basketball live scores...');
 
     try {
-        const response = await axios.request(options);
-        const basketballMatches = response.data;
+        const matches = await allSportsApi.getBasketballLiveScores();
 
-        if (basketballMatches?.response) {
-            io.emit('basketball_update', basketballMatches);
-            console.log('Basketball scores updated:', basketballMatches.response.length, 'games');
-            return basketballMatches;
+        if (matches && matches.length > 0) {
+            // Map to unified format
+            const mappedMatches = matches.map(mapBasketballMatch).filter(m => m !== null);
+
+            io.emit('basketball_update', mappedMatches);
+            console.log(`✅ Basketball scores updated: ${mappedMatches.length} games`);
+            return mappedMatches;
+        } else {
+            console.log('ℹ️  No live basketball games at the moment');
+            io.emit('basketball_update', []);
+            return [];
         }
     } catch (error) {
-        console.error('Error fetching basketball scores:', error.response?.data?.message || error.message);
+        console.error('❌ Error fetching basketball scores:', error.message);
         return null;
     }
 };
 
-// Fetch all live scores
+/**
+ * Fetch Cricket Live Scores from AllSportsAPI
+ */
+const fetchCricketScores = async () => {
+    console.log('🏏 Fetching cricket live scores...');
+
+    try {
+        const matches = await allSportsApi.getCricketLiveScores();
+
+        if (matches && matches.length > 0) {
+            // Map to unified format
+            const mappedMatches = matches.map(mapCricketMatch).filter(m => m !== null);
+
+            io.emit('cricket_update', mappedMatches);
+            console.log(`✅ Cricket scores updated: ${mappedMatches.length} matches`);
+            return mappedMatches;
+        } else {
+            console.log('ℹ️  No live cricket matches at the moment');
+            io.emit('cricket_update', []);
+            return [];
+        }
+    } catch (error) {
+        console.error('❌ Error fetching cricket scores:', error.message);
+        return null;
+    }
+};
+
+/**
+ * Fetch all live scores
+ */
 const fetchAllLiveScores = async () => {
-    console.log('\n ========== Fetching All Live Scores ==========');
+    console.log('\n🔄 ========== Fetching All Live Scores ==========');
 
     try {
         // Fetch all sports in parallel
@@ -170,18 +132,23 @@ const fetchAllLiveScores = async () => {
 
         // Broadcast combined scores
         io.emit('all_scores_update', allScores);
-        console.log('All scores broadcasted successfully\n');
+        console.log('✅ All scores broadcasted successfully');
+        console.log(`📊 Total matches: ${(allScores.cricket?.length || 0) +
+            (allScores.football?.length || 0) +
+            (allScores.basketball?.length || 0)
+            }`);
+        console.log('='.repeat(50) + '\n');
 
     } catch (error) {
-        console.error('Error in fetchAllLiveScores:', error.message);
+        console.error('❌ Error in fetchAllLiveScores:', error.message);
     }
 };
 
 // Fetch scores immediately on server start
 fetchAllLiveScores();
 
-// Fetch scores every 5 minutes (to save API credits)
-setInterval(fetchAllLiveScores, 500000);
+// Fetch scores every 1 hour
+setInterval(fetchAllLiveScores, 1000000);
 
 // Connect to Database
 const connectDB = require('./config/database');
@@ -205,7 +172,8 @@ app.get('/health', (req, res) => {
     res.json({
         status: 'ok',
         timestamp: new Date(),
-        environment: process.env.NODE_ENV
+        environment: process.env.NODE_ENV,
+        api: 'AllSportsAPI'
     });
 });
 
@@ -215,7 +183,9 @@ app.get('/api/health', (req, res) => {
         status: 'ok',
         timestamp: new Date(),
         environment: process.env.NODE_ENV,
-        message: 'SportFlash API is running'
+        message: 'SportFlash API is running',
+        apiProvider: 'AllSportsAPI.com',
+        trialExpiry: '2026-01-07'
     });
 });
 
@@ -227,28 +197,54 @@ const matchRoutes = require('./routes/matchRoutes');
 app.use('/api/auth', authRoutes);
 app.use('/api/matches', matchRoutes);
 
-
 // Socket.IO Connection Handler
 io.on('connection', (socket) => {
-    console.log(` Client connected: ${socket.id}`);
+    console.log(`🔌 Client connected: ${socket.id}`);
+
+    // Send current scores immediately on connection
+    socket.emit('connection_established', {
+        message: 'Connected to SportFlash Live Scores',
+        timestamp: new Date().toISOString()
+    });
 
     // Join match room
     socket.on('join_match', (matchId) => {
         socket.join(`match_${matchId}`);
-        console.log(` Client ${socket.id} joined match_${matchId}`);
+        console.log(`📍 Client ${socket.id} joined match_${matchId}`);
     });
 
     // Leave match room
     socket.on('leave_match', (matchId) => {
         socket.leave(`match_${matchId}`);
-        console.log(` Client ${socket.id} left match_${matchId}`);
+        console.log(`📍 Client ${socket.id} left match_${matchId}`);
+    });
+
+    // Request immediate score update
+    socket.on('request_scores', async (sport) => {
+        console.log(`🔄 Client ${socket.id} requested ${sport || 'all'} scores`);
+
+        if (!sport || sport === 'all') {
+            await fetchAllLiveScores();
+        } else {
+            switch (sport.toLowerCase()) {
+                case 'football':
+                case 'soccer':
+                    await fetchFootballScores();
+                    break;
+                case 'basketball':
+                    await fetchBasketballScores();
+                    break;
+                case 'cricket':
+                    await fetchCricketScores();
+                    break;
+            }
+        }
     });
 
     socket.on('disconnect', () => {
-        console.log(` Client disconnected: ${socket.id}`);
+        console.log(`🔌 Client disconnected: ${socket.id}`);
     });
 });
-
 
 // 404 Handler
 app.use((req, res) => {
@@ -270,8 +266,14 @@ app.use((err, req, res, next) => {
 
 const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => {
+    console.log('\n' + '='.repeat(60));
+    console.log(' SportFlash Server Started');
+    console.log('='.repeat(60));
     console.log(` Server running on http://localhost:${PORT}`);
     console.log(` Health check: http://localhost:${PORT}/health`);
     console.log(` Socket.IO ready for connections`);
     console.log(` Environment: ${process.env.NODE_ENV}`);
+    console.log(` API Provider: AllSportsAPI.com`);
+    console.log(` Trial expires: 2026-01-07`);
+    console.log('='.repeat(60) + '\n');
 });

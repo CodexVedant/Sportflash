@@ -175,7 +175,7 @@ function MyComponent() {
 - Keyboard-aware scrolling
 - Safe area handling
 
-## Future Enhancements
+## todo Enhancements
 
 - [ ] Forgot password functionality
 - [ ] Email verification

@@ -9,8 +9,6 @@ export default function SportFilter({ selected, onSelect }) {
         { id: 'cricket', name: 'Cricket', icon: 'baseball-outline' },
         { id: 'football', name: 'Football', icon: 'football-outline' },
         { id: 'basketball', name: 'Basketball', icon: 'basketball-outline' },
-        { id: 'tennis', name: 'Tennis', icon: 'tennisball-outline' },
-        { id: 'hockey', name: 'Hockey', icon: 'ice-cream-outline' },
     ];
 
     return (

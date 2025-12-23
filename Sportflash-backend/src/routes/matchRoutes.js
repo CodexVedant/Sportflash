@@ -6,6 +6,8 @@ const {
     getMatchesBySport,
     getMatch,
     getUpcomingMatches,
+    getLeagues,
+    getStandings,
     createMatch,
     updateMatch
 } = require('../controllers/matchController');
@@ -15,6 +17,8 @@ const { protect, authorize } = require('../middleware/auth');
 router.get('/', getMatches);
 router.get('/live', getLiveMatches);
 router.get('/upcoming', getUpcomingMatches);
+router.get('/leagues', getLeagues);
+router.get('/standings', getStandings);
 router.get('/sport/:sport', getMatchesBySport);
 router.get('/:id', getMatch);
 
