@@ -55,6 +55,9 @@ export default function MatchCard({ sport, status, displayStatus, league, homeTe
                         <TeamLogo logo={homeTeam.logo} name={homeTeam.name} />
                         <Text style={styles.teamName}>{homeTeam.name}</Text>
                         <Text style={styles.score}>{homeTeam.score}</Text>
+                        {sport?.toLowerCase() === 'cricket' && homeTeam.runRate && (
+                            <Text style={styles.subText}>RR: {homeTeam.runRate}</Text>
+                        )}
                     </View>
 
                     {/* VS or Time */}
@@ -74,6 +77,9 @@ export default function MatchCard({ sport, status, displayStatus, league, homeTe
                         <TeamLogo logo={awayTeam.logo} name={awayTeam.name} />
                         <Text style={styles.teamName}>{awayTeam.name}</Text>
                         <Text style={styles.score}>{awayTeam.score}</Text>
+                        {sport?.toLowerCase() === 'cricket' && awayTeam.runRate && (
+                            <Text style={styles.subText}>RR: {awayTeam.runRate}</Text>
+                        )}
                     </View>
                 </View>
 
@@ -146,6 +152,11 @@ const styles = StyleSheet.create({
         color: theme.colors.text,
         fontSize: 14,
         opacity: 0.8,
+    },
+    subText: {
+        color: theme.colors.textMuted,
+        fontSize: 10,
+        marginTop: 2,
     },
     centerInfo: {
         alignItems: 'center',

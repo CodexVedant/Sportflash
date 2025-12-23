@@ -220,19 +220,27 @@ const MatchStatsSummary = ({ statistics }) => {
     if (!statistics || statistics.length === 0) return null;
     return (
         <Section title="Match Stats">
-            {statistics.map((stat, i) => (
-                <View key={i} style={styles.statBarRow}>
-                    <Text style={styles.statLabel}>{stat.type}</Text>
-                    <View style={styles.statBarContainer}>
-                        <View style={[styles.statBar, { width: `${stat.home}%`, backgroundColor: theme.colors.primary }]} />
-                        <View style={[styles.statBar, { width: `${stat.away}%`, backgroundColor: theme.colors.secondary, alignSelf: 'flex-end' }]} />
+            {statistics.map((stat, i) => {
+                const homeVal = parseFloat(stat.home) || 0;
+                const awayVal = parseFloat(stat.away) || 0;
+                const total = homeVal + awayVal;
+                const homePct = total > 0 ? (homeVal / total) * 100 : 50;
+                const awayPct = total > 0 ? (awayVal / total) * 100 : 50;
+
+                return (
+                    <View key={i} style={styles.statBarRow}>
+                        <Text style={styles.statLabel}>{stat.type}</Text>
+                        <View style={styles.statBarContainer}>
+                            <View style={[styles.statBar, { width: `${homePct}%`, backgroundColor: theme.colors.primary }]} />
+                            <View style={[styles.statBar, { width: `${awayPct}%`, backgroundColor: theme.colors.secondary, alignSelf: 'flex-end', marginLeft: 'auto' }]} />
+                        </View>
+                        <View style={styles.statValues}>
+                            <Text style={styles.statVal}>{stat.home}</Text>
+                            <Text style={styles.statVal}>{stat.away}</Text>
+                        </View>
                     </View>
-                    <View style={styles.statValues}>
-                        <Text style={styles.statVal}>{stat.home}</Text>
-                        <Text style={styles.statVal}>{stat.away}</Text>
-                    </View>
-                </View>
-            ))}
+                );
+            })}
         </Section>
     );
 }

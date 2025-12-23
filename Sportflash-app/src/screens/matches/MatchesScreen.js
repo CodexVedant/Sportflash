@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, SectionList } from 'react-nat
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { theme } from '@utils/theme';
 import MatchCard from '@components/match/MatchCard';
+import BasketballMatchCard from '@components/match/BasketballMatchCard';
 import Sidebar from '@components/navigation/Sidebar';
 import { Ionicons } from '@expo/vector-icons';
 import { SkeletonList, EmptyState, NetworkError } from '@components/common';
@@ -116,26 +117,31 @@ export default function MatchesScreen({ navigation }) {
 
     const renderMatchItem = ({ item }) => (
         <View style={{ marginBottom: 16 }}>
-            <MatchCard
-                sport={item.sport}
-                status={item.status}
-                displayStatus={item.displayStatus}
-                league={item.league}
-                homeTeam={item.homeTeam}
-                awayTeam={item.awayTeam}
-                score={item.status === 'finished' || item.status === 'live' ?
-                    (item.homeTeam.score && item.awayTeam.score ? `${item.homeTeam.score} - ${item.awayTeam.score}` : 'vs')
-                    : null
-                }
-                timer={
-                    item.sport === 'cricket'
-                        ? (item.cricketData?.overs ? `${item.cricketData.overs} Overs` : '')
-                        : item.sport === 'basketball'
-                            ? (item.basketballData?.quarter ? `Q${item.basketballData.quarter}` : '')
+            {item.sport === 'basketball' ? (
+                <BasketballMatchCard
+                    match={item}
+                    onPress={() => navigation.navigate('MatchDetail', { match: item })}
+                />
+            ) : (
+                <MatchCard
+                    sport={item.sport}
+                    status={item.status}
+                    displayStatus={item.displayStatus}
+                    league={item.league}
+                    homeTeam={item.homeTeam}
+                    awayTeam={item.awayTeam}
+                    score={item.status === 'finished' || item.status === 'live' ?
+                        (item.homeTeam.score && item.awayTeam.score ? `${item.homeTeam.score} - ${item.awayTeam.score}` : 'vs')
+                        : null
+                    }
+                    timer={
+                        item.sport === 'cricket'
+                            ? (item.cricketData?.overs ? `${item.cricketData.overs} Overs` : '')
                             : item.currentMinute || (item.scheduledAt ? new Date(item.scheduledAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '')
-                }
-                onPress={() => navigation.navigate('MatchDetail', { match: item })}
-            />
+                    }
+                    onPress={() => navigation.navigate('MatchDetail', { match: item })}
+                />
+            )}
         </View>
     );
 
@@ -303,5 +309,19 @@ const styles = StyleSheet.create({
         padding: theme.spacing.lg,
         paddingBottom: 100,
     },
+    sectionHeader: {
+        backgroundColor: theme.colors.surface,
+        paddingVertical: 8,
+        paddingHorizontal: 16,
+        marginBottom: 8,
+        borderRadius: 8,
+        borderLeftWidth: 4,
+        borderLeftColor: theme.colors.primary
+    },
+    sectionTitle: {
+        color: theme.colors.text,
+        fontWeight: 'bold',
+        fontSize: 14
+    }
 });
 
