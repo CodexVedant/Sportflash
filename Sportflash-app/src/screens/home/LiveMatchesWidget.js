@@ -1,9 +1,10 @@
 import React from 'react';
-import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { theme } from '@utils/theme';
+import { Ionicons } from '@expo/vector-icons';
 import MatchCard from '@components/match/MatchCard';
 
-export default function LiveMatchesWidget({ matches, loading, width, navigation, gap }) {
+export default function LiveMatchesWidget({ matches, loading, width, navigation, gap, onFilterPress }) {
 
     // Logic for layout
     const isDesktop = width > 768;
@@ -17,7 +18,12 @@ export default function LiveMatchesWidget({ matches, loading, width, navigation,
 
     return (
         <View style={styles.section}>
-            <Text style={styles.sectionTitle}>TOP LIVE MATCHES</Text>
+            <View style={styles.header}>
+                <Text style={styles.sectionTitle}>TOP LIVE MATCHES</Text>
+                <TouchableOpacity onPress={onFilterPress} style={styles.filterBtn}>
+                    <Ionicons name="options-outline" size={20} color={theme.colors.textMuted} />
+                </TouchableOpacity>
+            </View>
 
             {loading ? (
                 <ActivityIndicator size="large" color={theme.colors.primary} />
@@ -32,6 +38,7 @@ export default function LiveMatchesWidget({ matches, loading, width, navigation,
                             <MatchCard
                                 sport={match.sport}
                                 status={match.status}
+                                displayStatus={match.displayStatus}
                                 league={match.league}
                                 homeTeam={match.homeTeam}
                                 awayTeam={match.awayTeam}
@@ -51,12 +58,22 @@ const styles = StyleSheet.create({
     section: {
         marginBottom: theme.spacing.xl,
     },
+    header: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: theme.spacing.md,
+    },
     sectionTitle: {
         color: theme.colors.textMuted,
         fontSize: theme.sizes.sm,
         fontWeight: '600',
-        marginBottom: theme.spacing.md,
         letterSpacing: 1,
+    },
+    filterBtn: {
+        padding: 4,
+        backgroundColor: 'rgba(255,255,255,0.05)',
+        borderRadius: 8,
     },
     emptyContainer: {
         padding: theme.spacing.xl,

@@ -11,10 +11,10 @@ const mapFootballMatch = (match) => {
 
     return {
         _id: match.event_key,
-        //id: match.event_key,
+        id: match.event_key,
         sport: 'football',
         status: mapMatchStatus(match.event_status, match.event_live),
-        displayStatus: match.event_status, // Decoupled raw status
+        displayStatus: match.event_status,
         date: match.event_date,
         time: match.event_time,
         league: match.league_name,
@@ -71,7 +71,7 @@ const mapBasketballMatch = (match) => {
         id: match.event_key,
         sport: 'basketball',
         status: mapMatchStatus(match.event_status, match.event_live),
-        displayStatus: match.event_status, // Decoupled raw status
+        displayStatus: match.event_status,
         date: match.event_date,
         time: match.event_time,
         league: match.league_name,
@@ -121,7 +121,7 @@ const mapCricketMatch = (match) => {
         id: match.event_key,
         sport: 'cricket',
         status: mapMatchStatus(match.event_status, match.event_live),
-        displayStatus: match.event_status, // Decoupled raw status
+        displayStatus: match.event_status,
         statusInfo: match.event_status_info,
         dateStart: match.event_date_start,
         dateStop: match.event_date_stop,
@@ -163,7 +163,9 @@ const mapCricketMatch = (match) => {
         // Backward compatibility
         cricketData: {
             overs: extractCricketOvers(match)
-        }
+        },
+        // Fallback for UI components looking for currentMinute
+        currentMinute: match.event_status
     };
 };
 
@@ -223,9 +225,18 @@ const extractBasketballScore = (result, team) => {
  * Generic status mapper for all sports
  */
 const mapMatchStatus = (status, isLive) => {
+    // Priority 1: Check specific terminal statuses first (Finished, Cancelled, etc.)
+    // This prevents finished games from mistakenly being marked as live even if isLive='1' (API quirk)
+    if (['Finished', 'Ended', 'FT', 'AOT', 'After Over Time'].includes(status)) return 'finished';
+    if (['Postponed', 'Cancelled', 'Abd'].includes(status)) return status.toLowerCase();
+
+    // Priority 2: Check standard 'Not Started'
+    if (['Not Started', 'NS'].includes(status)) return 'upcoming';
+
+    // Priority 3: Check if marked as live by API flag
     if (isLive === '1') return 'live';
 
-    // Check for specific live statuses
+    // Priority 4: Check for specific live statuses strings
     const liveStatuses = [
         // Basketball
         '1st Quarter', '2nd Quarter', '3rd Quarter', '4th Quarter',
@@ -241,12 +252,10 @@ const mapMatchStatus = (status, isLive) => {
 
     if (liveStatuses.includes(status) || /Quarter|Inning/.test(status)) return 'live';
 
-    // Football specific: If status is a number (minute), it's live
+    // Priority 5: Football specific - If status is a number (minute), it's live
     if (!isNaN(status) && String(status).trim() !== '') return 'live';
 
-    if (['Finished', 'Ended', 'FT', 'AOT', 'After Over Time'].includes(status)) return 'finished';
-    if (['Postponed', 'Cancelled', 'Abd', 'NS', 'Not Started'].includes(status)) return status === 'NS' || status === 'Not Started' ? 'upcoming' : status.toLowerCase();
-
+    // Default
     return 'upcoming';
 };
 

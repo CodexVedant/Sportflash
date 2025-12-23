@@ -3,7 +3,7 @@ import { View, Text, StyleSheet } from 'react-native';
 import Animated, { useSharedValue, useAnimatedStyle, withRepeat, withTiming, withSequence } from 'react-native-reanimated';
 import { theme } from '@utils/theme';
 
-export default function LiveBadge({ sport, style }) {
+export default function LiveBadge({ sport, status, style }) {
     const opacity = useSharedValue(0.5);
 
     useEffect(() => {
@@ -20,11 +20,23 @@ export default function LiveBadge({ sport, style }) {
         opacity: opacity.value,
     }));
 
+    // Format status text: If it's just a number (minute), append "'"
+    const getDisplayText = () => {
+        if (status) {
+            // If status is a number (like "41"), add quote for minutes
+            if (!isNaN(status) && String(status).trim() !== '') {
+                return `LIVE • ${status}'`;
+            }
+            return status.toUpperCase();
+        }
+        return sport ? `LIVE ${sport.toUpperCase()}` : 'LIVE';
+    };
+
     return (
         <View style={[styles.badgeContainer, style]}>
             <Animated.View style={[styles.dot, { backgroundColor: theme.colors.danger }, animatedStyle]} />
             <Text style={[styles.statusText, { color: theme.colors.danger }]}>
-                {sport ? `LIVE ${sport.toUpperCase()}` : 'LIVE'}
+                {getDisplayText()}
             </Text>
         </View>
     );

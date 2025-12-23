@@ -25,7 +25,7 @@ export default function HomeScreen({ navigation }) {
     const [matches, setMatches] = useState([]);
     const [filteredMatches, setFilteredMatches] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [activeSport, setActiveSport] = useState('all');
+    const [activeSport, setActiveSport] = useState('cricket');
     const { width } = useWindowDimensions();
     const { user } = useContext(AuthContext);
 
@@ -50,7 +50,6 @@ export default function HomeScreen({ navigation }) {
     ]);
 
     const SPORT_TABS = [
-        { id: 'all', label: 'All Sports', icon: 'globe-outline' },
         { id: 'cricket', label: 'Cricket', icon: 'baseball-outline' },
         { id: 'football', label: 'Football', icon: 'football-outline' },
         { id: 'basketball', label: 'Basketball', icon: 'basketball-outline' },
@@ -155,6 +154,7 @@ export default function HomeScreen({ navigation }) {
             id: match._id,
             sport: match.sport,
             status: match.status,
+            displayStatus: match.displayStatus,
             league: match.league,
             homeTeam: {
                 name: match.homeTeam.name,
@@ -191,168 +191,157 @@ export default function HomeScreen({ navigation }) {
                 <MenuToggle onPress={() => setSidebarVisible(true)} />
 
                 <View style={[styles.logoContainer, isDesktop && styles.logoContainerDesktop]}>
-                    <Text style={styles.logoText}>Sport<Text style={styles.highlight}>Flash</Text></Text>
-                </View>
-
-                <View style={styles.actions}>
-                    <TouchableOpacity onPress={() => setSearchVisible(true)}>
-                        <Ionicons name="search" size={24} color={theme.colors.text} style={{ marginRight: 16 }} />
-                    </TouchableOpacity>
-
-                    {user ? (
-                        <NotificationBell
-                            count={notifications.filter(n => !n.read).length}
-                            onPress={() => setNotificationVisible(true)}
+                    <View style={styles.container}>
+                        {/* Header (Logo + Search + Notifications) */}
+                        <Header
+                            onMenuPress={() => setSidebarVisible(true)}
+                            onNotificationOpen={() => setNotificationVisible(true)}
+                            unreadCount={notifications.filter(n => !n.read).length}
+                            onSearchPress={() => setSearchVisible(true)}
+                            user={user}
+                            navigation={navigation}
                         />
-                    ) : (
-                        <TouchableOpacity
-                            style={styles.loginBtn}
-                            onPress={() => navigation.navigate('Login')}
+
+                        <ScrollView
+                            style={styles.scrollView}
+                            contentContainerStyle={styles.scrollContent}
+                            refreshControl={
+                                <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.colors.primary} />
+                            }
                         >
-                            <Text style={styles.loginBtnText}>Login</Text>
-                        </TouchableOpacity>
-                    )}
-                </View>
-            </View>
+                            {/* Top Bar (Sport Tabs) */}
+                            <TopBar
+                                activeTab={activeSport}
+                                onTabChange={setActiveSport}
+                                tabs={SPORT_TABS}
+                            />
 
-            {/* Sport Tabs */}
-            <TopBar
-                activeTab={activeSport}
-                onTabChange={setActiveSport}
-                tabs={SPORT_TABS}
-            />
+                            {/* Main Content */}
+                            <View style={styles.content}>
+                                {/* Live Matches Widget */}
+                                <LiveMatchesWidget
+                                    matches={filteredMatches}
+                                    loading={loading}
+                                    width={width}
+                                    navigation={navigation}
+                                    gap={theme.spacing.lg}
+                                    onFilterPress={handleFilterPress}
+                                />
 
-            <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-
-                <View style={[styles.contentContainer, isDesktop && styles.contentContainerDesktop]}>
-
-                    {/* Live Section */}
-                    <LiveMatchesWidget
-                        matches={filteredMatches}
-                        loading={loading}
-                        width={width}
-                        navigation={navigation}
-                        gap={theme.spacing.md}
-                    />
-
-                    {/* Trending News Placeholder */}
-                    <TrendingNewsWidget />
-
-                    {/* Bottom spacing for TabBar */}
-                    <View style={{ height: 80 }} />
-
-                </View>
-
-            </ScrollView>
-        </SafeAreaView>
-    );
+                                {/* Trending/News Widget */}
+                                <TrendingWidget width={width} />
+                            </View>
+                        </ScrollView>
+                    </View>
+                </SafeAreaView>
+                );
 }
 
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: theme.colors.background,
+                const styles = StyleSheet.create({
+                    container: {
+                    flex: 1,
+                backgroundColor: theme.colors.background,
     },
-    header: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        paddingHorizontal: theme.spacing.lg,
-        paddingVertical: theme.spacing.md,
-        borderBottomWidth: 1,
-        borderBottomColor: 'rgba(255,255,255,0.05)',
-        position: 'relative',
+                header: {
+                    flexDirection: 'row',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                paddingHorizontal: theme.spacing.lg,
+                paddingVertical: theme.spacing.md,
+                borderBottomWidth: 1,
+                borderBottomColor: 'rgba(255,255,255,0.05)',
+                position: 'relative',
     },
-    menuBtn: {
-        zIndex: 20,
+                menuBtn: {
+                    zIndex: 20,
     },
-    logoContainer: {
-        position: 'absolute',
-        left: 0,
-        right: 0,
-        alignItems: 'center',
-        justifyContent: 'center',
-        pointerEvents: 'none',
+                logoContainer: {
+                    position: 'absolute',
+                left: 0,
+                right: 0,
+                alignItems: 'center',
+                justifyContent: 'center',
+                pointerEvents: 'none',
     },
-    emptyContainer: {
-        padding: theme.spacing.xl,
-        alignItems: 'center',
-        justifyContent: 'center',
-        backgroundColor: 'rgba(255,255,255,0.02)',
-        borderRadius: theme.borderRadius.lg,
+                emptyContainer: {
+                    padding: theme.spacing.xl,
+                alignItems: 'center',
+                justifyContent: 'center',
+                backgroundColor: 'rgba(255,255,255,0.02)',
+                borderRadius: theme.borderRadius.lg,
     },
-    emptyText: {
-        color: theme.colors.textMuted,
-        fontFamily: theme.fonts.medium,
-        fontSize: theme.sizes.md,
+                emptyText: {
+                    color: theme.colors.textMuted,
+                fontFamily: theme.fonts.medium,
+                fontSize: theme.sizes.md,
     },
-    logoText: {
-        fontSize: 24,
-        fontFamily: theme.fonts.display,
-        fontWeight: 'bold',
-        color: theme.colors.text,
-        letterSpacing: 1,
+                logoText: {
+                    fontSize: 24,
+                fontFamily: theme.fonts.display,
+                fontWeight: 'bold',
+                color: theme.colors.text,
+                letterSpacing: 1,
     },
-    highlight: {
-        color: theme.colors.primary,
+                highlight: {
+                    color: theme.colors.primary,
     },
-    actions: {
-        flexDirection: 'row',
-        zIndex: 10,
-        alignItems: 'center', // Fix vertical alignment
+                actions: {
+                    flexDirection: 'row',
+                zIndex: 10,
+                alignItems: 'center', // Fix vertical alignment
     },
-    scrollContent: {
-        padding: theme.spacing.lg,
+                scrollContent: {
+                    padding: theme.spacing.lg,
     },
-    section: {
-        marginBottom: theme.spacing.xl,
+                section: {
+                    marginBottom: theme.spacing.xl,
     },
-    sectionTitle: {
-        color: theme.colors.textMuted,
-        fontSize: theme.sizes.sm,
-        fontWeight: '600',
-        marginBottom: theme.spacing.md,
-        letterSpacing: 1,
+                sectionTitle: {
+                    color: theme.colors.textMuted,
+                fontSize: theme.sizes.sm,
+                fontWeight: '600',
+                marginBottom: theme.spacing.md,
+                letterSpacing: 1,
     },
-    newsPlaceholder: {
-        height: 150,
-        backgroundColor: theme.colors.surface,
-        borderRadius: theme.borderRadius.md,
-        justifyContent: 'center',
-        alignItems: 'center',
-        borderWidth: 1,
-        borderColor: 'rgba(255,255,255,0.05)',
+                newsPlaceholder: {
+                    height: 150,
+                backgroundColor: theme.colors.surface,
+                borderRadius: theme.borderRadius.md,
+                justifyContent: 'center',
+                alignItems: 'center',
+                borderWidth: 1,
+                borderColor: 'rgba(255,255,255,0.05)',
     },
-    // Desktop Styles
-    headerDesktop: {
-        paddingHorizontal: theme.spacing.xl,
-        justifyContent: 'space-between',
+                // Desktop Styles
+                headerDesktop: {
+                    paddingHorizontal: theme.spacing.xl,
+                justifyContent: 'space-between',
     },
-    logoContainerDesktop: {
-        position: 'relative', // Reset absolute position on desktop
-        alignItems: 'flex-start',
-        left: 'auto',
-        right: 'auto',
+                logoContainerDesktop: {
+                    position: 'relative', // Reset absolute position on desktop
+                alignItems: 'flex-start',
+                left: 'auto',
+                right: 'auto',
     },
-    contentContainer: {
-        width: '100%',
+                contentContainer: {
+                    width: '100%',
     },
-    contentContainerDesktop: {
-        maxWidth: 1200,
-        alignSelf: 'center',
+                contentContainerDesktop: {
+                    maxWidth: 1200,
+                alignSelf: 'center',
     },
-    gridContainer: {
-        width: '100%',
+                gridContainer: {
+                    width: '100%',
     },
-    loginBtn: {
-        backgroundColor: theme.colors.primary,
-        paddingHorizontal: 16,
-        paddingVertical: 8,
-        borderRadius: 20,
+                loginBtn: {
+                    backgroundColor: theme.colors.primary,
+                paddingHorizontal: 16,
+                paddingVertical: 8,
+                borderRadius: 20,
     },
-    loginBtnText: {
-        color: '#fff',
-        fontFamily: theme.fonts.bold,
-        fontSize: 14,
+                loginBtnText: {
+                    color: '#fff',
+                fontFamily: theme.fonts.bold,
+                fontSize: 14,
     }
 });

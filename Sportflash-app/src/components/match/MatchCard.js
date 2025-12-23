@@ -7,7 +7,7 @@ import Animated, { useSharedValue, useAnimatedStyle, withRepeat, withTiming, wit
 import LiveBadge from './LiveBadge';
 import TeamLogo from './TeamLogo';
 
-export default function MatchCard({ sport, status, league, homeTeam, awayTeam, score, timer, onPress }) {
+export default function MatchCard({ sport, status, displayStatus, league, homeTeam, awayTeam, score, timer, onPress }) {
 
     // Determine Colors based on Sport
     const getSportColor = () => {
@@ -37,7 +37,7 @@ export default function MatchCard({ sport, status, league, homeTeam, awayTeam, s
                 {/* Header: Live Badge + League */}
                 <View style={styles.header}>
                     {status === 'live' ? (
-                        <LiveBadge sport={sport} />
+                        <LiveBadge sport={sport} status={displayStatus} />
                     ) : (
                         <View style={styles.badgeContainer}>
                             <Text style={[styles.statusText, { color: theme.colors.textMuted }]}>

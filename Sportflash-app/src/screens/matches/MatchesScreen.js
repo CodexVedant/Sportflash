@@ -14,7 +14,7 @@ import { useGetLiveMatchesQuery } from '@store/api/matchesApi';
 
 export default function MatchesScreen({ navigation }) {
     const { user } = useContext(AuthContext);
-    const [activeSport, setActiveSport] = useState('all');
+    const [activeSport, setActiveSport] = useState('cricket');
     const [activeTab, setActiveTab] = useState('Live');
     const [sidebarVisible, setSidebarVisible] = useState(false);
     const [filterVisible, setFilterVisible] = useState(false);
@@ -51,7 +51,6 @@ export default function MatchesScreen({ navigation }) {
     ]);
 
     const SPORT_TABS = [
-        { id: 'all', label: 'All Sports', icon: 'globe-outline' },
         { id: 'cricket', label: 'Cricket', icon: 'baseball-outline' },
         { id: 'football', label: 'Football', icon: 'football-outline' },
         { id: 'basketball', label: 'Basketball', icon: 'basketball-outline' },
@@ -95,6 +94,7 @@ export default function MatchesScreen({ navigation }) {
             <MatchCard
                 sport={item.sport}
                 status={item.status}
+                displayStatus={item.displayStatus}
                 league={item.league}
                 homeTeam={item.homeTeam}
                 awayTeam={item.awayTeam}

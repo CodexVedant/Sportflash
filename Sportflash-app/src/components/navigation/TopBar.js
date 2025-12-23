@@ -15,7 +15,7 @@ export default function TopBar({ activeTab, onTabChange, tabs }) {
                     <Ionicons
                         name={tab.icon}
                         size={20}
-                        color={activeTab === tab.id ? theme.colors.primary : theme.colors.textMuted}
+                        color={activeTab === tab.id ? '#fff' : theme.colors.textMuted}
                         style={styles.icon}
                     />
                     <Text style={[styles.tabText, activeTab === tab.id && styles.activeTabText]}>
@@ -30,24 +30,24 @@ export default function TopBar({ activeTab, onTabChange, tabs }) {
 const styles = StyleSheet.create({
     container: {
         flexDirection: 'row',
-        backgroundColor: 'rgba(255,255,255,0.03)',
-        borderRadius: theme.borderRadius.lg,
-        padding: 4,
-        marginHorizontal: theme.spacing.lg,
-        marginVertical: theme.spacing.md,
+        backgroundColor: 'transparent', // Transparent background
+        paddingHorizontal: theme.spacing.lg,
+        borderBottomWidth: 1,
+        borderBottomColor: 'rgba(255,255,255,0.05)',
     },
     tab: {
         flex: 1,
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
-        paddingVertical: 10,
-        paddingHorizontal: 12,
-        borderRadius: theme.borderRadius.md,
+        paddingVertical: 14, // Increase padding for click area
         gap: 6,
+        borderBottomWidth: 3, // Reserve space for border
+        borderBottomColor: 'transparent',
     },
     activeTab: {
-        backgroundColor: theme.colors.primary,
+        backgroundColor: 'transparent', // No background color
+        borderBottomColor: theme.colors.primary, // Underline color
     },
     icon: {
         marginRight: 4,
@@ -56,9 +56,14 @@ const styles = StyleSheet.create({
         fontSize: 14,
         fontFamily: theme.fonts.medium,
         color: theme.colors.textMuted,
+        textTransform: 'uppercase', // Match the image style usually
+        letterSpacing: 0.5,
     },
     activeTabText: {
         color: '#fff',
-        fontWeight: '600',
+        fontWeight: 'bold',
+        textShadowColor: 'rgba(0, 0, 0, 0.5)',
+        textShadowOffset: { width: 0, height: 1 },
+        textShadowRadius: 2,
     },
 });
