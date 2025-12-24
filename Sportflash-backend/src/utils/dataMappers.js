@@ -173,11 +173,31 @@ const mapCricketMatch = (match) => {
  * Helper to extract current overs for cricket
  */
 const extractCricketOvers = (match) => {
-    // Try to get overs from comments (most recent over)
-    if (match.comments?.Live?.[0]?.overs) {
-        return match.comments.Live[0].overs;
+    // logic: looks for pattern (XX.X ov) or just (XX.X) at the end
+    const scores = [match.event_home_final_result, match.event_away_final_result].filter(s => s);
+
+    for (const score of scores) {
+        const matchOv = score.match(/\((\d+(\.\d+)?)\s*(ov)?\)/i);
+        if (matchOv) {
+            return matchOv[1];
+        }
     }
-    // Fallback to extraction from status text if available
+
+    if (match.comments?.Live?.length > 0) {
+        let maxOver = 0;
+        let found = false;
+
+        match.comments.Live.forEach(comment => {
+            const ov = parseFloat(comment?.overs);
+            if (!isNaN(ov)) {
+                if (ov > maxOver) maxOver = ov;
+                found = true;
+            }
+        });
+
+        if (found) return maxOver.toString();
+    }
+
     return null;
 };
 

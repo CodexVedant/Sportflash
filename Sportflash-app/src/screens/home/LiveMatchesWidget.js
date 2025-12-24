@@ -13,8 +13,6 @@ export default function LiveMatchesWidget({ matches, loading, width, navigation,
     const flattenedData = React.useMemo(() => {
         if (!matches || matches.length === 0) return [];
 
-        // Deduplicate matches to prevent double rendering
-        // We use a Map to ensure we keep the latest version if duplicates exist (though usually they are identical)
         const uniqueMatches = [];
         const seenIds = new Set();
 
