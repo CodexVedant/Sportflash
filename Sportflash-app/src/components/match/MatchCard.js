@@ -7,7 +7,8 @@ import Animated, { useSharedValue, useAnimatedStyle, withRepeat, withTiming, wit
 import LiveBadge from './LiveBadge';
 import TeamLogo from './TeamLogo';
 
-export default function MatchCard({ sport, status, displayStatus, league, homeTeam, awayTeam, score, timer, onPress }) {
+const MatchCard = ({ sport, status, displayStatus, league, homeTeam, awayTeam, score, timer, onPress }) => {
+    if (!homeTeam || !awayTeam) return null;
 
     // Determine Colors based on Sport
     const getSportColor = () => {
@@ -90,7 +91,9 @@ export default function MatchCard({ sport, status, displayStatus, league, homeTe
             </LinearGradient>
         </TouchableOpacity>
     );
-}
+};
+
+export default React.memo(MatchCard);
 
 const styles = StyleSheet.create({
     card: {

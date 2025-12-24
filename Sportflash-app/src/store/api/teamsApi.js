@@ -15,7 +15,7 @@ export const teamsApi = createApi({
     }),
     endpoints: (builder) => ({
         getTeam: builder.query({
-            query: (id) => `/teams/${id}`,
+            query: ({ id, sport }) => `/teams/${id}?sport=${sport}`,
         }),
         searchTeams: builder.query({
             query: (query) => `/teams/search?q=${query}`,

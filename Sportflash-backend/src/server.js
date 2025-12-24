@@ -223,6 +223,8 @@ const matchRoutes = require('./routes/matchRoutes');
 // Mount Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/matches', matchRoutes);
+app.use('/api/teams', require('./routes/teamRoutes'));
+app.use('/api/players', require('./routes/playerRoutes'));
 
 // Socket.IO Connection Handler
 io.on('connection', (socket) => {

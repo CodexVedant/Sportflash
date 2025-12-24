@@ -15,9 +15,6 @@ export const EmptyData = ({ message }) => (
     </View>
 );
 
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-
-// ... (code above)
 
 export const PlayerRow = ({ name, number, position, isCaptain, isGoalkeeper, onPress }) => (
     <TouchableOpacity onPress={onPress}>

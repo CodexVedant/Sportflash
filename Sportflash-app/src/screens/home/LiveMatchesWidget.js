@@ -20,6 +20,9 @@ export default function LiveMatchesWidget({ matches, loading, width, navigation,
         if (!matches || matches.length === 0) return [];
 
         const grouped = matches.reduce((acc, match) => {
+            // Strict validation: Ensure match has valid teams and names
+            if (!match.homeTeam?.name || !match.awayTeam?.name) return acc;
+
             const league = match.league || 'Others';
             if (!acc[league]) acc[league] = [];
             acc[league].push(match);
@@ -33,6 +36,7 @@ export default function LiveMatchesWidget({ matches, loading, width, navigation,
                 flatList.push({ type: 'match', ...match });
             });
         });
+        console.log('Flattened Live Matches Data:', flatList.length, flatList);
         return flatList;
     }, [matches]);
 
@@ -54,13 +58,13 @@ export default function LiveMatchesWidget({ matches, loading, width, navigation,
                         renderItem={({ item }) => {
                             if (item.type === 'header') {
                                 return (
-                                    <View style={styles.leagueHeader}>
+                                    <View style={[styles.leagueHeader, { zIndex: 10 }]}>
                                         <Text style={styles.leagueTitle}>{item.title}</Text>
                                     </View>
                                 );
                             }
                             return (
-                                <View style={{ marginBottom: 16 }}>
+                                <View style={{ marginBottom: 4 }}>
                                     <MatchCard
                                         sport={item.sport}
                                         status={item.status}
@@ -79,7 +83,7 @@ export default function LiveMatchesWidget({ matches, loading, width, navigation,
                         estimatedItemSize={160}
                         numColumns={numColumns}
                         contentContainerStyle={{ paddingBottom: 20 }}
-                        keyExtractor={item => item.id.toString()}
+                        keyExtractor={(item, index) => item.id ? item.id.toString() : index.toString()}
                         stickyHeaderIndices={stickyHeaderIndices}
                         ListFooterComponent={ListFooterComponent}
                         ListEmptyComponent={
@@ -107,12 +111,15 @@ const styles = StyleSheet.create({
     },
     leagueHeader: {
         backgroundColor: theme.colors.surface,
-        paddingVertical: 8,
+        paddingVertical: 6,
         paddingHorizontal: 12,
-        marginBottom: 8,
+        marginBottom: 0,
+        marginTop: 0,
         borderRadius: 4,
         borderLeftWidth: 3,
         borderLeftColor: theme.colors.primary,
+        borderBottomLeftRadius: 0,
+        borderBottomRightRadius: 0,
     },
     leagueTitle: {
         color: theme.colors.text,

@@ -13,25 +13,27 @@ export const mapMatchToUI = (match) => {
         }
     }
 
+    // Generate a fallback ID if missing to prevent key clashes
+    const safeId = match.id || match._id || `temp-${Math.random().toString(36).substr(2, 9)}`;
+
     return {
-        id: match.id || match._id,
+        id: safeId,
         sport: match.sport,
         status: match.status,
         displayStatus: match.displayStatus,
         league: match.league,
         homeTeam: {
-            name: match.homeTeam.name,
-            logo: match.homeTeam.logo,
-            score: match.homeTeam.score
+            name: match.homeTeam?.name || 'Unknown Team',
+            logo: match.homeTeam?.logo,
+            score: match.homeTeam?.score
         },
         awayTeam: {
-            name: match.awayTeam.name,
-            logo: match.awayTeam.logo,
-            score: match.awayTeam.score
+            name: match.awayTeam?.name || 'Unknown Team',
+            logo: match.awayTeam?.logo,
+            score: match.awayTeam?.score
         },
         score: centerInfo,
         timer: timer,
-        // Pass through detailed data for specific views
         // Pass through detailed data for specific views
         scorecard: match.scorecard,
         lineups: match.lineups,
@@ -56,8 +58,15 @@ export const mapMatchToUI = (match) => {
 
         // Parse Basketball Quarters
         basketballData: match.sport === 'basketball' && match.score?.quarters ? (() => {
-            // Example format "25-20, 18-22, ..."
-            const quarters = match.score.quarters.split(',').map(s => s.trim().split('-'));
+            // Example format "25-20, 18-22, ..." or array
+            let quarters = [];
+            if (typeof match.score.quarters === 'string') {
+                quarters = match.score.quarters.split(',').map(s => s.trim().split('-'));
+            } else if (Array.isArray(match.score.quarters)) {
+                // Assume it might be an array of objects or strings, but handle gracefully
+                return match.basketballData || {};
+            }
+            if (quarters.length === 0) return match.basketballData || {};
             return {
                 ...match.basketballData,
                 home_q1: quarters[0]?.[0], away_q1: quarters[0]?.[1],
