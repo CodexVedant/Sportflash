@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, Animated, TouchableOpacity, useWindowDimensions, Platform, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, Animated, TouchableOpacity, useWindowDimensions, Platform, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { theme } from '@utils/theme';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -7,9 +7,11 @@ import MatchCard from '@components/match/MatchCard';
 import { Ionicons } from '@expo/vector-icons';
 import SearchModal from '@components/common/SearchModal';
 import { useGetLiveMatchesQuery } from '@store/api/matchesApi';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import { NotificationBell, NotificationPanel } from '@components/notifications';
-import { useLiveScores } from '@hooks/useSocket';
+import { initSocketListeners } from '@store/thunks/socketThunks';
+import { selectAllLiveMatches } from '@store/slices/liveMatchesSlice';
+import { mapMatchToUI } from '@utils/matchMappers';
 import LiveMatchesWidget from '@screens/home/LiveMatchesWidget';
 import TrendingNewsWidget from '@screens/home/TrendingNewsWidget';
 import MenuToggle from '@components/navigation/MenuToggle';
@@ -18,17 +20,40 @@ import TopBar from '@components/navigation/TopBar';
 import Sidebar, { SidebarContent } from '@components/navigation/Sidebar';
 
 export default function HomeScreen({ navigation }) {
+    const dispatch = useDispatch();
+    const { user } = useSelector(state => state.auth);
+    const { width } = useWindowDimensions();
+
+    // UI Local State
     const [searchVisible, setSearchVisible] = useState(false);
     const [sidebarVisible, setSidebarVisible] = useState(false);
     const [notificationVisible, setNotificationVisible] = useState(false);
-    const [matches, setMatches] = useState([]);
-    const [filteredMatches, setFilteredMatches] = useState([]);
-    const [loading, setLoading] = useState(true);
     const [activeSport, setActiveSport] = useState('cricket');
-    const { width } = useWindowDimensions();
-    const { user } = useSelector(state => state.auth);
 
-    // Mock notifications
+    // Redux State - Single Source of Truth
+    const allLiveMatches = useSelector(selectAllLiveMatches);
+    const { isLoading: isMatchesLoading } = useGetLiveMatchesQuery();
+
+    // Derived State (Filtering)
+    const matches = React.useMemo(() => {
+        const live = allLiveMatches
+            .map(mapMatchToUI)
+            .filter(m => m.status === 'live');
+
+        return activeSport === 'all'
+            ? live
+            : live.filter(m => m.sport?.toLowerCase() === activeSport);
+    }, [allLiveMatches, activeSport]);
+
+    const loading = isMatchesLoading && matches.length === 0;
+
+    // Initialize Socket Listeners
+    useEffect(() => {
+        dispatch(initSocketListeners());
+        // Optional: return () => dispatch(stopSocketListeners());
+    }, [dispatch]);
+
+    // Mock notifications (Keeping existing logic)
     const [notifications] = useState([
         {
             id: 1,
@@ -59,116 +84,8 @@ export default function HomeScreen({ navigation }) {
     const MAX_WIDTH = 1200;
     const contentWidth = isDesktop ? Math.min(width, MAX_WIDTH) : width;
 
-    // Grid Calculation
-    const numColumns = width > 1024 ? 3 : (isDesktop ? 2 : 1);
-    const gap = theme.spacing.md;
-    const padding = theme.spacing.lg * 2;
-
-    const cardWidth = isDesktop
-        ? (contentWidth - padding - (gap * (numColumns - 1))) / numColumns
-        : '100%';
-
-    // Get live matches from Redux RTK Query
-    const { data: initialMatches = [], isLoading: isMatchesLoading, refetch } = useGetLiveMatchesQuery();
-
-    // Get live scores from socket
-    const liveScores = useLiveScores();
-
-    useEffect(() => {
-        if (initialMatches.length > 0) {
-            // Map backend data to UI format
-            const formattedMatches = initialMatches.map(mapMatchToUI);
-            const liveMatchesOnly = formattedMatches.filter(m => m.status === 'live');
-            setMatches(liveMatchesOnly);
-            setLoading(false);
-        } else if (!isMatchesLoading) {
-            setLoading(false);
-        }
-    }, [initialMatches, isMatchesLoading]);
-
-    // Filter matches by sport
-    useEffect(() => {
-        if (activeSport === 'all') {
-            setFilteredMatches(matches);
-        } else {
-            const filtered = matches.filter(match => match.sport?.toLowerCase() === activeSport);
-            setFilteredMatches(filtered);
-        }
-    }, [matches, activeSport]);
-
-    // Update matches when live cricket scores arrive
-    useEffect(() => {
-        if (liveScores.cricket && liveScores.cricket.length > 0) {
-            console.log('🔴 Live cricket scores received, updating UI...');
-
-            // Map live cricket scores to UI format
-            const liveCricketMatches = liveScores.cricket
-                .filter(match => match.status === 'live')
-                .map(match => ({
-                    id: match.id,
-                    sport: 'cricket',
-                    status: match.status,
-                    league: match.league,
-                    homeTeam: {
-                        name: match.homeTeam.name,
-                        logo: match.homeTeam.logo,
-                        score: match.homeTeam.score
-                    },
-                    awayTeam: {
-                        name: match.awayTeam.name,
-                        logo: match.awayTeam.logo,
-                        score: match.awayTeam.score
-                    },
-                    score: match.homeTeam.score && match.awayTeam.score
-                        ? `${match.homeTeam.score} - ${match.awayTeam.score}`
-                        : null,
-                    timer: match.cricketData?.overs ? `${match.cricketData.overs} Overs` : match.currentMinute || ''
-                }));
-
-            // Merge with existing matches
-            setMatches(prevMatches => {
-                const nonCricket = prevMatches.filter(m => m.sport !== 'cricket');
-                return [...liveCricketMatches, ...nonCricket];
-            });
-        }
-    }, [liveScores.cricket]);
 
 
-    const mapMatchToUI = (match) => {
-        let timer = match.currentMinute;
-        let centerInfo = null;
-
-        if (match.sport === 'cricket') {
-            timer = match.cricketData?.overs ? `${match.cricketData.overs} Overs` : '';
-        } else if (match.sport === 'basketball') {
-            timer = match.basketballData?.quarter ? `Q${match.basketballData.quarter}` : '';
-            centerInfo = 'Live';
-        } else if (match.sport === 'football') {
-            if (match.homeTeam.score && match.awayTeam.score) {
-                centerInfo = `${match.homeTeam.score} - ${match.awayTeam.score}`;
-            }
-        }
-
-        return {
-            id: match._id,
-            sport: match.sport,
-            status: match.status,
-            displayStatus: match.displayStatus,
-            league: match.league,
-            homeTeam: {
-                name: match.homeTeam.name,
-                logo: match.homeTeam.logo,
-                score: match.homeTeam.score
-            },
-            awayTeam: {
-                name: match.awayTeam.name,
-                logo: match.awayTeam.logo,
-                score: match.awayTeam.score
-            },
-            score: centerInfo,
-            timer: timer
-        };
-    };
 
     return (
         <SafeAreaView style={styles.container}>
@@ -221,28 +138,24 @@ export default function HomeScreen({ navigation }) {
                 tabs={SPORT_TABS}
             />
 
-            <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-
-                <View style={[styles.contentContainer, isDesktop && styles.contentContainerDesktop]}>
-
-                    {/* Live Section */}
-                    <LiveMatchesWidget
-                        matches={filteredMatches}
-                        loading={loading}
-                        width={width}
-                        navigation={navigation}
-                        gap={theme.spacing.md}
-                    />
-
-                    {/* Trending News Placeholder */}
-                    <TrendingNewsWidget />
-
-                    {/* Bottom spacing for TabBar */}
-                    <View style={{ height: 80 }} />
-
-                </View>
-
-            </ScrollView>
+            {/* Live Section */}
+            <View style={[styles.contentContainer, isDesktop && styles.contentContainerDesktop, { flex: 1 }]}>
+                <LiveMatchesWidget
+                    matches={matches} // Use filtered/derived matches here
+                    loading={loading}
+                    width={width}
+                    navigation={navigation}
+                    gap={theme.spacing.md}
+                    ListFooterComponent={
+                        <>
+                            {/* Trending News Placeholder */}
+                            <TrendingNewsWidget />
+                            {/* Bottom spacing for TabBar */}
+                            <View style={{ height: 80 }} />
+                        </>
+                    }
+                />
+            </View>
         </SafeAreaView>
     );
 }

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, useWindowDimensions, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -14,7 +14,10 @@ import { useToast } from '@context/ToastContext';
 import { useDispatch, useSelector } from 'react-redux';
 import { updateUserPreferences } from '@store/slices/authSlice';
 import socket from '@services/socket';
-import { useGetMatchH2HQuery, useGetMatchStandingsQuery } from '@store/api/matchesApi';
+import { useGetMatchH2HQuery, useGetMatchStandingsQuery, useGetLiveMatchesQuery } from '@store/api/matchesApi';
+import { selectMatchById } from '@store/slices/liveMatchesSlice';
+import { initSocketListeners } from '@store/thunks/socketThunks';
+import { mapMatchToUI } from '@utils/matchMappers';
 
 export default function MatchDetailScreen({ navigation, route }) {
     const { match } = route.params || {};
@@ -25,29 +28,58 @@ export default function MatchDetailScreen({ navigation, route }) {
     const { width } = useWindowDimensions();
     const isDesktop = width > 768;
 
-    // Default mock if no params
-    const initialMatch = match || {
-        _id: '1', // Ensure ID matches backend simulation
-        sport: 'cricket',
-        homeTeam: { name: 'IND', logo: '🇮🇳', score: '248/3' },
-        awayTeam: { name: 'AUS', logo: '🇦🇺', score: '180/6' },
-        status: 'live',
-        league: 'ICC World Cup 2026'
+    const matchId = match?._id || match?.id || '1';
+    const reduxMatch = useSelector(state => selectMatchById(state, matchId));
+    const displayMatch = reduxMatch ? mapMatchToUI(reduxMatch) : (match || {});
+    const matchData = {
+        ...displayMatch,
+        homeTeam: displayMatch.homeTeam || { name: 'Home' },
+        awayTeam: displayMatch.awayTeam || { name: 'Away' },
+        venue: displayMatch.venue || {},
+        date: displayMatch.date || 'Today'
     };
 
-    const [matchData, setMatchData] = useState(initialMatch);
-
-    // Derived state for header (can also just use matchData directly)
-    const [homeScore, setHomeScore] = useState(initialMatch.homeTeam?.score || '0/0');
-    const [awayScore, setAwayScore] = useState(initialMatch.awayTeam?.score || '0/0');
-    const [timer, setTimer] = useState(initialMatch.timer || '');
-    const [liveCommentary, setLiveCommentary] = useState([]);
-
-    // Logic to check if following
+    const homeScore = matchData.homeTeam?.score || '0';
+    const awayScore = matchData.awayTeam?.score || '0';
+    const timer = matchData.timer || '';
     const isFollowingHome = user?.preferences?.favoriteTeams?.includes(matchData.homeTeam?.name);
     const isFollowingAway = user?.preferences?.favoriteTeams?.includes(matchData.awayTeam?.name);
 
-    const handleFollow = async (teamName) => {
+    // Initial Fetch (if needed, though HomeScreen likely fetched it)
+    const { refetch } = useGetLiveMatchesQuery();
+
+    // Ensure socket listeners are active when on this screen
+    useEffect(() => {
+        dispatch(initSocketListeners());
+    }, [dispatch]);
+
+    const [liveCommentary, setLiveCommentary] = useState([]);
+
+    useEffect(() => {
+        // Join specific match room for detailed updates (like commentary) where applicable
+        if (matchId && matchId !== '1') {
+            socket.emit('join_match', matchId);
+        }
+
+        // Listener for commentary/specific events
+        const handleCommentary = (data) => {
+            if ((data.id === matchId || data._id === matchId) && data.commentary) {
+                setLiveCommentary(prev => [{ text: data.commentary, time: data.currentMinute }, ...prev].slice(0, 20));
+            }
+        };
+
+        socket.on('score_update', handleCommentary);
+
+        return () => {
+            socket.off('score_update', handleCommentary);
+            if (matchId && matchId !== '1') {
+                socket.emit('leave_match', matchId);
+            }
+        };
+    }, [matchId]);
+
+
+    const handleFollow = useCallback(async (teamName) => {
         if (!user) {
             showToast('Please login to follow teams', 'info');
             return;
@@ -69,7 +101,7 @@ export default function MatchDetailScreen({ navigation, route }) {
         } catch (error) {
             showToast('Failed to update favorites', 'error');
         }
-    };
+    }, [user, dispatch, showToast]);
 
     const getSportColor = () => {
         switch (matchData.sport?.toLowerCase()) {
@@ -81,49 +113,6 @@ export default function MatchDetailScreen({ navigation, route }) {
     };
 
     const activeColor = getSportColor();
-
-    // Real-time Socket Connection
-    useEffect(() => {
-        // join match room
-        const matchId = matchData._id || matchData.id || '1';
-        socket.emit('join_match', matchId);
-
-        const handleScoreUpdate = (data) => {
-            console.log("Socket Update:", data);
-
-            // Only update if match ID matches (or generic '1' for demo)
-            if (data.id === matchId || data._id === matchId || matchId === '1') {
-
-                // Update full match data object to refresh Scorecards/Stats
-                setMatchData(prev => ({
-                    ...prev,
-                    ...data,
-                    // Preserve some fields if needed
-                }));
-
-                // Update individual states for Hero section if structure differs or for animation triggers
-                if (data.homeTeam?.score) setHomeScore(data.homeTeam.score);
-                if (data.awayTeam?.score) setAwayScore(data.awayTeam.score);
-                if (data.currentMinute || data.status) setTimer(data.currentMinute || data.status);
-
-                // Handle Commentary
-                if (data.commentary) {
-                    setLiveCommentary(prev => {
-                        const newComm = [{ text: data.commentary, time: data.currentMinute }, ...prev];
-                        return newComm.slice(0, 20);
-                    });
-                }
-            }
-        };
-
-        socket.on('score_update', handleScoreUpdate);
-
-        return () => {
-            socket.off('score_update', handleScoreUpdate);
-            socket.emit('leave_match', matchId);
-        };
-    }, []);
-
 
     // Fetch Data for Tabs
     const { data: h2hData } = useGetMatchH2HQuery({
@@ -188,6 +177,14 @@ export default function MatchDetailScreen({ navigation, route }) {
         }
     };
 
+    const handleTeamPress = useCallback((team) => {
+        navigation.navigate('TeamProfile', {
+            teamId: team.id,
+            teamName: team.name,
+            sport: matchData.sport
+        });
+    }, [navigation, matchData.sport]);
+
     return (
         <View style={styles.container}>
             {/* Header Background */}
@@ -206,7 +203,14 @@ export default function MatchDetailScreen({ navigation, route }) {
                         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
                             <Ionicons name="arrow-back" size={24} color="#FFF" />
                         </TouchableOpacity>
-                        <Text style={styles.headerTitle}>{matchData.league}</Text>
+
+                        <TouchableOpacity onPress={() => navigation.navigate('LeagueDetails', { leagueId: matchData.leagueInfo?.id })}>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                                <Text style={styles.headerTitle}>{matchData.league}</Text>
+                                <Ionicons name="chevron-forward" size={16} color="rgba(255,255,255,0.7)" />
+                            </View>
+                        </TouchableOpacity>
+
                         <TouchableOpacity>
                             <Ionicons name="share-outline" size={24} color="#FFF" />
                         </TouchableOpacity>
@@ -219,6 +223,7 @@ export default function MatchDetailScreen({ navigation, route }) {
                         awayScore={awayScore}
                         timer={timer}
                         onFollow={handleFollow}
+                        onTeamPress={handleTeamPress}
                         isFollowingHome={isFollowingHome}
                         isFollowingAway={isFollowingAway}
                     />

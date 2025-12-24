@@ -137,7 +137,9 @@ export default function MatchesScreen({ navigation }) {
                     timer={
                         item.sport === 'cricket'
                             ? (item.cricketData?.overs ? `${item.cricketData.overs} Overs` : '')
-                            : item.currentMinute || (item.scheduledAt ? new Date(item.scheduledAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '')
+                            : (item.sport === 'basketball' && typeof item.timer === 'string' && item.timer.includes('Quarter'))
+                                ? item.timer
+                                : item.currentMinute || (item.scheduledAt ? new Date(item.scheduledAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '')
                     }
                     onPress={() => navigation.navigate('MatchDetail', { match: item })}
                 />

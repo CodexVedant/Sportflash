@@ -21,6 +21,8 @@ import PlayerProfileScreen from '@screens/player/PlayerProfileScreen';
 import NotificationsScreen from '@screens/profile/NotificationsScreen';
 import PreferencesScreen from '@screens/profile/PreferencesScreen';
 import NewsDetailScreen from '@screens/news/NewsDetailScreen';
+import LeagueDetailsScreen from '@screens/league/LeagueDetailsScreen';
+import TeamProfileScreen from '@screens/team/TeamProfileScreen';
 
 import { theme } from '@utils/theme';
 
@@ -58,6 +60,8 @@ export default function AppNavigator() {
                 <Stack.Screen name="Following" component={FollowingScreen} />
                 <Stack.Screen name="Bookmarks" component={BookmarksScreen} />
                 <Stack.Screen name="Settings" component={SettingsScreen} />
+                <Stack.Screen name="LeagueDetails" component={LeagueDetailsScreen} />
+                <Stack.Screen name="TeamProfile" component={TeamProfileScreen} />
                 <Stack.Screen name="PlayerProfile" component={PlayerProfileScreen} />
                 <Stack.Screen name="Notifications" component={NotificationsScreen} />
                 <Stack.Screen name="Preferences" component={PreferencesScreen} />

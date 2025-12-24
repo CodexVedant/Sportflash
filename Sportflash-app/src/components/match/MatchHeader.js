@@ -1,24 +1,23 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { theme } from '@utils/theme';
 import { Ionicons } from '@expo/vector-icons';
 import Animated from 'react-native-reanimated';
 
-export default function MatchHeader({
-    match,
-    homeScore,
-    awayScore,
-    timer,
-    onFollow,
-    isFollowingHome,
-    isFollowingAway
-}) {
-    if (!match) return null;
-
+// Define the functional component
+const MatchHeader = ({ match, homeScore, awayScore, timer, onFollow, onTeamPress, isFollowingHome, isFollowingAway }) => {
     return (
         <View style={styles.scoreHero}>
             <View style={styles.teamContainer}>
-                <View style={styles.logoLg}><Text style={{ fontSize: 32 }}>{match.homeTeam.logo}</Text></View>
+                <TouchableOpacity onPress={() => onTeamPress && onTeamPress(match.homeTeam)}>
+                    <View style={styles.logoLg}>
+                        <Image
+                            source={{ uri: match.homeTeam.logo }}
+                            style={{ width: 60, height: 60, borderRadius: 30 }}
+                            resizeMode="cover"
+                        />
+                    </View>
+                </TouchableOpacity>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                     <Text style={styles.teamNameHero}>{match.homeTeam.name}</Text>
                     <TouchableOpacity onPress={() => onFollow(match.homeTeam.name)}>
@@ -37,7 +36,15 @@ export default function MatchHeader({
             </View>
 
             <View style={styles.teamContainer}>
-                <View style={styles.logoLg}><Text style={{ fontSize: 32 }}>{match.awayTeam.logo}</Text></View>
+                <TouchableOpacity onPress={() => onTeamPress && onTeamPress(match.awayTeam)}>
+                    <View style={styles.logoLg}>
+                        <Image
+                            source={{ uri: match.awayTeam.logo }}
+                            style={{ width: 60, height: 60, borderRadius: 30 }}
+                            resizeMode="cover"
+                        />
+                    </View>
+                </TouchableOpacity>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                     <Text style={styles.teamNameHero}>{match.awayTeam.name}</Text>
                     <TouchableOpacity onPress={() => onFollow(match.awayTeam.name)}>
@@ -48,6 +55,19 @@ export default function MatchHeader({
         </View>
     );
 }
+
+// Memoize specifically to prevent re-renders on parent state changes (like tab switching)
+export default React.memo(MatchHeader, (prevProps, nextProps) => {
+    return (
+        prevProps.match?.id === nextProps.match?.id &&
+        prevProps.homeScore === nextProps.homeScore &&
+        prevProps.awayScore === nextProps.awayScore &&
+        prevProps.timer === nextProps.timer &&
+        prevProps.isFollowingHome === nextProps.isFollowingHome &&
+        prevProps.isFollowingAway === nextProps.isFollowingAway
+    );
+});
+
 
 const styles = StyleSheet.create({
     scoreHero: {

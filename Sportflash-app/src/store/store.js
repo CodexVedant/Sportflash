@@ -6,6 +6,7 @@ import notificationsReducer from './slices/notificationsSlice';
 import searchReducer from './slices/searchSlice';
 import themeReducer from './slices/themeSlice';
 import userReducer from './slices/userSlice';
+import liveMatchesReducer from './slices/liveMatchesSlice';
 
 import { matchesApi } from './api/matchesApi';
 import { newsApi } from './api/newsApi';
@@ -24,6 +25,7 @@ export const store = configureStore({
         search: searchReducer,
         theme: themeReducer,
         user: userReducer,
+        liveMatches: liveMatchesReducer,
 
         // APIs
         [matchesApi.reducerPath]: matchesApi.reducer,
