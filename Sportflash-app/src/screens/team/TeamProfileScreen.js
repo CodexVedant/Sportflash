@@ -1,26 +1,15 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Image } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Image, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { theme } from '@utils/theme';
 import { Ionicons } from '@expo/vector-icons';
-import { useGetTeamDetailsQuery } from '@store/api/teamsApi';
+import { useGetTeamQuery } from '@store/api/teamsApi';
 
 export default function TeamProfileScreen({ navigation, route }) {
     const { teamId, teamName, sport = 'football' } = route.params || {};
     const [activeTab, setActiveTab] = useState('Overview');
 
-    // Fetch Team Details (Note: We might need to ensure this query exists in teamsApi or add it)
-    // Assuming a hook exists or using a placeholder for now until we verify api/teamsApi.js
-    // const { data: teamData, isLoading } = useGetTeamDetailsQuery(teamId, { skip: !teamId });
-
-    // Mock Data for UI Structure (Replace with real API data later)
-    const teamData = {
-        name: teamName || 'Team Name',
-        logo: 'https://via.placeholder.com/100', // Should be passed on param ideally
-        founded: '1878',
-        stadium: 'Old Trafford',
-        country: 'England'
-    };
+    // Fetch Team Details from API
+    const { data: teamData, isLoading, error } = useGetTeamQuery({ id: teamId, sport });
 
     const renderTabContent = () => {
         switch (activeTab) {
@@ -39,7 +28,7 @@ export default function TeamProfileScreen({ navigation, route }) {
                             </View>
                             <View style={styles.infoRow}>
                                 <Text style={styles.label}>Stadium</Text>
-                                <Text style={styles.value}>{teamData.stadium}</Text>
+                                <Text style={styles.value}>{teamData.venue?.name || 'N/A'}</Text>
                             </View>
                         </View>
 
@@ -74,6 +63,22 @@ export default function TeamProfileScreen({ navigation, route }) {
         }
     };
 
+    if (isLoading) {
+        return (
+            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: theme.colors.background }}>
+                <ActivityIndicator size="large" color={theme.colors.primary} />
+            </View>
+        );
+    }
+
+    if (error || !teamData) {
+        return (
+            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: theme.colors.background }}>
+                <Text style={{ color: theme.colors.textMuted }}>Failed to load team details.</Text>
+            </View>
+        );
+    }
+
     return (
         <SafeAreaView style={styles.container}>
             {/* Header */}
@@ -90,8 +95,11 @@ export default function TeamProfileScreen({ navigation, route }) {
             {/* Team Hero */}
             <View style={styles.hero}>
                 <View style={styles.logoContainer}>
-                    {/* Fallback to icon if no logo URL (handling the mock logic) */}
-                    <Ionicons name="shield-half" size={40} color={theme.colors.primary} />
+                    {teamData.logo ? (
+                        <Image source={{ uri: teamData.logo }} style={{ width: 60, height: 60, resizeMode: 'contain' }} />
+                    ) : (
+                        <Ionicons name="shield-half" size={40} color={theme.colors.primary} />
+                    )}
                 </View>
                 <Text style={styles.teamNameHero}>{teamData.name}</Text>
                 <Text style={styles.countryText}>{teamData.country}</Text>

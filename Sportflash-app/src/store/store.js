@@ -14,6 +14,7 @@ import { teamsApi } from './api/teamsApi';
 import { searchApi } from './api/searchApi';
 import { usersApi } from './api/usersApi';
 import { authApi } from './api/authApi';
+import { playersApi } from './api/playersApi';
 
 export const store = configureStore({
     reducer: {
@@ -34,6 +35,7 @@ export const store = configureStore({
         [searchApi.reducerPath]: searchApi.reducer,
         [usersApi.reducerPath]: usersApi.reducer,
         [authApi.reducerPath]: authApi.reducer,
+        [playersApi.reducerPath]: playersApi.reducer,
     },
     middleware: (getDefaultMiddleware) =>
         getDefaultMiddleware({
@@ -44,7 +46,8 @@ export const store = configureStore({
             teamsApi.middleware,
             searchApi.middleware,
             usersApi.middleware,
-            authApi.middleware
+            authApi.middleware,
+            playersApi.middleware
         ),
 });
 

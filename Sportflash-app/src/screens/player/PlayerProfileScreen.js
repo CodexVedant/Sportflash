@@ -1,44 +1,64 @@
-import React, { useState } from 'react';
-import { View, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, StyleSheet, ScrollView, TouchableOpacity, Text, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { theme } from '@utils/theme';
 import { Ionicons } from '@expo/vector-icons';
 import PlayerHeader from '@components/player/PlayerHeader';
 import PlayerStats from '@components/player/PlayerStats';
+import { useGetPlayerDetailsQuery } from '@store/api/playersApi';
 
 export default function PlayerProfileScreen({ route, navigation }) {
-    // Get player from params or use mock
-    const { player: initialPlayer } = route.params || {};
+    // Get player from params
+    const { player: initialPlayer, playerId, sport = 'football' } = route.params || {};
 
-    // Mock data expansion
-    const [player, setPlayer] = useState({
-        ...initialPlayer,
-        image: initialPlayer?.image || 'https://api.dicebear.com/7.x/avataaars/png?seed=Felix',
-        number: initialPlayer?.number || '10',
-        nationality: initialPlayer?.nationality || 'Argentina',
-        position: initialPlayer?.position || 'Forward',
-        team: initialPlayer?.team || 'Inter Miami',
-        isFollowing: false,
-    });
+    // Determine ID: passed explicitly or inside player object
+    const id = playerId || initialPlayer?.id;
 
-    // Mock Stats
-    const stats = [
-        { label: 'Appearances', value: '24', icon: 'shirt-outline' },
-        { label: 'Goals', value: '18', icon: 'football-outline' },
-        { label: 'Assists', value: '12', icon: 'flash-outline' },
-        { label: 'Rating', value: '8.4', icon: 'star-outline' },
-    ];
+    const { data: playerData, isLoading, error } = useGetPlayerDetailsQuery({ id, sport }, { skip: !id });
 
-    const form = ['W', 'W', 'D', 'W', 'L'];
+    // Derive display data (API > Initial > Mock)
+    const player = playerData || initialPlayer;
 
-    const achievements = [
-        { title: 'Ballon d\'Or', year: '2023' },
-        { title: 'World Cup', year: '2022' },
-        { title: 'Golden Boot', year: '2021' },
-    ];
+    const [isFollowing, setIsFollowing] = useState(false);
+
+    // Map API stats to UI format
+    const stats = playerData ? [
+        { label: 'Goals', value: playerData.statistics?.goals || '0', icon: 'football-outline' },
+        { label: 'Assists', value: playerData.statistics?.assists || '0', icon: 'flash-outline' },
+        { label: 'Red Cards', value: playerData.statistics?.redCards || '0', icon: 'alert-circle-outline' },
+        { label: 'Yellow Cards', value: playerData.statistics?.yellowCards || '0', icon: 'warning-outline' },
+    ] : [];
+
+    // Temporary placeholder for achievements/form until API supports it
+    const form = ['?', '?', '?', '?', '?'];
+    const achievements = [];
 
     const toggleFollow = () => {
-        setPlayer(prev => ({ ...prev, isFollowing: !prev.isFollowing }));
+        setIsFollowing(!isFollowing);
+    };
+
+    if (isLoading && !player) {
+        return (
+            <View style={[styles.container, styles.center]}>
+                <ActivityIndicator size="large" color={theme.colors.primary} />
+            </View>
+        );
+    }
+
+    if (!player) {
+        return (
+            <View style={[styles.container, styles.center]}>
+                <Text style={{ color: theme.colors.textMuted }}>Player not found.</Text>
+            </View>
+        );
+    }
+
+    // Merge API data into player object passed to Header
+    const displayPlayer = {
+        ...player,
+        image: player.photo || player.image || 'https://api.dicebear.com/7.x/avataaars/png?seed=Player', // API field is 'photo', mock was 'image'
+        team: player.team?.name || player.team,
+        isFollowing: isFollowing
     };
 
     return (
@@ -51,7 +71,7 @@ export default function PlayerProfileScreen({ route, navigation }) {
 
             <ScrollView showsVerticalScrollIndicator={false}>
                 <PlayerHeader
-                    player={player}
+                    player={displayPlayer}
                     onFollow={toggleFollow}
                 />
 
@@ -88,5 +108,9 @@ const styles = StyleSheet.create({
     },
     content: {
         paddingBottom: 40,
+    },
+    center: {
+        justifyContent: 'center',
+        alignItems: 'center',
     }
 });
