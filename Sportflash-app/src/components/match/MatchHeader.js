@@ -24,14 +24,13 @@ const MatchHeader = ({ match, homeScore, awayScore, timer, onFollow, onTeamPress
                         <Ionicons name={isFollowingHome ? "star" : "star-outline"} size={16} color={isFollowingHome ? theme.colors.warning : theme.colors.textMuted} />
                     </TouchableOpacity>
                 </View>
+                <Animated.Text style={styles.teamScore}>
+                    {homeScore}
+                </Animated.Text>
             </View>
 
             <View style={styles.scoreBoard}>
-                <Animated.Text style={[styles.mainScore]}>
-                    {homeScore}
-                </Animated.Text>
                 <Text style={styles.vsText}>VS</Text>
-                <Text style={styles.mainScore}>{awayScore}</Text>
                 <Text style={styles.statusBadge}>{timer || match.status.toUpperCase()}</Text>
             </View>
 
@@ -51,6 +50,7 @@ const MatchHeader = ({ match, homeScore, awayScore, timer, onFollow, onTeamPress
                         <Ionicons name={isFollowingAway ? "star" : "star-outline"} size={16} color={isFollowingAway ? theme.colors.warning : theme.colors.textMuted} />
                     </TouchableOpacity>
                 </View>
+                <Text style={styles.teamScore}>{awayScore}</Text>
             </View>
         </View>
     );
@@ -73,13 +73,14 @@ const styles = StyleSheet.create({
     scoreHero: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        alignItems: 'center',
+        alignItems: 'flex-start',
         paddingHorizontal: theme.spacing.xl,
         marginTop: theme.spacing.lg,
         marginBottom: theme.spacing.xl,
     },
     teamContainer: {
         alignItems: 'center',
+        flex: 1,
     },
     logoLg: {
         width: 70,
@@ -94,25 +95,29 @@ const styles = StyleSheet.create({
         color: '#FFF',
         fontWeight: 'bold',
         fontSize: 18,
+        textAlign: 'center',
     },
     scoreBoard: {
         alignItems: 'center',
+        paddingHorizontal: 10,
+        marginTop: 35,
     },
-    mainScore: {
+    teamScore: {
         color: '#FFF',
-        fontSize: 22,
+        fontSize: 24,
         fontWeight: 'bold',
-        marginBottom: 4,
+        marginTop: 8,
     },
     vsText: {
         color: 'rgba(255,255,255,0.5)',
-        fontSize: 14,
+        fontSize: 20,
+        fontWeight: 'bold',
         marginBottom: 4,
     },
     statusBadge: {
         color: theme.colors.danger,
         fontWeight: 'bold',
-        fontSize: 12,
-        marginTop: 4,
+        fontSize: 16,
+        marginTop: 8,
     },
 });

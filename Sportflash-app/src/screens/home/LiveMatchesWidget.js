@@ -49,7 +49,6 @@ export default function LiveMatchesWidget({ matches, loading, width, navigation,
     return (
         <View style={[styles.section, { flex: 1 }]}>
             {/* <Text style={styles.sectionTitle}>LIVE MATCHES</Text> */}
-
             {loading ? (
                 <ActivityIndicator size="large" color={theme.colors.primary} />
             ) : flattenedData.length === 0 ? (

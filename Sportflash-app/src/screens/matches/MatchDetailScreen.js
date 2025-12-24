@@ -210,10 +210,6 @@ export default function MatchDetailScreen({ navigation, route }) {
                                 <Ionicons name="chevron-forward" size={16} color="rgba(255,255,255,0.7)" />
                             </View>
                         </TouchableOpacity>
-
-                        <TouchableOpacity>
-                            <Ionicons name="share-outline" size={24} color="#FFF" />
-                        </TouchableOpacity>
                     </View>
 
                     {/* Match Score Hero */}

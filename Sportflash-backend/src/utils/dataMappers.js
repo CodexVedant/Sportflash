@@ -66,6 +66,9 @@ const mapFootballMatch = (match) => {
 const mapBasketballMatch = (match) => {
     if (!match) return null;
 
+    // Format Quarters
+    const quartersData = formatBasketballQuarters(match.scores);
+
     return {
         _id: match.event_key, // Backward compatibility
         id: match.event_key,
@@ -96,12 +99,13 @@ const mapBasketballMatch = (match) => {
         },
         score: {
             final: match.event_final_result,
-            quarters: match.scores || null
+            quarters: quartersData.list
         },
         currentQuarter: match.event_quarter || null,
         // Backward compatibility for frontend
         basketballData: {
-            quarter: match.event_quarter
+            quarter: match.event_quarter,
+            ...quartersData.stats
         },
         isLive: match.event_live === '1',
         lineups: match.lineups || null,
@@ -111,13 +115,44 @@ const mapBasketballMatch = (match) => {
 };
 
 /**
+ * Helper to process basketball quarter scores
+ */
+const formatBasketballQuarters = (scores) => {
+    const defaultStats = {};
+    const list = [];
+
+    if (!scores) return { stats: defaultStats, list };
+    const keys = Object.keys(scores);
+
+    keys.forEach(key => {
+        let qData = scores[key];
+        if (Array.isArray(qData)) qData = qData[0];
+
+        if (qData) {
+            const h = qData.score_home;
+            const a = qData.score_away;
+
+            // Normalize key (1st Quarter -> "q1", 1 -> "q1")
+            const qNum = key.replace(/\D/g, '');
+            if (qNum) {
+                defaultStats[`home_q${qNum}`] = h;
+                defaultStats[`away_q${qNum}`] = a;
+                list.push(`${h}-${a}`);
+            }
+        }
+    });
+
+    return { stats: defaultStats, list };
+};
+
+/**
  * Map Cricket match data to unified format
  */
 const mapCricketMatch = (match) => {
     if (!match) return null;
 
     return {
-        _id: match.event_key, // Backward compatibility
+        _id: match.event_key,
         id: match.event_key,
         sport: 'cricket',
         status: mapMatchStatus(match.event_status, match.event_live),
@@ -155,7 +190,7 @@ const mapCricketMatch = (match) => {
         toss: match.event_toss,
         manOfMatch: match.event_man_of_match,
         isLive: match.event_live === '1',
-        scorecard: match.scorecard || null,
+        scorecard: normalizeCricketScorecard(match.scorecard),
         comments: match.comments || null,
         wickets: match.wickets || null,
         extra: match.extra || null,
@@ -199,6 +234,43 @@ const extractCricketOvers = (match) => {
     }
 
     return null;
+};
+
+/**
+ * Normalize Cricket Scorecard
+ * Maps API specific fields to clean UI fields
+ */
+const normalizeCricketScorecard = (scorecard) => {
+    if (!scorecard) return null;
+
+    const normalized = {};
+
+    Object.keys(scorecard).forEach(key => {
+        const inning = scorecard[key];
+        normalized[key] = {
+            title: inning.title || `Inning ${key}`,
+            score: inning.total || inning.score || '',
+            batting: (inning.batsman || inning.batting || []).map(b => ({
+                player: b.name || b.player,
+                status: b.out_by || b.dismissal || b.status || 'not out',
+                runs: b.runs || b.R || '0',
+                balls: b.balls || b.B || '0',
+                fours: b['4s'] || b.fours || '0',
+                sixes: b['6s'] || b.sixes || '0',
+                sr: b.SR || b.sr || '0.00'
+            })),
+            bowling: (inning.bowlers || inning.bowling || []).map(b => ({
+                player: b.name || b.player,
+                overs: b.O || b.overs || '0',
+                maidens: b.M || b.maidens || '0',
+                runs: b.R || b.runs || '0',
+                wickets: b.W || b.wickets || '0',
+                economy: b.Econ || b.economy || '0.00'
+            }))
+        };
+    });
+
+    return normalized;
 };
 
 /**
