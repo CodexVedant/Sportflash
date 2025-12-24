@@ -52,22 +52,30 @@ const FootballStats = ({ match, onPlayerPress }) => {
             {lineups && (
                 <View>
                     <Section title={`${homeTeam.name} XI`}>
-                        {lineups.home?.startXI?.map((player, idx) => (
-                            <PlayerRow
-                                key={idx}
-                                {...player}
-                                onPress={() => onPlayerPress && onPlayerPress({ ...player, sport: 'football' })}
-                            />
-                        ))}
+                        {lineups.home?.startXI?.length > 0 ? (
+                            lineups.home.startXI.map((player, idx) => (
+                                <PlayerRow
+                                    key={idx}
+                                    {...player}
+                                    onPress={() => onPlayerPress && onPlayerPress({ ...player, sport: 'football' })}
+                                />
+                            ))
+                        ) : (
+                            <Text style={styles.emptyText}>Not available yet</Text>
+                        )}
                     </Section>
                     <Section title={`${awayTeam.name} XI`}>
-                        {lineups.away?.startXI?.map((player, idx) => (
-                            <PlayerRow
-                                key={idx}
-                                {...player}
-                                onPress={() => onPlayerPress && onPlayerPress({ ...player, sport: 'football' })}
-                            />
-                        ))}
+                        {lineups.away?.startXI?.length > 0 ? (
+                            lineups.away.startXI.map((player, idx) => (
+                                <PlayerRow
+                                    key={idx}
+                                    {...player}
+                                    onPress={() => onPlayerPress && onPlayerPress({ ...player, sport: 'football' })}
+                                />
+                            ))
+                        ) : (
+                            <Text style={styles.emptyText}>Not available yet</Text>
+                        )}
                     </Section>
                 </View>
             )}
@@ -115,6 +123,12 @@ const styles = StyleSheet.create({
     eventText: {
         color: theme.colors.text,
         fontSize: 13,
+    },
+    emptyText: {
+        color: theme.colors.textMuted,
+        fontStyle: 'italic',
+        textAlign: 'center',
+        padding: 10,
     },
 });
 

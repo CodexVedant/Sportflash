@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { NavigationContainer } from '@react-navigation/native';
+import { NavigationContainer, DefaultTheme } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { ActivityIndicator, View } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
@@ -28,6 +28,17 @@ import { theme } from '@utils/theme';
 
 const Stack = createNativeStackNavigator();
 
+const NavigationTheme = {
+    ...DefaultTheme,
+    colors: {
+        ...DefaultTheme.colors,
+        background: theme.colors.background,
+        card: theme.colors.surface,
+        text: theme.colors.text,
+        border: 'transparent',
+    },
+};
+
 export default function AppNavigator() {
     const dispatch = useDispatch();
     const { loading } = useSelector(state => state.auth);
@@ -49,9 +60,14 @@ export default function AppNavigator() {
     }
 
     return (
-        <NavigationContainer>
+        <NavigationContainer theme={NavigationTheme}>
             <StatusBar style="light" />
-            <Stack.Navigator screenOptions={{ headerShown: false }}>
+            <Stack.Navigator
+                screenOptions={{
+                    headerShown: false,
+                    contentStyle: { backgroundColor: theme.colors.background }
+                }}
+            >
                 <Stack.Screen name="Main" component={MainNavigator} />
                 <Stack.Screen name="Login" component={LoginScreen} />
                 <Stack.Screen name="Register" component={RegisterScreen} />

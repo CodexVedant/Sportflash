@@ -3,8 +3,8 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-nati
 import { theme } from '@utils/theme';
 import { Section, PlayerRow, EmptyData } from './SharedComponents';
 
-const CricketScorecard = ({ match }) => {
-    const { score, scorecard, lineups, teamHome, teamAway } = match;
+const CricketScorecard = ({ match, onPlayerPress }) => {
+    const { score, scorecard, lineups, homeTeam, awayTeam } = match;
 
     if (!scorecard) return <EmptyData message="No scorecard available yet" />;
 
@@ -75,6 +75,38 @@ const CricketScorecard = ({ match }) => {
                     </View>
                 );
             })}
+
+            {/* Playing XI Lineups */}
+            {lineups && (
+                <View style={{ marginTop: theme.spacing.lg }}>
+                    <Section title={`${match.homeTeam.name} Playing XI`}>
+                        {lineups.home?.startXI?.length > 0 ? (
+                            lineups.home.startXI.map((player, idx) => (
+                                <PlayerRow
+                                    key={idx}
+                                    {...player}
+                                    onPress={() => onPlayerPress && onPlayerPress({ ...player, sport: 'cricket' })}
+                                />
+                            ))
+                        ) : (
+                            <Text style={styles.emptyText}>Not available yet</Text>
+                        )}
+                    </Section>
+                    <Section title={`${match.awayTeam.name} Playing XI`}>
+                        {lineups.away?.startXI?.length > 0 ? (
+                            lineups.away.startXI.map((player, idx) => (
+                                <PlayerRow
+                                    key={idx}
+                                    {...player}
+                                    onPress={() => onPlayerPress && onPlayerPress({ ...player, sport: 'cricket' })}
+                                />
+                            ))
+                        ) : (
+                            <Text style={styles.emptyText}>Not available yet</Text>
+                        )}
+                    </Section>
+                </View>
+            )}
         </ScrollView>
     );
 };
@@ -115,31 +147,42 @@ const styles = StyleSheet.create({
     headerText: {
         flex: 1,
         color: theme.colors.textMuted,
-        fontSize: 10,
+        fontSize: 12,
         textAlign: 'center',
-        fontWeight: '600',
+        fontWeight: '700',
+        textTransform: 'uppercase',
     },
     row: {
         flexDirection: 'row',
-        paddingVertical: theme.spacing.sm,
+        paddingVertical: theme.spacing.md,
         borderBottomWidth: 1,
-        borderBottomColor: 'rgba(255,255,255,0.02)',
-        alignItems: 'center',
+        borderBottomColor: 'rgba(255,255,255,0.05)',
+        alignItems: 'flex-start', // Align for multiline dismissal
     },
     playerName: {
         color: theme.colors.text,
-        fontSize: 12,
-        fontWeight: '500',
+        fontSize: 15,
+        fontWeight: '600',
+        marginBottom: 2,
     },
     dismissal: {
         color: theme.colors.textMuted,
-        fontSize: 10,
+        fontSize: 12,
+        fontStyle: 'italic',
     },
     statText: {
         flex: 1,
         color: theme.colors.text,
-        fontSize: 12,
+        fontSize: 14,
         textAlign: 'center',
+        fontWeight: '500',
+        alignSelf: 'center',
+    },
+    emptyText: {
+        color: theme.colors.textMuted,
+        fontStyle: 'italic',
+        textAlign: 'center',
+        padding: 10,
     },
 });
 

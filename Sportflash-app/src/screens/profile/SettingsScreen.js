@@ -7,6 +7,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { useNavigation } from '@react-navigation/native';
 import { toggleTheme } from '@store/slices/themeSlice';
 import { logout } from '@store/slices/authSlice';
+import BackButton from '@components/common/BackButton';
 
 export default function SettingsScreen() {
     const navigation = useNavigation();
@@ -22,9 +23,7 @@ export default function SettingsScreen() {
     return (
         <SafeAreaView style={styles.container}>
             <View style={styles.header}>
-                <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-                    <Ionicons name="arrow-back" size={24} color={theme.colors.text} />
-                </TouchableOpacity>
+                <BackButton color={theme.colors.text} style={styles.backBtn} />
                 <Text style={styles.headerTitle}>Settings</Text>
             </View>
 

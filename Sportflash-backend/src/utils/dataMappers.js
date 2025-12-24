@@ -55,8 +55,44 @@ const mapFootballMatch = (match) => {
         goalscorers: match.goalscorers || [],
         cards: match.cards || [],
         substitutes: match.substitutes || [],
-        lineups: match.lineups || null,
+        lineups: normalizeLineups(match.lineups),
         statistics: match.statistics || []
+    };
+};
+
+/**
+ * Normalize Lineups
+ */
+const normalizeLineups = (lineups) => {
+    if (!lineups) return null;
+
+    // API can return 'home' or 'home_team'
+    const home = lineups.home || lineups.home_team;
+    const away = lineups.away || lineups.away_team;
+
+    // Helper to map and filter invalid entries (API often returns nulls for football)
+    const process = (list) => {
+        if (!list || !Array.isArray(list)) return [];
+        return list.map(mapLineupPlayer).filter(p => p.name);
+    };
+
+    return {
+        home: {
+            startXI: process(home?.starting_lineups),
+            substitutes: process(home?.substitutes)
+        },
+        away: {
+            startXI: process(away?.starting_lineups),
+            substitutes: process(away?.substitutes)
+        }
+    };
+};
+
+const mapLineupPlayer = (p) => {
+    return {
+        name: p.player || p.lineup_player || p.player_name || p.name,
+        number: p.number || p.lineup_number || p.player_number || '',
+        position: p.position || p.lineup_position || p.player_position || ''
     };
 };
 
@@ -108,7 +144,7 @@ const mapBasketballMatch = (match) => {
             ...quartersData.stats
         },
         isLive: match.event_live === '1',
-        lineups: match.lineups || null,
+        lineups: normalizeLineups(match.lineups),
         statistics: match.statistics || [],
         playerStatistics: match.player_statistics || null
     };
@@ -194,7 +230,7 @@ const mapCricketMatch = (match) => {
         comments: match.comments || null,
         wickets: match.wickets || null,
         extra: match.extra || null,
-        lineups: match.lineups || null,
+        lineups: normalizeLineups(match.lineups),
         // Backward compatibility
         cricketData: {
             overs: extractCricketOvers(match)
@@ -247,10 +283,37 @@ const normalizeCricketScorecard = (scorecard) => {
 
     Object.keys(scorecard).forEach(key => {
         const inning = scorecard[key];
-        normalized[key] = {
-            title: inning.title || `Inning ${key}`,
-            score: inning.total || inning.score || '',
-            batting: (inning.batsman || inning.batting || []).map(b => ({
+
+        let batting = [];
+        let bowling = [];
+
+        // Handle Array structure (mixed Batsman/Bowler)
+        if (Array.isArray(inning)) {
+            batting = inning
+                .filter(p => p.type === 'Batsman')
+                .map(b => ({
+                    player: b.player,
+                    status: b.status || 'not out',
+                    runs: b.R || '0',
+                    balls: b.B || '0',
+                    fours: b['4s'] || '0',
+                    sixes: b['6s'] || '0',
+                    sr: b.SR || '0.00'
+                }));
+
+            bowling = inning
+                .filter(p => p.type === 'Bowler')
+                .map(b => ({
+                    player: b.player,
+                    overs: b.O || '0',
+                    maidens: b.M || '0',
+                    runs: b.R || '0',
+                    wickets: b.W || '0',
+                    economy: b.ER || b.Econ || '0.00'
+                }));
+        } else {
+            // Handle Object structure (legacy/fallback)
+            batting = (inning.batsman || inning.batsmen || inning.batting || []).map(b => ({
                 player: b.name || b.player,
                 status: b.out_by || b.dismissal || b.status || 'not out',
                 runs: b.runs || b.R || '0',
@@ -258,15 +321,23 @@ const normalizeCricketScorecard = (scorecard) => {
                 fours: b['4s'] || b.fours || '0',
                 sixes: b['6s'] || b.sixes || '0',
                 sr: b.SR || b.sr || '0.00'
-            })),
-            bowling: (inning.bowlers || inning.bowling || []).map(b => ({
+            }));
+
+            bowling = (inning.bowler || inning.bowlers || inning.bowling || []).map(b => ({
                 player: b.name || b.player,
                 overs: b.O || b.overs || '0',
                 maidens: b.M || b.maidens || '0',
                 runs: b.R || b.runs || '0',
                 wickets: b.W || b.wickets || '0',
                 economy: b.Econ || b.economy || '0.00'
-            }))
+            }));
+        }
+
+        normalized[key] = {
+            title: inning.title || `Inning ${key}`,
+            score: inning.total || inning.score || '',
+            batting,
+            bowling
         };
     });
 
@@ -317,18 +388,13 @@ const extractBasketballScore = (result, team) => {
  * Generic status mapper for all sports
  */
 const mapMatchStatus = (status, isLive) => {
-    // Priority 1: Check specific terminal statuses first (Finished, Cancelled, etc.)
-    // This prevents finished games from mistakenly being marked as live even if isLive='1' (API quirk)
     if (['Finished', 'Ended', 'FT', 'AOT', 'After Over Time'].includes(status)) return 'finished';
     if (['Postponed', 'Cancelled', 'Abd'].includes(status)) return status.toLowerCase();
 
-    // Priority 2: Check standard 'Not Started'
     if (['Not Started', 'NS'].includes(status)) return 'upcoming';
 
-    // Priority 3: Check if marked as live by API flag
     if (isLive === '1') return 'live';
 
-    // Priority 4: Check for specific live statuses strings
     const liveStatuses = [
         // Basketball
         '1st Quarter', '2nd Quarter', '3rd Quarter', '4th Quarter',
@@ -344,10 +410,8 @@ const mapMatchStatus = (status, isLive) => {
 
     if (liveStatuses.includes(status) || /Quarter|Inning/.test(status)) return 'live';
 
-    // Priority 5: Football specific - If status is a number (minute), it's live
     if (!isNaN(status) && String(status).trim() !== '') return 'live';
 
-    // Default
     return 'upcoming';
 };
 

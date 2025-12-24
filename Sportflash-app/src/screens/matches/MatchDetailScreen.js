@@ -6,6 +6,7 @@ import { theme } from '@utils/theme';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, { useSharedValue, useAnimatedStyle, withSequence, withTiming, withSpring, interpolateColor } from 'react-native-reanimated';
 import MatchHeader from '@components/match/MatchHeader';
+import BackButton from '@components/common/BackButton';
 import Scorecard from '@components/match/Scorecard';
 import Commentary from '@components/match/Commentary';
 import H2HStats from '@components/match/H2HStats';
@@ -200,9 +201,17 @@ export default function MatchDetailScreen({ navigation, route }) {
 
                     {/* Top Navigation Bar */}
                     <View style={styles.topBar}>
-                        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-                            <Ionicons name="arrow-back" size={24} color="#FFF" />
-                        </TouchableOpacity>
+                        <BackButton
+                            color="#FFF"
+                            style={styles.backBtn}
+                            onFallback={() => {
+                                if (matchData.leagueInfo?.id) {
+                                    navigation.navigate('LeagueDetails', { leagueId: matchData.leagueInfo.id });
+                                } else {
+                                    navigation.navigate('Home');
+                                }
+                            }}
+                        />
 
                         <TouchableOpacity onPress={() => navigation.navigate('LeagueDetails', { leagueId: matchData.leagueInfo?.id })}>
                             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>

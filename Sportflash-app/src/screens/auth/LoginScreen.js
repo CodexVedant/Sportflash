@@ -8,6 +8,7 @@ import Button from '@components/common/Button';
 import { ErrorMessage } from '@components/common';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import BackButton from '@components/common/BackButton';
 
 export default function LoginScreen({ navigation, route }) {
     const [email, setEmail] = useState('');
@@ -61,9 +62,8 @@ export default function LoginScreen({ navigation, route }) {
                 <ScrollView contentContainerStyle={styles.scrollContent}>
 
                     {/* Back Button */}
-                    <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-                        <Ionicons name="arrow-back" size={24} color={theme.colors.text} />
-                    </TouchableOpacity>
+                    <BackButton color={theme.colors.text} style={styles.backBtn} />
+
 
                     {/* Centered Content */}
                     <View style={styles.centerContainer}>

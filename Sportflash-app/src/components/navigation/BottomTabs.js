@@ -19,6 +19,7 @@ const Tab = createBottomTabNavigator();
 export default function BottomTabs() {
     return (
         <Tab.Navigator
+            sceneContainerStyle={{ backgroundColor: theme.colors.background }}
             screenOptions={({ route }) => ({
                 headerShown: false,
                 tabBarStyle: styles.tabBar,
