@@ -7,14 +7,13 @@ import MatchCard from '@components/match/MatchCard';
 export default function LiveMatchesWidget({ matches, loading, width, navigation, gap, ListFooterComponent }) {
 
     // Logic for layout
+    // Simplified layout mechanism - Vertical List only for consistency
     const isDesktop = width > 768;
-    const numColumns = width > 1024 ? 3 : (isDesktop ? 2 : 1);
-    const padding = theme.spacing.lg * 2;
+    const numColumns = 1; // Force single column to avoid header span issues in FlashList
     const contentWidth = isDesktop ? Math.min(width, 1200) : width;
 
-    const cardWidth = isDesktop
-        ? (contentWidth - padding - (gap * (numColumns - 1))) / numColumns
-        : '100%';
+    // In future for desktop: We could use a different component for grid view if needed
+    // but for now, a consistent vertical feed is safer.
 
     // Group matches by league and flatten for FlashList
     const flattenedData = React.useMemo(() => {
@@ -61,7 +60,7 @@ export default function LiveMatchesWidget({ matches, loading, width, navigation,
                                 );
                             }
                             return (
-                                <View style={{ marginBottom: isDesktop ? 0 : 16, maxWidth: cardWidth }}>
+                                <View style={{ marginBottom: 16 }}>
                                     <MatchCard
                                         sport={item.sport}
                                         status={item.status}
@@ -105,6 +104,21 @@ const styles = StyleSheet.create({
         fontWeight: '600',
         marginBottom: theme.spacing.md,
         letterSpacing: 1,
+    },
+    leagueHeader: {
+        backgroundColor: theme.colors.surface,
+        paddingVertical: 8,
+        paddingHorizontal: 12,
+        marginBottom: 8,
+        borderRadius: 4,
+        borderLeftWidth: 3,
+        borderLeftColor: theme.colors.primary,
+    },
+    leagueTitle: {
+        color: theme.colors.text,
+        fontWeight: '700',
+        fontSize: 12,
+        textTransform: 'uppercase',
     },
     emptyContainer: {
         padding: theme.spacing.xl,
