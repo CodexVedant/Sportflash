@@ -1,8 +1,9 @@
-import { StyleSheet, Dimensions } from 'react-native';
+import { StyleSheet } from 'react-native';
 import { theme } from '@utils/theme';
 
-const { width } = Dimensions.get('window');
-export const SIDEBAR_WIDTH = Math.min(width * 0.75, 300);
+// Use a fixed width that works for both web and mobile
+// The component will handle responsive sizing
+export const SIDEBAR_WIDTH = 300;
 
 export const styles = StyleSheet.create({
     contentContainer: {

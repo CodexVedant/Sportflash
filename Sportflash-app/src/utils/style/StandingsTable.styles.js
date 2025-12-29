@@ -15,7 +15,7 @@ export const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        paddingHorizontal: SCREEN_WIDTH < 768 ? theme.spacing.sm : theme.spacing.md,
+        paddingHorizontal: theme.spacing.md,
         paddingVertical: theme.spacing.sm,
         borderBottomWidth: 1,
         borderBottomColor: 'rgba(255, 255, 255, 0.05)',
@@ -46,7 +46,7 @@ export const styles = StyleSheet.create({
         flexDirection: 'row',
         backgroundColor: '#1E293B', // Same as background to prevent flicker when sticking
         paddingVertical: theme.spacing.sm,
-        paddingHorizontal: SCREEN_WIDTH < 768 ? theme.spacing.sm : theme.spacing.md,
+        paddingHorizontal: theme.spacing.md,
         borderBottomWidth: 1,
         borderBottomColor: 'rgba(255, 255, 255, 0.1)',
     },

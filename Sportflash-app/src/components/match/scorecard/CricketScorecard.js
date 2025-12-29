@@ -85,7 +85,14 @@ const CricketScorecard = ({ match, onPlayerPress }) => {
                             lineups.home.startXI.map((player, idx) => (
                                 <PlayerRow
                                     key={idx}
-                                    {...player}
+                                    name={player.name}
+                                    number={player.number}
+                                    position={player.position}
+                                    isCaptain={player.isCaptain}
+                                    isWicketKeeper={player.isWicketKeeper}
+                                    battingStyle={player.battingStyle}
+                                    bowlingStyle={player.bowlingStyle}
+                                    sport="cricket"
                                     onPress={() => onPlayerPress && onPlayerPress({ ...player, sport: 'cricket' })}
                                 />
                             ))
@@ -98,7 +105,14 @@ const CricketScorecard = ({ match, onPlayerPress }) => {
                             lineups.away.startXI.map((player, idx) => (
                                 <PlayerRow
                                     key={idx}
-                                    {...player}
+                                    name={player.name}
+                                    number={player.number}
+                                    position={player.position}
+                                    isCaptain={player.isCaptain}
+                                    isWicketKeeper={player.isWicketKeeper}
+                                    battingStyle={player.battingStyle}
+                                    bowlingStyle={player.bowlingStyle}
+                                    sport="cricket"
                                     onPress={() => onPlayerPress && onPlayerPress({ ...player, sport: 'cricket' })}
                                 />
                             ))

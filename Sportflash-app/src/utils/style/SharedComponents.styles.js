@@ -53,4 +53,10 @@ export const styles = StyleSheet.create({
         color: theme.colors.textMuted,
         fontSize: 12,
     },
+    playerSubInfo: {
+        color: theme.colors.textMuted,
+        fontSize: 11,
+        marginTop: 2,
+        fontStyle: 'italic',
+    },
 });

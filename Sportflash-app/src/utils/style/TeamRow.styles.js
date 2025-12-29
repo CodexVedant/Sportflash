@@ -5,7 +5,7 @@ export const styles = StyleSheet.create({
 
     row: {
         flexDirection: 'row',
-        paddingHorizontal: SCREEN_WIDTH < 768 ? theme.spacing.sm : theme.spacing.md,
+        paddingHorizontal: theme.spacing.md,
         paddingVertical: theme.spacing.sm,
         borderBottomWidth: 1,
         borderBottomColor: 'rgba(255,255,255,0.05)',

@@ -66,7 +66,10 @@ const BasketballStats = ({ match, onPlayerPress }) => {
                             lineups.home.startXI.map((player, idx) => (
                                 <PlayerRow
                                     key={idx}
-                                    {...player}
+                                    name={player.name}
+                                    number={player.number}
+                                    position={player.position}
+                                    sport="basketball"
                                     onPress={() => onPlayerPress && onPlayerPress({ ...player, sport: 'basketball' })}
                                 />
                             ))
@@ -79,7 +82,10 @@ const BasketballStats = ({ match, onPlayerPress }) => {
                             lineups.away.startXI.map((player, idx) => (
                                 <PlayerRow
                                     key={idx}
-                                    {...player}
+                                    name={player.name}
+                                    number={player.number}
+                                    position={player.position}
+                                    sport="basketball"
                                     onPress={() => onPlayerPress && onPlayerPress({ ...player, sport: 'basketball' })}
                                 />
                             ))

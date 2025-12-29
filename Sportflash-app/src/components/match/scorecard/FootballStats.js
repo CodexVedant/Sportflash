@@ -57,7 +57,12 @@ const FootballStats = ({ match, onPlayerPress }) => {
                             lineups.home.startXI.map((player, idx) => (
                                 <PlayerRow
                                     key={idx}
-                                    {...player}
+                                    name={player.name}
+                                    number={player.number}
+                                    position={player.position}
+                                    isCaptain={player.isCaptain}
+                                    isGoalkeeper={player.isGoalkeeper}
+                                    sport="football"
                                     onPress={() => onPlayerPress && onPlayerPress({ ...player, sport: 'football' })}
                                 />
                             ))
@@ -70,7 +75,12 @@ const FootballStats = ({ match, onPlayerPress }) => {
                             lineups.away.startXI.map((player, idx) => (
                                 <PlayerRow
                                     key={idx}
-                                    {...player}
+                                    name={player.name}
+                                    number={player.number}
+                                    position={player.position}
+                                    isCaptain={player.isCaptain}
+                                    isGoalkeeper={player.isGoalkeeper}
+                                    sport="football"
                                     onPress={() => onPlayerPress && onPlayerPress({ ...player, sport: 'football' })}
                                 />
                             ))
