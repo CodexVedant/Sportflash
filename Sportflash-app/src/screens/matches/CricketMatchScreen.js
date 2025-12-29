@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, FlatList, ActivityIndicator } from 'react-native';
+import { View, Text, FlatList, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { theme } from '@utils/theme';
 import MatchCard from '@components/match/MatchCard';
 import { useGetLiveMatchesQuery } from '@store/api/matchesApi';
 import { EmptyState } from '@components/common';
+import { styles } from '@utils/style/CricketMatchScreen.styles';
 
 export default function CricketMatchScreen({ navigation }) {
     const { data: allMatches = [], isLoading } = useGetLiveMatchesQuery();
@@ -59,20 +60,3 @@ export default function CricketMatchScreen({ navigation }) {
         </View>
     );
 }
-
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: theme.colors.background,
-    },
-    loadingContainer: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        backgroundColor: theme.colors.background,
-    },
-    listContent: {
-        padding: theme.spacing.lg,
-        paddingBottom: 100,
-    },
-});

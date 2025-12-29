@@ -1,7 +1,8 @@
 import React from 'react';
-import { View, StyleSheet, Platform } from 'react-native';
+import { View, Platform } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { theme } from '@utils/theme';
+import { styles } from '@utils/style/Card.styles';
 
 export default function Card({ children, style, variant = 'glass' }) {
 
@@ -23,20 +24,3 @@ export default function Card({ children, style, variant = 'glass' }) {
         </View>
     );
 }
-
-const styles = StyleSheet.create({
-    container: {
-        borderRadius: theme.borderRadius.lg,
-        overflow: 'hidden',
-        borderWidth: 1,
-        borderColor: 'rgba(255,255,255,0.05)',
-        position: 'relative',
-        marginBottom: theme.spacing.md,
-    },
-    solid: {
-        backgroundColor: theme.colors.surface,
-    },
-    content: {
-        padding: theme.spacing.md,
-    }
-});

@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, ScrollView, TouchableOpacity, Text, ActivityIndicator } from 'react-native';
+import { View, ScrollView, TouchableOpacity, Text, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { theme } from '@utils/theme';
 import { Ionicons } from '@expo/vector-icons';
 import PlayerHeader from '@components/player/PlayerHeader';
 import PlayerStats from '@components/player/PlayerStats';
 import { useGetPlayerDetailsQuery } from '@store/api/playersApi';
+import { styles } from '@utils/style/PlayerProfileScreen.styles';
 
 export default function PlayerProfileScreen({ route, navigation }) {
     // Get player from params
@@ -86,31 +87,3 @@ export default function PlayerProfileScreen({ route, navigation }) {
         </SafeAreaView>
     );
 }
-
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: theme.colors.background,
-    },
-    header: {
-        position: 'absolute',
-        top: 40,
-        left: 20,
-        zIndex: 10,
-    },
-    backButton: {
-        width: 40,
-        height: 40,
-        borderRadius: 20,
-        backgroundColor: 'rgba(0,0,0,0.5)',
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    content: {
-        paddingBottom: 40,
-    },
-    center: {
-        justifyContent: 'center',
-        alignItems: 'center',
-    }
-});

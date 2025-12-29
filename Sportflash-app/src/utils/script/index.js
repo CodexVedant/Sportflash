@@ -1,10 +1,13 @@
 /**
  * Central export file for all helper functions
- * Import helpers using: import { getSportColor, SPORT_TABS } from '@utils/script';
+ * Import helpers using: import { helperFunction } from '@utils/script';
  */
 
 // MatchCard helpers
 export { getSportColor } from './MatchCard.helpers';
+
+// BasketballMatchCard helpers
+export { parseQuarters, getQuarterScore } from './BasketballMatchCard.helpers';
 
 // HomeScreen helpers
 export {
@@ -16,8 +19,11 @@ export {
     getMockNotifications
 } from './HomeScreen.helpers';
 
-// Add more helper exports here as you refactor other components
-// Example:
-// export { formatDate, formatTime } from './dateHelpers';
-// export { validateEmail, validatePassword } from './validators';
+// Sidebar helpers
+export {
+    MENU_SECTIONS,
+    TAB_ROUTES,
+    handleSidebarNavigation
+} from './Sidebar.helpers';
 
+// Add more helper exports here as needed
