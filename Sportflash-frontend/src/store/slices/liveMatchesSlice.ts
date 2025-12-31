@@ -4,7 +4,6 @@ import { Match } from '@app-types/models/match';
 
 // 1. Adapter Setup
 const matchesAdapter = createEntityAdapter<Match>({
-    selectId: (match) => match.id,
     sortComparer: (a, b) => 0
 });
 
