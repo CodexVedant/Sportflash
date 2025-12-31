@@ -2,7 +2,7 @@
 
 export const mapMatchToUI = (match: any): Match => {
     let timer = match.currentMinute;
-    let centerInfo = null;
+    let centerInfo: string | undefined;
 
     if (match.sport === 'cricket') {
         timer = match.cricketData?.overs ? `${match.cricketData.overs} Overs` : '';

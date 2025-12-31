@@ -28,6 +28,9 @@
             "@navigation/*": [
                 "./src/navigation/*"
             ],
+            "@config": [
+                "./src/config/index"
+            ],
             "@config/*": [
                 "./src/config/*"
             ],
