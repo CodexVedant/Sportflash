@@ -193,9 +193,12 @@ const mapBasketballMatch = (match) => {
             logo: match.event_away_team_logo || null,
             score: extractBasketballScore(match.event_final_result, 'away')
         },
+        venue: {
+            name: match.event_stadium
+        },
         score: {
             final: match.event_final_result,
-            quarters: quartersData.list
+            quarters: quartersData.quarters
         },
         currentQuarter: match.event_quarter || null,
         // Backward compatibility for frontend
@@ -216,17 +219,28 @@ const mapBasketballMatch = (match) => {
 const formatBasketballQuarters = (scores) => {
     const defaultStats = {};
     const list = [];
+    const quartersObj = {};
 
-    if (!scores) return { stats: defaultStats, list };
+    if (!scores) {
+        return { stats: defaultStats, list, quarters: null };
+    }
+
     const keys = Object.keys(scores);
 
     keys.forEach(key => {
         let qData = scores[key];
+
         if (Array.isArray(qData)) qData = qData[0];
 
         if (qData) {
             const h = qData.score_home;
             const a = qData.score_away;
+
+            // Store with original key for frontend compatibility
+            quartersObj[key] = [{
+                score_home: h,
+                score_away: a
+            }];
 
             // Normalize key (1st Quarter -> "q1", 1 -> "q1")
             const qNum = key.replace(/\D/g, '');
@@ -238,8 +252,9 @@ const formatBasketballQuarters = (scores) => {
         }
     });
 
-    return { stats: defaultStats, list };
+    return { stats: defaultStats, list, quarters: quartersObj };
 };
+
 
 /**
  * Map Cricket match data to unified format

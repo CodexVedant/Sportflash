@@ -2,8 +2,13 @@ import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { theme } from '@utils/theme';
-import DateTimePicker from '@react-native-community/datetimepicker';
 import { styles } from '@utils/style/DatePicker.styles';
+
+// Conditional import - only load DateTimePicker on native platforms
+let DateTimePicker = null;
+if (Platform.OS !== 'web') {
+    DateTimePicker = require('@react-native-community/datetimepicker').default;
+}
 
 export default function DatePicker({ dateRange, onDateChange }) {
     const [showStartPicker, setShowStartPicker] = useState(false);
@@ -26,6 +31,17 @@ export default function DatePicker({ dateRange, onDateChange }) {
         setShowEndPicker(Platform.OS === 'ios');
         if (selectedDate) {
             onDateChange({ ...dateRange, end: selectedDate });
+        }
+    };
+
+    // Web-specific date input handler
+    const handleWebDateInput = (type, value) => {
+        if (Platform.OS === 'web' && value) {
+            const newDate = new Date(value);
+            onDateChange({
+                ...dateRange,
+                [type]: newDate
+            });
         }
     };
 
@@ -69,13 +85,33 @@ export default function DatePicker({ dateRange, onDateChange }) {
                 {/* Start Date */}
                 <View style={styles.dateContainer}>
                     <Text style={styles.dateLabel}>From</Text>
-                    <TouchableOpacity
-                        style={styles.dateButton}
-                        onPress={() => setShowStartPicker(true)}
-                    >
-                        <Ionicons name="calendar-outline" size={18} color={theme.colors.textMuted} />
-                        <Text style={styles.dateText}>{formatDate(dateRange.start)}</Text>
-                    </TouchableOpacity>
+                    {Platform.OS === 'web' ? (
+                        <input
+                            type="date"
+                            value={dateRange.start ? dateRange.start.toISOString().split('T')[0] : ''}
+                            onChange={(e) => handleWebDateInput('start', e.target.value)}
+                            max={dateRange.end ? dateRange.end.toISOString().split('T')[0] : new Date().toISOString().split('T')[0]}
+                            style={{
+                                backgroundColor: 'rgba(255,255,255,0.05)',
+                                border: '1px solid rgba(255,255,255,0.1)',
+                                borderRadius: '8px',
+                                padding: '10px',
+                                color: theme.colors.text,
+                                fontSize: '14px',
+                                fontFamily: theme.fonts.body,
+                                width: '100%',
+                                outline: 'none'
+                            }}
+                        />
+                    ) : (
+                        <TouchableOpacity
+                            style={styles.dateButton}
+                            onPress={() => setShowStartPicker(true)}
+                        >
+                            <Ionicons name="calendar-outline" size={18} color={theme.colors.textMuted} />
+                            <Text style={styles.dateText}>{formatDate(dateRange.start)}</Text>
+                        </TouchableOpacity>
+                    )}
                 </View>
 
                 {/* Separator */}
@@ -86,13 +122,34 @@ export default function DatePicker({ dateRange, onDateChange }) {
                 {/* End Date */}
                 <View style={styles.dateContainer}>
                     <Text style={styles.dateLabel}>To</Text>
-                    <TouchableOpacity
-                        style={styles.dateButton}
-                        onPress={() => setShowEndPicker(true)}
-                    >
-                        <Ionicons name="calendar-outline" size={18} color={theme.colors.textMuted} />
-                        <Text style={styles.dateText}>{formatDate(dateRange.end)}</Text>
-                    </TouchableOpacity>
+                    {Platform.OS === 'web' ? (
+                        <input
+                            type="date"
+                            value={dateRange.end ? dateRange.end.toISOString().split('T')[0] : ''}
+                            onChange={(e) => handleWebDateInput('end', e.target.value)}
+                            min={dateRange.start ? dateRange.start.toISOString().split('T')[0] : undefined}
+                            max={new Date().toISOString().split('T')[0]}
+                            style={{
+                                backgroundColor: 'rgba(255,255,255,0.05)',
+                                border: '1px solid rgba(255,255,255,0.1)',
+                                borderRadius: '8px',
+                                padding: '10px',
+                                color: theme.colors.text,
+                                fontSize: '14px',
+                                fontFamily: theme.fonts.body,
+                                width: '100%',
+                                outline: 'none'
+                            }}
+                        />
+                    ) : (
+                        <TouchableOpacity
+                            style={styles.dateButton}
+                            onPress={() => setShowEndPicker(true)}
+                        >
+                            <Ionicons name="calendar-outline" size={18} color={theme.colors.textMuted} />
+                            <Text style={styles.dateText}>{formatDate(dateRange.end)}</Text>
+                        </TouchableOpacity>
+                    )}
                 </View>
             </View>
 
@@ -104,28 +161,32 @@ export default function DatePicker({ dateRange, onDateChange }) {
                 </TouchableOpacity>
             )}
 
-            {/* Date Pickers */}
-            {showStartPicker && (
-                <DateTimePicker
-                    value={dateRange.start || new Date()}
-                    mode="date"
-                    display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-                    onChange={handleStartDateChange}
-                    maximumDate={dateRange.end || new Date()}
-                    themeVariant="dark"
-                />
-            )}
+            {/* Date Pickers - Native Only */}
+            {Platform.OS !== 'web' && DateTimePicker && (
+                <>
+                    {showStartPicker && (
+                        <DateTimePicker
+                            value={dateRange.start || new Date()}
+                            mode="date"
+                            display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                            onChange={handleStartDateChange}
+                            maximumDate={dateRange.end || new Date()}
+                            themeVariant="dark"
+                        />
+                    )}
 
-            {showEndPicker && (
-                <DateTimePicker
-                    value={dateRange.end || new Date()}
-                    mode="date"
-                    display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-                    onChange={handleEndDateChange}
-                    minimumDate={dateRange.start || undefined}
-                    maximumDate={new Date()}
-                    themeVariant="dark"
-                />
+                    {showEndPicker && (
+                        <DateTimePicker
+                            value={dateRange.end || new Date()}
+                            mode="date"
+                            display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                            onChange={handleEndDateChange}
+                            minimumDate={dateRange.start || undefined}
+                            maximumDate={new Date()}
+                            themeVariant="dark"
+                        />
+                    )}
+                </>
             )}
         </View>
     );

@@ -162,17 +162,102 @@ export default function MatchDetailScreen({ navigation, route }) {
                         <View style={styles.sectionHeader}>
                             <Text style={styles.sectionTitle}>Match Info</Text>
                         </View>
-                        <View style={styles.statRow}>
-                            <Text style={styles.textMuted}>Venue</Text>
-                            <Text style={styles.text}>{matchData.venue?.name || 'Unknown'}</Text>
-                        </View>
-                        <View style={styles.statRow}>
-                            <Text style={styles.textMuted}>Referee</Text>
-                            <Text style={styles.text}>{matchData.venue?.referee || 'Unknown'}</Text>
-                        </View>
+
+                        {/* League Information */}
+                        {matchData.leagueInfo?.name && (
+                            <View style={styles.statRow}>
+                                <Text style={styles.textMuted}>League</Text>
+                                <Text style={styles.text}>{matchData.leagueInfo.name}</Text>
+                            </View>
+                        )}
+
+                        {matchData.leagueInfo?.country && (
+                            <View style={styles.statRow}>
+                                <Text style={styles.textMuted}>Country</Text>
+                                <Text style={styles.text}>{matchData.leagueInfo.country}</Text>
+                            </View>
+                        )}
+
+                        {matchData.leagueInfo?.round && (
+                            <View style={styles.statRow}>
+                                <Text style={styles.textMuted}>Round</Text>
+                                <Text style={styles.text}>{matchData.leagueInfo.round}</Text>
+                            </View>
+                        )}
+
+                        {matchData.leagueInfo?.season && (
+                            <View style={styles.statRow}>
+                                <Text style={styles.textMuted}>Season</Text>
+                                <Text style={styles.text}>{matchData.leagueInfo.season}</Text>
+                            </View>
+                        )}
+
+                        {/* Match Details */}
                         <View style={styles.statRow}>
                             <Text style={styles.textMuted}>Date</Text>
-                            <Text style={styles.text}>{matchData.date}</Text>
+                            <Text style={styles.text}>
+                                {matchData.date || matchData.dateStart || 'Not Available'}
+                            </Text>
+                        </View>
+
+                        {matchData.time && (
+                            <View style={styles.statRow}>
+                                <Text style={styles.textMuted}>Time</Text>
+                                <Text style={styles.text}>{matchData.time}</Text>
+                            </View>
+                        )}
+
+                        {/* Venue Information */}
+                        {matchData.venue?.name && (
+                            <View style={styles.statRow}>
+                                <Text style={styles.textMuted}>Venue</Text>
+                                <Text style={styles.text}>{matchData.venue.name}</Text>
+                            </View>
+                        )}
+
+                        {matchData.venue?.referee && (
+                            <View style={styles.statRow}>
+                                <Text style={styles.textMuted}>Referee</Text>
+                                <Text style={styles.text}>{matchData.venue.referee}</Text>
+                            </View>
+                        )}
+
+                        {/* Cricket Specific */}
+                        {matchData.sport === 'cricket' && matchData.matchType && (
+                            <View style={styles.statRow}>
+                                <Text style={styles.textMuted}>Match Type</Text>
+                                <Text style={styles.text}>{matchData.matchType}</Text>
+                            </View>
+                        )}
+
+                        {matchData.sport === 'cricket' && matchData.toss && (
+                            <View style={styles.statRow}>
+                                <Text style={styles.textMuted}>Toss</Text>
+                                <Text style={styles.text}>{matchData.toss}</Text>
+                            </View>
+                        )}
+
+                        {matchData.sport === 'cricket' && matchData.manOfMatch && (
+                            <View style={styles.statRow}>
+                                <Text style={styles.textMuted}>Man of the Match</Text>
+                                <Text style={styles.text}>{matchData.manOfMatch}</Text>
+                            </View>
+                        )}
+
+                        {/* Football Specific */}
+                        {matchData.sport === 'football' && matchData.homeTeam?.formation && (
+                            <View style={styles.statRow}>
+                                <Text style={styles.textMuted}>Formation</Text>
+                                <Text style={styles.text}>
+                                    {matchData.homeTeam.formation} - {matchData.awayTeam?.formation || 'N/A'}
+                                </Text>
+                            </View>
+                        )}
+
+                        {/* Match Status */}
+                        <View style={styles.statRow}>
+                            <Text style={styles.textMuted}>Status</Text>
+                            <Text style={styles.text}>{matchData.displayStatus || matchData.status}</Text>
                         </View>
                     </View>
                 );

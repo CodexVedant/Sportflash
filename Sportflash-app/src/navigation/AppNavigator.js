@@ -23,6 +23,7 @@ import PreferencesScreen from '@screens/profile/PreferencesScreen';
 import NewsDetailScreen from '@screens/news/NewsDetailScreen';
 import LeagueDetailsScreen from '@screens/league/LeagueDetailsScreen';
 import TeamProfileScreen from '@screens/team/TeamProfileScreen';
+import UpcomingMatchesScreen from '@screens/matches/UpcomingMatchesScreen';
 
 import { theme } from '@utils/theme';
 
@@ -82,6 +83,7 @@ export default function AppNavigator() {
                 <Stack.Screen name="Notifications" component={NotificationsScreen} />
                 <Stack.Screen name="Preferences" component={PreferencesScreen} />
                 <Stack.Screen name="NewsDetail" component={NewsDetailScreen} />
+                <Stack.Screen name="UpcomingMatches" component={UpcomingMatchesScreen} />
             </Stack.Navigator>
         </NavigationContainer>
     );

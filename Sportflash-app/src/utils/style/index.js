@@ -68,3 +68,4 @@ export { styles as TeamRowStyles } from './TeamRow.styles';
 export { styles as ToastContextStyles } from './ToastContext.styles';
 export { styles as TopBarStyles } from './TopBar.styles';
 export { styles as TrendingNewsWidgetStyles } from './TrendingNewsWidget.styles';
+export { styles as UpcomingMatchesScreenStyles } from './UpcomingMatchesScreen.styles';

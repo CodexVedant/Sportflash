@@ -26,4 +26,14 @@ export {
     handleSidebarNavigation
 } from './Sidebar.helpers';
 
+// UpcomingMatchesScreen helpers
+export {
+    formatMatchDateTime,
+    groupMatchesByDate,
+    filterMatchesBySport,
+    getNextSevenDays,
+    isMatchSoon,
+    getMatchCountdown
+} from './UpcomingMatchesScreen.helpers';
+
 // Add more helper exports here as needed

@@ -42,5 +42,38 @@ export const styles = StyleSheet.create({
         color: theme.colors.primary,
         fontSize: 16,
         fontWeight: 'bold',
+    },
+    authButtonsContainer: {
+        alignItems: 'center',
+        gap: 16,
+    },
+    loginBtn: {
+        backgroundColor: theme.colors.primary,
+        paddingHorizontal: 48,
+        paddingVertical: 14,
+        borderRadius: 8,
+        minWidth: 200,
+        alignItems: 'center',
+    },
+    loginText: {
+        color: '#FFFFFF',
+        fontSize: 16,
+        fontWeight: 'bold',
+    },
+    registerBtn: {
+        backgroundColor: theme.colors.surface,
+        paddingHorizontal: 48,
+        paddingVertical: 14,
+        borderRadius: 8,
+        borderWidth: 1,
+        borderColor: theme.colors.primary,
+        minWidth: 200,
+        alignItems: 'center',
+    },
+    registerText: {
+        color: theme.colors.primary,
+        fontSize: 16,
+        fontWeight: 'bold',
     }
 });
+

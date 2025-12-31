@@ -5,7 +5,7 @@
 /**
  * Safely extract quarter score from various API formats
  * @param {Object} quarters - Quarters data from API
- * @param {string} qKey - Quarter key (e.g., "1st Quarter")
+ * @param {string} qKey - Quarter key (e.g., "1stQuarter", "2ndQuarter")
  * @returns {Object} Object with home and away scores
  */
 export const getQuarterScore = (quarters, qKey) => {
@@ -32,9 +32,10 @@ export const parseQuarters = (score) => {
     if (!score?.quarters) return null;
 
     return {
-        q1: getQuarterScore(score.quarters, '1st Quarter'),
-        q2: getQuarterScore(score.quarters, '2nd Quarter'),
-        q3: getQuarterScore(score.quarters, '3rd Quarter'),
-        q4: getQuarterScore(score.quarters, '4th Quarter'),
+        q1: getQuarterScore(score.quarters, '1stQuarter'),
+        q2: getQuarterScore(score.quarters, '2ndQuarter'),
+        q3: getQuarterScore(score.quarters, '3rdQuarter'),
+        q4: getQuarterScore(score.quarters, '4thQuarter'),
     };
 };
+

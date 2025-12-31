@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, Alert, Image } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, Alert, Image, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { theme } from '@utils/theme';
 import { Ionicons } from '@expo/vector-icons';
@@ -14,31 +14,38 @@ export default function ProfileScreen() {
     const dispatch = useDispatch();
     const { user } = useSelector(state => state.auth);
 
-    const handleLogout = () => {
-        Alert.alert(
-            "Logout",
-            "Are you sure you want to logout?",
-            [
-                { text: "Cancel", style: "cancel" },
-                {
-                    text: "Logout",
-                    style: "destructive",
-                    onPress: async () => {
-                        try {
-                            await dispatch(logout());
-                            navigation.dispatch(
-                                CommonActions.reset({
-                                    index: 0,
-                                    routes: [{ name: 'Login' }],
-                                })
-                            );
-                        } catch (err) {
-                            console.log("Logout error", err);
+    const handleLogout = async () => {
+        // Platform-aware confirmation
+        const confirmed = Platform.OS === 'web'
+            ? window.confirm('Are you sure you want to logout?')
+            : await new Promise((resolve) => {
+                Alert.alert(
+                    "Logout",
+                    "Are you sure you want to logout?",
+                    [
+                        { text: "Cancel", style: "cancel", onPress: () => resolve(false) },
+                        {
+                            text: "Logout",
+                            style: "destructive",
+                            onPress: () => resolve(true)
                         }
-                    },
-                },
-            ]
-        );
+                    ]
+                );
+            });
+
+        if (confirmed) {
+            try {
+                await dispatch(logout()).unwrap();
+                navigation.dispatch(
+                    CommonActions.reset({
+                        index: 0,
+                        routes: [{ name: 'Login' }],
+                    })
+                );
+            } catch (err) {
+                console.error("Logout error:", err);
+            }
+        }
     };
 
     const handleNavigation = (label) => {

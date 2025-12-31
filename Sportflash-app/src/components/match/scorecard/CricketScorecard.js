@@ -35,15 +35,15 @@ const CricketScorecard = ({ match, onPlayerPress }) => {
                                 <View key={idx} style={styles.row}>
                                     <View style={{ flex: 2 }}>
                                         <TouchableOpacity onPress={() => onPlayerPress && onPlayerPress({ name: batter.player, sport: 'cricket' })}>
-                                            <Text style={[styles.playerName, { color: theme.colors.primary }]}>{batter.player}</Text>
+                                            <Text style={[styles.playerName, { color: theme.colors.primary }]}>{batter.player || '-'}</Text>
                                         </TouchableOpacity>
-                                        <Text style={styles.dismissal}>{batter.status}</Text>
+                                        <Text style={styles.dismissal}>{batter.status || ''}</Text>
                                     </View>
-                                    <Text style={styles.statText}>{batter.runs}</Text>
-                                    <Text style={styles.statText}>{batter.balls}</Text>
-                                    <Text style={styles.statText}>{batter.fours}</Text>
-                                    <Text style={styles.statText}>{batter.sixes}</Text>
-                                    <Text style={styles.statText}>{batter.sr}</Text>
+                                    <Text style={styles.statText}>{batter.runs || '0'}</Text>
+                                    <Text style={styles.statText}>{batter.balls || '0'}</Text>
+                                    <Text style={styles.statText}>{batter.fours || '0'}</Text>
+                                    <Text style={styles.statText}>{batter.sixes || '0'}</Text>
+                                    <Text style={styles.statText}>{batter.sr || '0.00'}</Text>
                                 </View>
                             ))}
                         </Section>
@@ -62,14 +62,14 @@ const CricketScorecard = ({ match, onPlayerPress }) => {
                                 <View key={idx} style={styles.row}>
                                     <View style={{ flex: 2 }}>
                                         <TouchableOpacity onPress={() => onPlayerPress && onPlayerPress({ name: bowler.player, sport: 'cricket' })}>
-                                            <Text style={[styles.playerName, { color: theme.colors.primary }]}>{bowler.player}</Text>
+                                            <Text style={[styles.playerName, { color: theme.colors.primary }]}>{bowler.player || '-'}</Text>
                                         </TouchableOpacity>
                                     </View>
-                                    <Text style={styles.statText}>{bowler.overs}</Text>
-                                    <Text style={styles.statText}>{bowler.maidens}</Text>
-                                    <Text style={styles.statText}>{bowler.runs}</Text>
-                                    <Text style={styles.statText}>{bowler.wickets}</Text>
-                                    <Text style={styles.statText}>{bowler.economy}</Text>
+                                    <Text style={styles.statText}>{bowler.overs || '0'}</Text>
+                                    <Text style={styles.statText}>{bowler.maidens || '0'}</Text>
+                                    <Text style={styles.statText}>{bowler.runs || '0'}</Text>
+                                    <Text style={styles.statText}>{bowler.wickets || '0'}</Text>
+                                    <Text style={styles.statText}>{bowler.economy || '0.00'}</Text>
                                 </View>
                             ))}
                         </Section>

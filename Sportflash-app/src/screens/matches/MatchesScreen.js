@@ -11,7 +11,7 @@ import { FilterPanel } from '@components/filter';
 import { NotificationBell, NotificationPanel } from '@components/notifications';
 import { useSelector } from 'react-redux';
 import TopBar from '@components/navigation/TopBar';
-import { useGetLiveMatchesQuery } from '@store/api/matchesApi';
+import { useGetLiveMatchesQuery, useGetUpcomingMatchesQuery } from '@store/api/matchesApi';
 import { styles } from '@utils/style/MatchesScreen.styles';
 
 export default function MatchesScreen({ navigation }) {
@@ -28,9 +28,51 @@ export default function MatchesScreen({ navigation }) {
         dateRange: { start: null, end: null },
     });
 
-    // Fetch matches using RTK Query
-    const { data: allMatches = [], isLoading, error: apiError, refetch } = useGetLiveMatchesQuery();
-    const [filteredMatches, setFilteredMatches] = useState([]);
+    // Conditionally fetch based on active tab
+    const { data: liveMatches = [], isLoading: isLoadingLive, error: liveError, refetch: refetchLive } = useGetLiveMatchesQuery(
+        undefined,
+        { skip: activeTab !== 'Live' }
+    );
+
+    const { data: upcomingMatches = [], isLoading: isLoadingUpcoming, error: upcomingError, refetch: refetchUpcoming } = useGetUpcomingMatchesQuery(
+        { sport: activeSport === 'all' ? undefined : activeSport },
+        { skip: activeTab !== 'Upcoming' }
+    );
+
+    // Determine which data to use - memoized to prevent infinite loops
+    const allMatches = React.useMemo(() => {
+        return activeTab === 'Upcoming' ? upcomingMatches : liveMatches;
+    }, [activeTab, upcomingMatches, liveMatches]);
+
+    const isLoading = activeTab === 'Upcoming' ? isLoadingUpcoming : isLoadingLive;
+    const apiError = activeTab === 'Upcoming' ? upcomingError : liveError;
+    const refetch = activeTab === 'Upcoming' ? refetchUpcoming : refetchLive;
+
+    // Filter matches based on sport and status - use useMemo instead of useEffect
+    const filteredMatches = React.useMemo(() => {
+        let matches = [...allMatches];
+
+        // Filter by sport
+        if (activeSport !== 'all') {
+            matches = matches.filter(match => match.sport?.toLowerCase() === activeSport);
+        }
+
+        // Filter by status
+        if (activeTab === 'Live') {
+            matches = matches.filter(match => match.status === 'live');
+        } else if (activeTab === 'Upcoming') {
+            matches = matches.filter(match => match.status === 'upcoming');
+        } else if (activeTab === 'Results') {
+            matches = matches.filter(match => match.status === 'finished');
+        }
+
+        // Apply additional filters
+        if (filters.league !== 'all') {
+            matches = matches.filter(match => match.league?.toLowerCase().includes(filters.league.toLowerCase()));
+        }
+
+        return matches;
+    }, [allMatches, activeSport, activeTab, filters]);
 
     // Mock notifications
     const [notifications] = useState([
@@ -59,32 +101,6 @@ export default function MatchesScreen({ navigation }) {
     ];
 
     const STATUS_TABS = ['Live', 'Upcoming', 'Results'];
-
-    // Filter matches based on sport and status
-    useEffect(() => {
-        let matches = [...allMatches];
-
-        // Filter by sport
-        if (activeSport !== 'all') {
-            matches = matches.filter(match => match.sport?.toLowerCase() === activeSport);
-        }
-
-        // Filter by status
-        if (activeTab === 'Live') {
-            matches = matches.filter(match => match.status === 'live');
-        } else if (activeTab === 'Upcoming') {
-            matches = matches.filter(match => match.status === 'upcoming');
-        } else if (activeTab === 'Results') {
-            matches = matches.filter(match => match.status === 'finished');
-        }
-
-        // Apply additional filters
-        if (filters.league !== 'all') {
-            matches = matches.filter(match => match.league?.toLowerCase().includes(filters.league.toLowerCase()));
-        }
-
-        setFilteredMatches(matches);
-    }, [allMatches, activeSport, activeTab, filters]);
 
     const handleApplyFilters = (newFilters) => {
         setFilters(newFilters);
@@ -162,6 +178,12 @@ export default function MatchesScreen({ navigation }) {
                     <Text style={styles.headerTitle}>Matches</Text>
                 </View>
                 <View style={styles.headerActions}>
+                    <TouchableOpacity
+                        onPress={() => navigation.navigate('UpcomingMatches')}
+                        style={[styles.iconBtn, { marginRight: 8 }]}
+                    >
+                        <Ionicons name="calendar-outline" size={24} color={theme.colors.primary} />
+                    </TouchableOpacity>
                     <TouchableOpacity onPress={() => setFilterVisible(true)} style={styles.iconBtn}>
                         <Ionicons name="options-outline" size={24} color={theme.colors.text} />
                     </TouchableOpacity>

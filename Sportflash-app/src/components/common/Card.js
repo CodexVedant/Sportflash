@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Platform } from 'react-native';
+import { View, Platform, StyleSheet } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { theme } from '@utils/theme';
 import { styles } from '@utils/style/Card.styles';

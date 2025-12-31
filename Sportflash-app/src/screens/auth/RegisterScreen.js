@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, KeyboardAvoidingView, Platform, Alert, useWindowDimensions, ScrollView } from 'react-native';
+import { View, Text, TouchableOpacity, KeyboardAvoidingView, Platform, Alert, useWindowDimensions, ScrollView, StyleSheet } from 'react-native';
 import { useDispatch } from 'react-redux';
 import { register } from '@store/slices/authSlice';
 import { theme } from '@utils/theme';

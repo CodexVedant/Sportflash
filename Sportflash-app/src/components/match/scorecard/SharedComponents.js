@@ -58,7 +58,9 @@ export const PlayerRow = ({
             const info = [];
             if (battingStyle) info.push(battingStyle);
             if (bowlingStyle) info.push(bowlingStyle);
-            return <Text style={styles.playerSubInfo}>{info.join(' • ')}</Text>;
+            if (info.length > 0) {
+                return <Text style={styles.playerSubInfo}>{info.join(' • ')}</Text>;
+            }
         }
         return null;
     };
@@ -67,16 +69,15 @@ export const PlayerRow = ({
         <TouchableOpacity onPress={onPress} disabled={!onPress}>
             <View style={styles.playerRow}>
                 <View style={styles.playerInfo}>
-                    {number && <Text style={styles.playerNumber}>{number}</Text>}
+                    {!!number && <Text style={styles.playerNumber}>{number}</Text>}
                     <View style={{ flex: 1 }}>
                         <Text style={[styles.playerName, onPress && { color: theme.colors.primary }]}>
-                            {name || 'Unknown Player'}
-                            {renderBadges()}
+                            {name || 'Unknown Player'}{renderBadges()}
                         </Text>
                         {renderAdditionalInfo()}
                     </View>
                 </View>
-                {position && <Text style={styles.playerPosition}>{position}</Text>}
+                {!!position && <Text style={styles.playerPosition}>{position}</Text>}
             </View>
         </TouchableOpacity>
     );

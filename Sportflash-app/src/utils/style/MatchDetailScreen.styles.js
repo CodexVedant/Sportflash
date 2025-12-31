@@ -153,5 +153,13 @@ export const styles = StyleSheet.create({
         color: theme.colors.textMuted,
         flex: 1,
         lineHeight: 20,
+    },
+    text: {
+        color: '#FFFFFF',
+        fontSize: 14,
+    },
+    textMuted: {
+        color: 'rgba(255,255,255,0.6)',
+        fontSize: 14,
     }
 });

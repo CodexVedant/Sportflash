@@ -19,8 +19,7 @@ const io = new Server(server, {
 
 // Import AllSportsAPI Service
 const allSportsApi = require('./services/allSportsApiService');
-const {
-    mapFootballMatch,
+const { mapFootballMatch,
     mapBasketballMatch,
     mapCricketMatch
 } = require('./utils/dataMappers');
@@ -294,7 +293,7 @@ app.use((err, req, res, next) => {
 });
 
 const PORT = process.env.PORT || 5000;
-server.listen(PORT, () => {
+server.listen(PORT, '0.0.0.0', () => {
     console.log('\n' + '='.repeat(60));
     console.log(' SportFlash Server Started');
     console.log('='.repeat(60));

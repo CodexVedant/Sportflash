@@ -104,7 +104,7 @@ class AllSportsApiService {
      * @param {string} leagueId - League ID
      */
     async getFootballStandings(leagueId) {
-        return await this.makeRequest('football', 'Standings', { league_id: leagueId });
+        return await this.makeRequest('football', 'Standings', { leagueId: leagueId });
     }
 
     /**
@@ -112,7 +112,7 @@ class AllSportsApiService {
      * @param {string} teamId - Team ID
      */
     async getFootballTeam(teamId) {
-        return await this.makeRequest('football', 'Teams', { team_id: teamId });
+        return await this.makeRequest('football', 'Teams', { teamId: teamId });
     }
 
     /**
@@ -132,7 +132,7 @@ class AllSportsApiService {
      * @param {string} leagueId - League ID
      */
     async getFootballTopScorers(leagueId) {
-        return await this.makeRequest('football', 'Topscorers', { league_id: leagueId });
+        return await this.makeRequest('football', 'Topscorers', { leagueId: leagueId });
     }
 
     /**
@@ -197,7 +197,7 @@ class AllSportsApiService {
      * @param {string} teamId - Team ID
      */
     async getBasketballTeam(teamId) {
-        return await this.makeRequest('basketball', 'Teams', { team_id: teamId });
+        return await this.makeRequest('basketball', 'Teams', { teamId: teamId });
     }
 
     /**
@@ -250,7 +250,7 @@ class AllSportsApiService {
      */
     async getCricketStandings(leagueId) {
         // Cricket API specific parameter naming
-        return await this.makeRequest('cricket', 'Standings', { league_id: leagueId });
+        return await this.makeRequest('cricket', 'Standings', { leagueId: leagueId });
     }
 
     /**
@@ -258,7 +258,7 @@ class AllSportsApiService {
      * @param {string} teamId - Team ID
      */
     async getCricketTeam(teamId) {
-        return await this.makeRequest('cricket', 'Teams', { team_id: teamId });
+        return await this.makeRequest('cricket', 'Teams', { teamId: teamId });
     }
 
     /**

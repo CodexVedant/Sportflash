@@ -63,6 +63,86 @@ exports.getMatches = async (req, res) => {
 };
 
 /**
+ * @desc    Get upcoming matches
+ * @route   GET /api/matches/upcoming
+ * @access  Public
+ */
+exports.getUpcomingMatches = async (req, res) => {
+    try {
+        const { sport, date, days = 7 } = req.query;
+
+        let upcomingMatches = [];
+        const targetDate = date || new Date().toISOString().split('T')[0];
+
+        if (sport) {
+            // Get upcoming matches for specific sport
+            const rawMatches = await allSportsApi.getFixturesBySport(sport, targetDate);
+
+            if (rawMatches) {
+                switch (sport.toLowerCase()) {
+                    case 'football':
+                    case 'soccer':
+                        upcomingMatches = rawMatches
+                            .map(mapFootballMatch)
+                            .filter(m => m !== null);
+                        break;
+                    case 'basketball':
+                        upcomingMatches = rawMatches
+                            .map(mapBasketballMatch)
+                            .filter(m => m !== null);
+                        break;
+                    case 'cricket':
+                        upcomingMatches = rawMatches
+                            .map(mapCricketMatch)
+                            .filter(m => m !== null);
+                        break;
+                }
+            }
+        } else {
+            // Get upcoming matches for all sports
+            const [footballFixtures, basketballFixtures, cricketFixtures] = await Promise.allSettled([
+                allSportsApi.getFootballFixtures({ date: targetDate }),
+                allSportsApi.getBasketballFixtures({ date: targetDate }),
+                allSportsApi.getCricketFixtures({ date: targetDate })
+            ]);
+
+            upcomingMatches = [
+                ...(footballFixtures.status === 'fulfilled' && footballFixtures.value
+                    ? footballFixtures.value.map(mapFootballMatch).filter(m => m !== null)
+                    : []),
+                ...(basketballFixtures.status === 'fulfilled' && basketballFixtures.value
+                    ? basketballFixtures.value.map(mapBasketballMatch).filter(m => m !== null)
+                    : []),
+                ...(cricketFixtures.status === 'fulfilled' && cricketFixtures.value
+                    ? cricketFixtures.value.map(mapCricketMatch).filter(m => m !== null)
+                    : [])
+            ];
+        }
+
+        // Sort by date/time
+        upcomingMatches.sort((a, b) => {
+            const dateA = new Date(a.date || a.startTime || 0);
+            const dateB = new Date(b.date || b.startTime || 0);
+            return dateA - dateB;
+        });
+
+        res.json({
+            success: true,
+            count: upcomingMatches.length,
+            date: targetDate,
+            data: upcomingMatches
+        });
+    } catch (error) {
+        console.error('Error in getUpcomingMatches:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error fetching upcoming matches',
+            error: error.message
+        });
+    }
+};
+
+/**
  * @desc    Get live matches
  * @route   GET /api/matches/live
  * @access  Public
