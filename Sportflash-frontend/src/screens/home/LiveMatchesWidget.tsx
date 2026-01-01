@@ -3,9 +3,10 @@ import { View, Text, ActivityIndicator, ScrollView, StyleProp, ViewStyle } from 
 import { theme } from '@utils/theme';
 import MatchCard from '@components/match/MatchCard';
 import { styles } from '@utils/style/LiveMatchesWidget.styles';
+import { Match } from '../../types/models/match';
 
 interface LiveMatchesWidgetProps {
-    matches: any[];
+    matches: Match[];
     loading: boolean;
     width: number;
     navigation: any;
@@ -23,7 +24,7 @@ export default function LiveMatchesWidget({ matches, loading, width, navigation,
     const flattenedData = React.useMemo(() => {
         if (!matches || matches.length === 0) return [];
 
-        const uniqueMatches: any[] = [];
+        const uniqueMatches: Match[] = [];
         const seenIds = new Set();
 
         matches.forEach(match => {
@@ -40,16 +41,16 @@ export default function LiveMatchesWidget({ matches, loading, width, navigation,
             // Strict validation: Ensure match has valid teams and names
             if (!match.homeTeam?.name || !match.awayTeam?.name) return acc;
 
-            const league = match.league || 'Others';
-            if (!acc[league]) acc[league] = [];
-            acc[league].push(match);
+            const leagueName = match.league?.name || 'Others';
+            if (!acc[leagueName]) acc[leagueName] = [];
+            acc[leagueName].push(match);
             return acc;
-        }, {} as Record<string, any[]>);
+        }, {} as Record<string, Match[]>);
 
         const flatList: any[] = [];
         Object.keys(grouped).sort().forEach(league => {
             flatList.push({ type: 'header', title: league, id: `header-${league}` });
-            grouped[league].forEach(match => {
+            grouped[league].forEach((match: Match) => {
                 flatList.push({ type: 'match', ...match });
             });
         });
@@ -82,10 +83,8 @@ export default function LiveMatchesWidget({ matches, loading, width, navigation,
                         return (
                             <View key={item.id || index} style={{ marginBottom: 4 }}>
                                 <MatchCard
-                                    match={item}
-                                    sport={item.sport}
-                                    status={item.status} // Pass status if MatchCard expects it separately, or just match
-                                    title={item.title}  // If MatchCard needs title
+                                    {...item}
+                                    league={item.league?.name}
                                     onPress={() => navigation.navigate('MatchDetail', { match: item })}
                                 />
                             </View>
