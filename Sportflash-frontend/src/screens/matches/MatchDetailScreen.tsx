@@ -162,22 +162,27 @@ export default function MatchDetailScreen({ navigation, route }: Props) {
                     />
                 );
             case 'Standings':
+                console.log('📊 Standings Data:', standingsData);
+                console.log('📊 First item:', standingsData?.[0]);
                 return (
                     <StandingsWidget
-                        data={standingsData?.map(item => ({
-                            team: {
-                                id: item.team?.id,
-                                name: item.team?.name
-                            },
-                            position: item.position ?? item.rank ?? 0,
-                            stats: {
-                                played: item.stats?.played ?? item.played ?? 0,
-                                points: item.stats?.points ?? item.points ?? 0,
-                                goalDifference: item.stats?.goalDifference ?? item.goalDifference ?? 0,
-                                netRunRate: item.stats?.netRunRate ?? (item as any).netRunRate,
-                                percentage: item.stats?.percentage ?? (item as any).percentage
-                            }
-                        })) || []}
+                        data={standingsData?.map(item => {
+                            console.log('📊 Mapping item:', item);
+                            return {
+                                team: {
+                                    id: item.team?.id,
+                                    name: item.team?.name
+                                },
+                                position: item.position ?? item.rank ?? 0,
+                                stats: {
+                                    played: item.stats?.played ?? item.played ?? 0,
+                                    points: item.stats?.points ?? item.points ?? 0,
+                                    goalDifference: item.stats?.goalDifference ?? item.goalDifference ?? 0,
+                                    netRunRate: item.stats?.netRunRate ?? (item as any).netRunRate,
+                                    percentage: item.stats?.percentage ?? (item as any).percentage
+                                }
+                            };
+                        }) || []}
                         highlightTeams={[matchData.homeTeam?.id, matchData.awayTeam?.id]}
                     />
                 );
