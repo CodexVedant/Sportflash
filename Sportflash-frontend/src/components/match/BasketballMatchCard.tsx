@@ -60,7 +60,7 @@ export default function BasketballMatchCard({ match, onPress }: BasketballMatchC
                             <Text style={styles.statusText}>{displayStatus?.toUpperCase() || status?.toUpperCase()}</Text>
                         </View>
                     )}
-                    <Text style={styles.league} numberOfLines={1}>{league?.name || league}</Text>
+                    <Text style={styles.league} numberOfLines={1}>{(typeof league === 'object' ? league?.name : league) || 'League'}</Text>
                 </View>
 
                 {/* Score Header (Q1, Q2, Q3, Q4 labels) */}

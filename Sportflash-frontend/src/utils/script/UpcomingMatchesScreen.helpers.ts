@@ -3,12 +3,19 @@
  * Handles business logic and data transformations for upcoming matches
  */
 
+import { Match } from '../../types/models/match';
+
+interface MatchDate {
+    date: string;
+    time: string;
+}
+
 /**
  * Format match date and time
  * @param {string} dateString - ISO date string
  * @returns {object} Formatted date and time
  */
-export const formatMatchDateTime = (dateString) => {
+export const formatMatchDateTime = (dateString?: string): MatchDate => {
     if (!dateString) return { date: 'TBD', time: 'TBD' };
 
     const matchDate = new Date(dateString);
@@ -45,11 +52,11 @@ export const formatMatchDateTime = (dateString) => {
  * @param {Array} matches - Array of match objects
  * @returns {Array} Grouped matches by date
  */
-export const groupMatchesByDate = (matches) => {
+export const groupMatchesByDate = (matches: Match[]): { date: string; matches: Match[] }[] => {
     if (!matches || matches.length === 0) return [];
 
     const grouped = matches.reduce((acc, match) => {
-        const { date } = formatMatchDateTime(match.date || match.startTime);
+        const { date } = formatMatchDateTime(match.date || (match as any).startTime);
 
         if (!acc[date]) {
             acc[date] = [];
@@ -57,7 +64,7 @@ export const groupMatchesByDate = (matches) => {
         acc[date].push(match);
 
         return acc;
-    }, {});
+    }, {} as Record<string, Match[]>);
 
     // Convert to array format for rendering
     return Object.entries(grouped).map(([date, matches]) => ({
@@ -72,17 +79,24 @@ export const groupMatchesByDate = (matches) => {
  * @param {string} sport - Sport filter (all, football, basketball, cricket)
  * @returns {Array} Filtered matches
  */
-export const filterMatchesBySport = (matches, sport) => {
+export const filterMatchesBySport = (matches: Match[], sport: string): Match[] => {
     if (!sport || sport === 'all') return matches;
     return matches.filter(match => match.sport?.toLowerCase() === sport.toLowerCase());
 };
+
+export interface DateOption {
+    value: string;
+    label: string;
+    dayOfWeek: string;
+    date: number;
+}
 
 /**
  * Get next 7 days dates
  * @returns {Array} Array of date objects
  */
-export const getNextSevenDays = () => {
-    const dates = [];
+export const getNextSevenDays = (): DateOption[] => {
+    const dates: DateOption[] = [];
     const today = new Date();
 
     for (let i = 0; i < 7; i++) {
@@ -109,12 +123,12 @@ export const getNextSevenDays = () => {
  * @param {string} dateString - ISO date string
  * @returns {boolean} True if match is happening soon
  */
-export const isMatchSoon = (dateString) => {
+export const isMatchSoon = (dateString?: string): boolean => {
     if (!dateString) return false;
 
     const matchDate = new Date(dateString);
     const now = new Date();
-    const diffInHours = (matchDate - now) / (1000 * 60 * 60);
+    const diffInHours = (matchDate.getTime() - now.getTime()) / (1000 * 60 * 60);
 
     return diffInHours > 0 && diffInHours <= 2;
 };
@@ -124,12 +138,12 @@ export const isMatchSoon = (dateString) => {
  * @param {string} dateString - ISO date string
  * @returns {string} Countdown text
  */
-export const getMatchCountdown = (dateString) => {
+export const getMatchCountdown = (dateString?: string): string => {
     if (!dateString) return '';
 
     const matchDate = new Date(dateString);
     const now = new Date();
-    const diff = matchDate - now;
+    const diff = matchDate.getTime() - now.getTime();
 
     if (diff <= 0) return 'Starting soon';
 

@@ -1,4 +1,4 @@
-import { BaseEntity } from '../common';
+import { BaseEntity, Dictionary } from '../common';
 import { Team } from './team';
 
 export interface Player extends BaseEntity {
@@ -10,4 +10,5 @@ export interface Player extends BaseEntity {
     nationality?: string;
     image?: string;
     stats?: Dictionary<any>; // Flexible for now
+    statistics?: any;
 }

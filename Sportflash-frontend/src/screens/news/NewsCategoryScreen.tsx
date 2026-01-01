@@ -16,7 +16,7 @@ export default function NewsCategoryScreen() {
     const { category = 'all' } = route.params || {};
 
     // Fetch news based on category
-    const { data: news = [], isLoading, error } = useGetNewsQuery(category);
+    const { data: news = [], isLoading, error } = useGetNewsQuery(category as any);
 
     useEffect(() => {
         navigation.setOptions({

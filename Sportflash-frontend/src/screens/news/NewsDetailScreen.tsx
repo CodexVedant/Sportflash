@@ -23,9 +23,9 @@ export default function NewsDetailScreen() {
     const bookmarks = useAppSelector(state => state.news.bookmarks);
     // Ensure ids are compared as strings or numbers consistently. API usually returns strings or numbers. 
     // Assuming bookmarks stores same type as newsId.
-    const isBookmarked = bookmarks.includes(String(newsId)) || bookmarks.includes(Number(newsId));
+    const isBookmarked = newsId ? bookmarks.includes(String(newsId)) : false;
 
-    const { data: article, isLoading, error } = useGetNewsDetailQuery(newsId);
+    const { data: article, isLoading, error } = useGetNewsDetailQuery(String(newsId || ''));
 
     const handleShare = async () => {
         try {
@@ -75,7 +75,7 @@ export default function NewsDetailScreen() {
                             <Ionicons name="arrow-back" size={24} color="#FFF" />
                         </TouchableOpacity>
                         <View style={{ flexDirection: 'row', gap: 12 }}>
-                            <TouchableOpacity onPress={() => dispatch(toggleBookmark(newsId))} style={styles.iconBtn}>
+                            <TouchableOpacity onPress={() => dispatch(toggleBookmark(String(newsId)))} style={styles.iconBtn}>
                                 <Ionicons
                                     name={isBookmarked ? "bookmark" : "bookmark-outline"}
                                     size={24}
@@ -85,12 +85,12 @@ export default function NewsDetailScreen() {
                             <TouchableOpacity onPress={handleShare} style={styles.iconBtn}>
                                 <Ionicons name="share-social-outline" size={24} color="#FFF" />
                             </TouchableOpacity>
-                        </View>
-                    </View>
-                </View>
+                        </View >
+                    </View >
+                </View >
 
                 {/* Content */}
-                <View style={styles.content}>
+                < View style={styles.content} >
                     <View style={styles.badge}>
                         <Text style={styles.badgeText}>{article.category || 'News'}</Text>
                     </View>
@@ -108,9 +108,9 @@ export default function NewsDetailScreen() {
                     <Text style={styles.body}>
                         {article.content || "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.\n\nDuis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident."}
                     </Text>
-                </View>
-            </ScrollView>
-        </SafeAreaView>
+                </View >
+            </ScrollView >
+        </SafeAreaView >
     );
 }
 

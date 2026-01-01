@@ -32,7 +32,7 @@ const options: SocketOptions = {
     })
 };
 
-const socket: Socket = io(SOCKET_URL, options);
+const socket = io(SOCKET_URL, options);
 
 export const connectSocket = (): void => {
     if (!socket.connected) {
@@ -51,7 +51,7 @@ socket.on('connect', () => {
     console.log(`✅ Socket connected on ${Platform.OS}`);
 });
 
-socket.on('disconnect', (reason: Socket.DisconnectReason) => {
+socket.on('disconnect', (reason: string) => {
     console.log(`❌ Socket disconnected: ${reason}`);
 });
 

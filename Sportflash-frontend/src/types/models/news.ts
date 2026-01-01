@@ -11,4 +11,6 @@ export interface Article extends BaseEntity {
     publishedAt: string;
     source?: string;
     url?: string;
+    author?: string;
+    time?: string;
 }

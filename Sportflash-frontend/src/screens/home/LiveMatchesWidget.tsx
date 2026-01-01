@@ -41,7 +41,9 @@ export default function LiveMatchesWidget({ matches, loading, width, navigation,
             // Strict validation: Ensure match has valid teams and names
             if (!match.homeTeam?.name || !match.awayTeam?.name) return acc;
 
-            const leagueName = match.league?.name || 'Others';
+            const league = match.league?.name || (typeof match.league === 'string' ? match.league : 'Others');
+            const leagueName = typeof league === 'string' ? league : 'Others';
+
             if (!acc[leagueName]) acc[leagueName] = [];
             acc[leagueName].push(match);
             return acc;
@@ -50,7 +52,7 @@ export default function LiveMatchesWidget({ matches, loading, width, navigation,
         const flatList: any[] = [];
         Object.keys(grouped).sort().forEach(league => {
             flatList.push({ type: 'header', title: league, id: `header-${league}` });
-            grouped[league].forEach((match: Match) => {
+            grouped[league].forEach(match => {
                 flatList.push({ type: 'match', ...match });
             });
         });
@@ -84,7 +86,6 @@ export default function LiveMatchesWidget({ matches, loading, width, navigation,
                             <View key={item.id || index} style={{ marginBottom: 4 }}>
                                 <MatchCard
                                     {...item}
-                                    league={item.league?.name}
                                     onPress={() => navigation.navigate('MatchDetail', { match: item })}
                                 />
                             </View>

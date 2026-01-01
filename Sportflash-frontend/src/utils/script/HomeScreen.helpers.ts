@@ -3,9 +3,18 @@
  */
 
 /**
+ * Interface for Sport Tab
+ */
+export interface SportTab {
+    id: string;
+    label: string;
+    icon: string;
+}
+
+/**
  * Sport tabs configuration
  */
-export const SPORT_TABS = [
+export const SPORT_TABS: SportTab[] = [
     { id: 'cricket', label: 'Cricket', icon: 'baseball-outline' },
     { id: 'football', label: 'Football', icon: 'football-outline' },
     { id: 'basketball', label: 'Basketball', icon: 'basketball-outline' },
@@ -26,22 +35,34 @@ export const MAX_CONTENT_WIDTH = 1200;
  * @param {number} width - Current window width
  * @returns {boolean} True if desktop size
  */
-export const isDesktopSize = (width) => width > DESKTOP_BREAKPOINT;
+export const isDesktopSize = (width: number): boolean => width > DESKTOP_BREAKPOINT;
 
 /**
  * Calculate content width based on screen size
  * @param {number} width - Current window width
  * @returns {number} Calculated content width
  */
-export const getContentWidth = (width) => {
+export const getContentWidth = (width: number): number => {
     return isDesktopSize(width) ? Math.min(width, MAX_CONTENT_WIDTH) : width;
 };
+
+/**
+ * Interface for Notification
+ */
+export interface Notification {
+    id: number;
+    type: string;
+    title: string;
+    message: string;
+    timestamp: Date;
+    read: boolean;
+}
 
 /**
  * Mock notifications data
  * TODO: Replace with actual API call
  */
-export const getMockNotifications = () => [
+export const getMockNotifications = (): Notification[] => [
     {
         id: 1,
         type: 'match_start',

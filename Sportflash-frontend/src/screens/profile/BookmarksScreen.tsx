@@ -21,7 +21,7 @@ export default function BookmarksScreen() {
     // Let's assume fetching all news for demo purposes.
     const { data: allNews = [] } = useGetNewsQuery('all');
 
-    const bookmarkedArticles = allNews.filter(item => bookmarks.includes(item.id));
+    const bookmarkedArticles = allNews.filter(item => bookmarks.includes(String(item.id)));
 
     return (
         <SafeAreaView style={styles.container}>
@@ -57,7 +57,7 @@ export default function BookmarksScreen() {
                                 <Text style={styles.title} numberOfLines={2}>{item.title}</Text>
                                 <Text style={styles.time}>{item.time || 'Recent'}</Text>
                             </View>
-                            <TouchableOpacity style={styles.removeBtn} onPress={() => dispatch(toggleBookmark(item.id))}>
+                            <TouchableOpacity style={styles.removeBtn} onPress={() => dispatch(toggleBookmark(String(item.id)))}>
                                 <Ionicons name="trash-outline" size={20} color={theme.colors.textMuted} />
                             </TouchableOpacity>
                         </TouchableOpacity>

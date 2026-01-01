@@ -150,7 +150,13 @@ export default function MatchDetailScreen({ navigation, route }: Props) {
             case 'H2H':
                 return (
                     <H2HStats
-                        data={h2hData}
+                        data={h2hData?.matches?.map((m: any) => ({
+                            match_date: m.date || m.match_date,
+                            match_hometeam_name: m.homeTeam?.name || m.match_hometeam_name,
+                            match_awayteam_name: m.awayTeam?.name || m.match_awayteam_name,
+                            match_hometeam_score: m.homeTeam?.score || m.match_hometeam_score,
+                            match_awayteam_score: m.awayTeam?.score || m.match_awayteam_score
+                        })) || []}
                         team1={matchData.homeTeam}
                         team2={matchData.awayTeam}
                     />
@@ -158,7 +164,20 @@ export default function MatchDetailScreen({ navigation, route }: Props) {
             case 'Standings':
                 return (
                     <StandingsWidget
-                        data={standingsData}
+                        data={standingsData?.map(item => ({
+                            team: {
+                                id: item.team?.id,
+                                name: item.team?.name
+                            },
+                            position: item.rank,
+                            stats: {
+                                played: item.played,
+                                points: item.points,
+                                goalDifference: item.goalDifference,
+                                netRunRate: (item as any).netRunRate,
+                                percentage: (item as any).percentage
+                            }
+                        })) || []}
                         highlightTeams={[matchData.homeTeam?.id, matchData.awayTeam?.id]}
                     />
                 );
@@ -302,14 +321,25 @@ export default function MatchDetailScreen({ navigation, route }: Props) {
                             style={styles.backBtn}
                             onFallback={() => {
                                 if (matchData.leagueInfo?.id) {
-                                    navigation.navigate('LeagueDetails', { leagueId: matchData.leagueInfo.id });
+                                    navigation.navigate('LeagueDetails', {
+                                        leagueId: matchData.leagueInfo.id,
+                                        name: matchData.leagueInfo.name,
+                                        round: matchData.leagueInfo.round
+                                    });
                                 } else {
-                                    navigation.navigate('Home');
+                                    // Navigate to Main stack if Home is not in RootStack direct children
+                                    // Assuming Home is the initial route of Main or a direct route
+                                    // If 'Home' gave error, it might be nested in 'Main'
+                                    navigation.navigate('Main');
                                 }
                             }}
                         />
 
-                        <TouchableOpacity onPress={() => navigation.navigate('LeagueDetails', { leagueId: matchData.leagueInfo?.id })}>
+                        <TouchableOpacity onPress={() => navigation.navigate('LeagueDetails', {
+                            leagueId: matchData.leagueInfo?.id,
+                            name: matchData.leagueInfo?.name,
+                            round: matchData.leagueInfo?.round
+                        })}>
                             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
                                 <Text style={styles.headerTitle}>{matchData.league}</Text>
                                 <Ionicons name="chevron-forward" size={16} color="rgba(255,255,255,0.7)" />
@@ -325,8 +355,8 @@ export default function MatchDetailScreen({ navigation, route }: Props) {
                         timer={timer}
                         onFollow={handleFollow}
                         onTeamPress={handleTeamPress}
-                        isFollowingHome={isFollowingHome}
-                        isFollowingAway={isFollowingAway}
+                        isFollowingHome={!!isFollowingHome}
+                        isFollowingAway={!!isFollowingAway}
                     />
 
                     {/* Tabs */}

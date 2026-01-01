@@ -73,7 +73,10 @@ export default function MatchesScreen({ navigation }: Props) {
 
         // Apply additional filters
         if (filters.league !== 'all') {
-            matches = matches.filter(match => match.league?.toLowerCase().includes(filters.league.toLowerCase()));
+            matches = matches.filter(match => {
+                const leagueName = typeof match.league === 'string' ? match.league : match.league?.name;
+                return leagueName?.toLowerCase().includes(filters.league.toLowerCase());
+            });
         }
 
         return matches;
@@ -117,7 +120,7 @@ export default function MatchesScreen({ navigation }: Props) {
         if (!filteredMatches.length) return [];
 
         const groups = filteredMatches.reduce((acc, match) => {
-            const leagueName = match.league || 'Others';
+            const leagueName = (typeof match.league === 'string' ? match.league : match.league?.name) || 'Others';
             if (!acc[leagueName]) {
                 acc[leagueName] = [];
             }
@@ -185,7 +188,7 @@ export default function MatchesScreen({ navigation }: Props) {
                 </View>
                 <View style={styles.headerActions}>
                     <TouchableOpacity
-                        onPress={() => navigation.navigate('UpcomingMatches')}
+                        onPress={() => navigation.navigate('UpcomingMatches', {})}
                         style={[styles.iconBtn, { marginRight: 8 }]}
                     >
                         <Ionicons name="calendar-outline" size={24} color={theme.colors.primary} />

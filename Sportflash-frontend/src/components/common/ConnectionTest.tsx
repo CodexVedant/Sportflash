@@ -33,12 +33,12 @@ export default function ConnectionTest() {
             console.log('❌ Socket.IO disconnected');
         });
 
-        socket.on('score_update', (data) => {
+        socket.on('score_update', (data: any) => {
             setSocketData(data);
             console.log('📊 Score update received:', data);
         });
 
-        socket.on('connect_error', (error) => {
+        socket.on('connect_error', (error: any) => {
             setSocketStatus('error');
             console.error('❌ Socket.IO connection error:', error);
         });

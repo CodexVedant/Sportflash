@@ -24,6 +24,7 @@ interface MatchCardProps {
     awayTeam: TeamDisplayProps;
     score?: string;
     timer?: string;
+    match?: any;
     onPress?: (event: GestureResponderEvent) => void;
 }
 

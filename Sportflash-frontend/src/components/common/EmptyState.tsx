@@ -8,6 +8,7 @@ interface EmptyStateProps {
     icon?: any; // Ionicons name
     title?: string;
     subtitle?: string;
+    message?: string;
     actionLabel?: string;
     onAction?: () => void;
     variant?: 'default' | 'search' | 'error' | 'noResults' | 'noMatches' | 'noNews' | 'noBookmarks' | 'noFollowing' | 'noNotifications';
@@ -18,11 +19,14 @@ export default function EmptyState({
     icon = 'file-tray-outline',
     title = 'No Data Available',
     subtitle = 'There is nothing to display at the moment',
+    message,
     actionLabel,
     onAction,
     variant = 'default', // default, search, error, noResults
     style,
 }: EmptyStateProps) {
+    // Message prop overrides subtitle if present (backward compatibility)
+    const effectiveSubtitle = message || subtitle;
     const getIconAndText = () => {
         switch (variant) {
             case 'search':
@@ -81,7 +85,7 @@ export default function EmptyState({
     const config = getIconAndText();
     const displayIcon = icon !== 'file-tray-outline' ? icon : config.icon;
     const displayTitle = title !== 'No Data Available' ? title : config.title;
-    const displaySubtitle = subtitle !== 'There is nothing to display at the moment' ? subtitle : config.subtitle;
+    const displaySubtitle = effectiveSubtitle !== 'There is nothing to display at the moment' ? effectiveSubtitle : config.subtitle;
 
     return (
         <View style={[styles.container, style]}>

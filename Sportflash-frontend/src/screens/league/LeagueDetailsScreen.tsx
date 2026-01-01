@@ -12,7 +12,7 @@ import { RootStackParamList } from '@app-types/navigation';
 type Props = NativeStackScreenProps<RootStackParamList, 'LeagueDetails'>;
 
 export default function LeagueDetailsScreen({ navigation, route }: Props) {
-    const { leagueId, sport = 'football' } = route.params || {};
+    const { leagueId, sport = 'football', name, round } = route.params || {};
     const [activeTab, setActiveTab] = useState('Standings');
 
     // Fetch Standings Data for this League using existing API endpoint
@@ -24,7 +24,7 @@ export default function LeagueDetailsScreen({ navigation, route }: Props) {
 
     // Mock header info (In a real app, we'd fetch League Info specifically)
     // For now, we rely on what we have or show a loader
-    const leagueName = standingsData && standingsData.length > 0 ? standingsData[0]?.leagueName : 'League Details';
+    const leagueName = name || (standingsData && standingsData.length > 0 ? (standingsData[0] as any)?.leagueName : 'League Details');
 
     const renderTabContent = () => {
         switch (activeTab) {
@@ -32,8 +32,20 @@ export default function LeagueDetailsScreen({ navigation, route }: Props) {
                 return (
                     <View style={styles.tabContent}>
                         <StandingsWidget
-                            data={standingsData}
-                        // No specific team to highlight here, seeing the whole table
+                            data={standingsData?.map(item => ({
+                                team: {
+                                    id: item.team?.id,
+                                    name: item.team?.name
+                                },
+                                position: item.rank,
+                                stats: {
+                                    played: item.played,
+                                    points: item.points,
+                                    goalDifference: item.goalDifference,
+                                    netRunRate: (item as any).netRunRate,
+                                    percentage: (item as any).percentage
+                                }
+                            })) || []}
                         />
                     </View>
                 );
@@ -62,7 +74,7 @@ export default function LeagueDetailsScreen({ navigation, route }: Props) {
                     <Ionicons name="arrow-back" size={24} color={theme.colors.text} />
                 </TouchableOpacity>
                 <Text style={styles.headerTitle} numberOfLines={1}>
-                    {standingsData?.[0]?.round ? `${standingsData[0].round}` : 'Tournament'}
+                    {round ? round : 'Tournament'}
                 </Text>
                 <View style={{ width: 24 }} />
             </View>
