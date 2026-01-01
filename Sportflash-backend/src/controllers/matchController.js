@@ -475,21 +475,15 @@ exports.getStandings = async (req, res) => {
             case 'football':
             case 'soccer':
                 rawStandings = await allSportsApi.getFootballStandings(league);
-                console.log('📊 Raw Football Standings:', JSON.stringify(rawStandings, null, 2));
                 standings = mapStandings(rawStandings, 'football');
-                console.log('📊 Mapped Football Standings:', JSON.stringify(standings, null, 2));
                 break;
             case 'basketball':
                 rawStandings = await allSportsApi.getBasketballStandings(league);
-                console.log('📊 Raw Basketball Standings:', JSON.stringify(rawStandings, null, 2));
                 standings = mapStandings(rawStandings, 'basketball');
-                console.log('📊 Mapped Basketball Standings:', JSON.stringify(standings, null, 2));
                 break;
             case 'cricket':
                 rawStandings = await allSportsApi.getCricketStandings(league);
-                console.log('📊 Raw Cricket Standings:', JSON.stringify(rawStandings, null, 2));
                 standings = mapStandings(rawStandings, 'cricket');
-                console.log('📊 Mapped Cricket Standings:', JSON.stringify(standings, null, 2));
                 break;
             default:
                 return res.status(400).json({
@@ -499,7 +493,7 @@ exports.getStandings = async (req, res) => {
         }
 
         if (!standings || standings.length === 0) {
-            console.log('⚠️ No standings data available for league:', league);
+            // Quietly handle empty standings without logging to console/terminal
         }
 
         res.json({

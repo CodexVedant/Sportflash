@@ -55,11 +55,13 @@ export interface Match extends BaseEntity {
     lineups?: any;
     statistics?: any;
     events?: MatchEvent[];
+    comments?: any;
 }
 
 export interface H2HStats {
-    matches: Match[]; // Past matches
-    summary: {
+    H2H?: any[]; // Raw API response support
+    matches?: Match[]; // Past matches
+    summary?: {
         total: number;
         homeWins: number;
         awayWins: number;

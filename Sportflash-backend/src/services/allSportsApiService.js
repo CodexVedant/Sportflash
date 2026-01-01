@@ -157,7 +157,7 @@ class AllSportsApiService {
      * @param {string} countryId - Optional country ID filter
      */
     async getBasketballLeagues(countryId = null) {
-        const params = countryId ? { country_id: countryId } : {};
+        const params = countryId ? { countryId: countryId } : {};
         return await this.makeRequest('basketball', 'Leagues', params);
     }
 
@@ -178,8 +178,8 @@ class AllSportsApiService {
         const params = {};
         if (date) params.from = date;
         if (date) params.to = date;
-        if (leagueId) params.league_id = leagueId;
-        if (teamId) params.team_id = teamId;
+        if (leagueId) params.leagueId = leagueId;
+        if (teamId) params.teamId = teamId;
 
         return await this.makeRequest('basketball', 'Fixtures', params);
     }

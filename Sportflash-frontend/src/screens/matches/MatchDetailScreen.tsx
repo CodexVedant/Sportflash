@@ -1,5 +1,5 @@
 ﻿import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, useWindowDimensions, Platform, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, useWindowDimensions, Platform, StyleSheet, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { theme } from '@utils/theme';
@@ -65,30 +65,53 @@ export default function MatchDetailScreen({ navigation, route }: Props) {
         dispatch(initSocketListeners());
     }, [dispatch]);
 
-    const [liveCommentary, setLiveCommentary] = useState<any[]>([]);
+    const derivedCommentary = React.useMemo(() => {
+        const commentaryList: any[] = [];
 
-    useEffect(() => {
-        // Join specific match room for detailed updates (like commentary) where applicable
-        if (matchId && matchId !== '1') {
-            socket.emit('join_match', matchId);
+        // Cricket Commentary
+        if (matchData.sport === 'cricket' && matchData.comments?.Live) {
+            matchData.comments.Live.forEach((c: any) => {
+                commentaryList.push({
+                    time: c?.overs ? `${c.overs} ov` : '',
+                    text: c?.text || c?.comment || c?.post || 'Ball bowled',
+                    key: `cricket-${Math.random()}`
+                });
+            });
         }
 
-        // Listener for commentary/specific events
-        const handleCommentary = (data: any) => {
-            if ((data.id === matchId || data._id === matchId) && data.commentary) {
-                setLiveCommentary(prev => [{ text: data.commentary, time: data.currentMinute }, ...prev].slice(0, 20));
-            }
-        };
+        // Football Events as Commentary
+        if (matchData.sport === 'football' && matchData.events) {
+            matchData.events.forEach((e: any, index: number) => {
+                let text = '';
+                if (e.type === 'goal') {
+                    text = `⚽ GOAL! ${e.player} scores for ${e.team === 'home' ? matchData.homeTeam?.name : matchData.awayTeam?.name}`;
+                } else if (e.type === 'card') {
+                    text = `${e.cardType || 'Yellow'} Card 🟨 to ${e.player} (${e.team === 'home' ? matchData.homeTeam?.name : matchData.awayTeam?.name})`;
+                }
 
-        socket.on('score_update', handleCommentary);
+                if (text) {
+                    commentaryList.push({
+                        time: `${e.time}'`,
+                        text,
+                        key: `football-${index}`
+                    });
+                }
+            });
+            // Reverse to show latest first
+            commentaryList.reverse();
+        }
 
-        return () => {
-            socket.off('score_update', handleCommentary);
-            if (matchId && matchId !== '1') {
-                socket.emit('leave_match', matchId);
-            }
-        };
-    }, [matchId]);
+        // Basketball Commentary (Simulated from Quarter Scores)
+        if (matchData.sport === 'basketball' && matchData.basketballData) {
+            const b = matchData.basketballData;
+            if (b.home_q4) commentaryList.push({ time: 'Q4', text: `End of Q4: ${b.home_q4} - ${b.away_q4}`, key: 'q4' });
+            if (b.home_q3) commentaryList.push({ time: 'Q3', text: `End of Q3: ${b.home_q3} - ${b.away_q3}`, key: 'q3' });
+            if (b.home_q2) commentaryList.push({ time: 'Q2', text: `End of Q2: ${b.home_q2} - ${b.away_q2}`, key: 'q2' });
+            if (b.home_q1) commentaryList.push({ time: 'Q1', text: `End of Q1: ${b.home_q1} - ${b.away_q1}`, key: 'q1' });
+        }
+
+        return commentaryList;
+    }, [matchData]);
 
 
     const handleFollow = useCallback(async (teamName: string) => {
@@ -126,17 +149,36 @@ export default function MatchDetailScreen({ navigation, route }: Props) {
 
     const activeColor = getSportColor();
 
+    const isFinished = ['Finished', 'FT', 'AET', 'Ended'].includes(matchData.status) || matchData.status?.toLowerCase() === 'finished';
+
     // Fetch Data for Tabs
-    const { data: h2hData } = useGetMatchH2HQuery({
+    const { data: h2hData, isLoading: isH2HLoading, refetch: refetchH2H } = useGetMatchH2HQuery({
         sport: matchData.sport || 'football',
         team1Id: matchData.homeTeam?.id,
         team2Id: matchData.awayTeam?.id
-    }, { skip: !matchData.homeTeam?.id || !matchData.awayTeam?.id });
+    }, {
+        skip: !matchData.homeTeam?.id || !matchData.awayTeam?.id,
+        pollingInterval: isFinished ? 0 : 300000, // Disable polling if finished
+        refetchOnMountOrArgChange: true
+    });
 
-    const { data: standingsData } = useGetMatchStandingsQuery({
+    const { data: standingsData, isLoading: isStandingsLoading, refetch: refetchStandings } = useGetMatchStandingsQuery({
         sport: matchData.sport || 'football',
         leagueId: matchData.leagueInfo?.id
-    }, { skip: !matchData.leagueInfo?.id });
+    }, {
+        skip: !matchData.leagueInfo?.id,
+        pollingInterval: isFinished ? 0 : 300000, // Disable polling if finished
+        refetchOnMountOrArgChange: true
+    });
+
+    // Refetch data when respective tabs become active
+    useEffect(() => {
+        if (activeTab === 'Standings' && matchData.leagueInfo?.id) {
+            refetchStandings();
+        } else if (activeTab === 'H2H' && matchData.homeTeam?.id && matchData.awayTeam?.id) {
+            refetchH2H();
+        }
+    }, [activeTab, matchData.leagueInfo?.id, matchData.homeTeam?.id, matchData.awayTeam?.id, refetchStandings, refetchH2H]);
 
     const renderTabContent = () => {
         switch (activeTab) {
@@ -148,27 +190,64 @@ export default function MatchDetailScreen({ navigation, route }: Props) {
                     />
                 );
             case 'H2H':
+                if (isH2HLoading && !h2hData) {
+                    return (
+                        <View style={[styles.tabContent, { justifyContent: 'center', alignItems: 'center', paddingVertical: 40 }]}>
+                            <ActivityIndicator size="large" color={activeColor} />
+                            <Text style={[styles.textMuted, { marginTop: 16 }]}>Loading head-to-head data...</Text>
+                        </View>
+                    );
+                }
+
+                const rawH2H = h2hData as any;
+                const h2hList = Array.isArray(rawH2H) ? rawH2H : (rawH2H?.H2H || rawH2H?.matches || []);
+
                 return (
-                    <H2HStats
-                        data={h2hData?.matches?.map((m: any) => ({
-                            match_date: m.date || m.match_date,
-                            match_hometeam_name: m.homeTeam?.name || m.match_hometeam_name,
-                            match_awayteam_name: m.awayTeam?.name || m.match_awayteam_name,
-                            match_hometeam_score: m.homeTeam?.score || m.match_hometeam_score,
-                            match_awayteam_score: m.awayTeam?.score || m.match_awayteam_score
-                        })) || []}
-                        team1={matchData.homeTeam}
-                        team2={matchData.awayTeam}
-                    />
+                    <View style={styles.tabContent}>
+                        <View style={[styles.sectionHeader, { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }]}>
+                            <Text style={styles.sectionTitle}>Head to Head</Text>
+                            <TouchableOpacity
+                                onPress={() => refetchH2H()}
+                                style={{ padding: 8 }}
+                            >
+                                <Ionicons name="refresh" size={20} color={activeColor} />
+                            </TouchableOpacity>
+                        </View>
+                        <H2HStats
+                            data={h2hList.map((m: any) => ({
+                                match_date: m.event_date || m.event_date_start || m.date || m.match_date || '',
+                                match_hometeam_name: m.event_home_team || m.homeTeam?.name || m.match_hometeam_name || 'Unknown',
+                                match_awayteam_name: m.event_away_team || m.awayTeam?.name || m.match_awayteam_name || 'Unknown',
+                                match_hometeam_score: m.event_home_final_result || m.homeTeam?.score || m.match_hometeam_score || '?',
+                                match_awayteam_score: m.event_away_final_result || m.awayTeam?.score || m.match_awayteam_score || '?'
+                            }))}
+                            team1={matchData.homeTeam}
+                            team2={matchData.awayTeam}
+                        />
+                    </View>
                 );
             case 'Standings':
-                console.log('📊 Standings Data:', standingsData);
-                console.log('📊 First item:', standingsData?.[0]);
+                if (isStandingsLoading && !standingsData) {
+                    return (
+                        <View style={[styles.tabContent, { justifyContent: 'center', alignItems: 'center', paddingVertical: 40 }]}>
+                            <ActivityIndicator size="large" color={activeColor} />
+                            <Text style={[styles.textMuted, { marginTop: 16 }]}>Loading standings...</Text>
+                        </View>
+                    );
+                }
                 return (
-                    <StandingsWidget
-                        data={standingsData?.map(item => {
-                            console.log('📊 Mapping item:', item);
-                            return {
+                    <View style={styles.tabContent}>
+                        <View style={[styles.sectionHeader, { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }]}>
+                            <Text style={styles.sectionTitle}>League Standings</Text>
+                            <TouchableOpacity
+                                onPress={() => refetchStandings()}
+                                style={{ padding: 8 }}
+                            >
+                                <Ionicons name="refresh" size={20} color={activeColor} />
+                            </TouchableOpacity>
+                        </View>
+                        <StandingsWidget
+                            data={standingsData?.map(item => ({
                                 team: {
                                     id: item.team?.id,
                                     name: item.team?.name
@@ -181,14 +260,14 @@ export default function MatchDetailScreen({ navigation, route }: Props) {
                                     netRunRate: item.stats?.netRunRate ?? (item as any).netRunRate,
                                     percentage: item.stats?.percentage ?? (item as any).percentage
                                 }
-                            };
-                        }) || []}
-                        highlightTeams={[matchData.homeTeam?.id, matchData.awayTeam?.id]}
-                    />
+                            })) || []}
+                            highlightTeams={[matchData.homeTeam?.id, matchData.awayTeam?.id]}
+                        />
+                    </View>
                 );
             case 'Commentary':
                 return (
-                    <Commentary commentary={liveCommentary} />
+                    <Commentary commentary={derivedCommentary} />
                 );
             default:
                 return (

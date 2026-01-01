@@ -27,7 +27,10 @@ export default function StandingsWidget({ data, highlightTeams = [] }: Standings
     if (!data || data.length === 0) {
         return (
             <View style={styles.emptyContainer}>
-                <Text style={styles.emptyText}>Standings not available for this league.</Text>
+                <Text style={styles.emptyText}>Standings not available</Text>
+                <Text style={[styles.emptyText, { fontSize: 12, marginTop: 8, opacity: 0.7 }]}>
+                    This league may not have started yet or uses a different format
+                </Text>
             </View>
         );
     }

@@ -31,7 +31,15 @@ const EmptyState = ({ message }: { message: string }) => (
 
 export default function H2HStats({ data, team1, team2 }: H2HStatsProps) {
     if (!data || !Array.isArray(data) || data.length === 0) {
-        return <EmptyState message="No head-to-head history available." />;
+        return (
+            <View style={styles.conversational}>
+                <Ionicons name="stats-chart-outline" size={48} color={theme.colors.textMuted} />
+                <Text style={styles.emptyText}>No head-to-head history available</Text>
+                <Text style={[styles.emptyText, { fontSize: 12, marginTop: 8, opacity: 0.7 }]}>
+                    These teams may not have faced each other recently
+                </Text>
+            </View>
+        );
     }
 
     const renderItem = ({ item }: { item: H2HMatchItem }) => {

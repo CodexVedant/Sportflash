@@ -97,7 +97,8 @@ export const mapMatchToUI = (match: any): Match => {
             };
         })() : match.basketballData,
 
-        cricketData: match.cricketData
+        cricketData: match.cricketData,
+        comments: match.comments
     };
 
     return mapped;
