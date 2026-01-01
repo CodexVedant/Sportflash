@@ -37,10 +37,11 @@ export default function ProfileScreen() {
         if (confirmed) {
             try {
                 await dispatch(logout()).unwrap();
+                // Navigate to Home screen and reset navigation stack
                 navigation.dispatch(
                     CommonActions.reset({
                         index: 0,
-                        routes: [{ name: 'Login' }],
+                        routes: [{ name: 'Main' }],
                     })
                 );
             } catch (err) {

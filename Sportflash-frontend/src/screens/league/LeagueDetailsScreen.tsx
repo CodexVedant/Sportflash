@@ -37,13 +37,13 @@ export default function LeagueDetailsScreen({ navigation, route }: Props) {
                                     id: item.team?.id,
                                     name: item.team?.name
                                 },
-                                position: item.rank,
+                                position: item.position ?? item.rank ?? 0,
                                 stats: {
-                                    played: item.played,
-                                    points: item.points,
-                                    goalDifference: item.goalDifference,
-                                    netRunRate: (item as any).netRunRate,
-                                    percentage: (item as any).percentage
+                                    played: item.stats?.played ?? item.played ?? 0,
+                                    points: item.stats?.points ?? item.points ?? 0,
+                                    goalDifference: item.stats?.goalDifference ?? item.goalDifference ?? 0,
+                                    netRunRate: item.stats?.netRunRate ?? (item as any).netRunRate,
+                                    percentage: item.stats?.percentage ?? (item as any).percentage
                                 }
                             })) || []}
                         />

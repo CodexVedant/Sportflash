@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Switch } from 're
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '@hooks/useTheme';
 import { Ionicons } from '@expo/vector-icons';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, CommonActions } from '@react-navigation/native';
 import { toggleTheme } from '@store/slices/themeSlice';
 import { logout } from '@store/slices/authSlice';
 import BackButton from '@components/common/BackButton';
@@ -20,8 +20,19 @@ export default function SettingsScreen() {
     const theme = useTheme();
     const styles = useMemo(() => makeStyles(theme), [theme]);
 
-    const handleLogout = () => {
-        dispatch(logout());
+    const handleLogout = async () => {
+        try {
+            await dispatch(logout()).unwrap();
+            // Navigate to Home screen and reset navigation stack
+            navigation.dispatch(
+                CommonActions.reset({
+                    index: 0,
+                    routes: [{ name: 'Main' }],
+                })
+            );
+        } catch (err) {
+            console.error("Logout error:", err);
+        }
     };
 
     const handleLogin = () => {

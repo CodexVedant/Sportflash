@@ -41,6 +41,7 @@ export const mapMatchToUI = (match: any): Match => {
             name: match.homeTeam?.name || 'Unknown Team',
             logo: match.homeTeam?.logo,
             sport: match.sport,
+            score: match.homeTeam?.score || match.score?.home || '0',
             // Custom UI fields usually not in Team model but handled by JS flexibility
             // casting to any to allow extra props if needed or extending Team
         } as any,
@@ -49,6 +50,7 @@ export const mapMatchToUI = (match: any): Match => {
             name: match.awayTeam?.name || 'Unknown Team',
             logo: match.awayTeam?.logo,
             sport: match.sport,
+            score: match.awayTeam?.score || match.score?.away || '0',
         } as any,
         score: centerInfo,
         timer: timer,

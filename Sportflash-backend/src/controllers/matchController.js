@@ -469,20 +469,27 @@ exports.getStandings = async (req, res) => {
         }
 
         let standings = null;
+        let rawStandings = null;
 
         switch (sport?.toLowerCase()) {
             case 'football':
             case 'soccer':
-                const footballStandings = await allSportsApi.getFootballStandings(league);
-                standings = mapStandings(footballStandings, 'football');
+                rawStandings = await allSportsApi.getFootballStandings(league);
+                console.log('📊 Raw Football Standings:', JSON.stringify(rawStandings, null, 2));
+                standings = mapStandings(rawStandings, 'football');
+                console.log('📊 Mapped Football Standings:', JSON.stringify(standings, null, 2));
                 break;
             case 'basketball':
-                const basketballStandings = await allSportsApi.getBasketballStandings(league);
-                standings = mapStandings(basketballStandings, 'basketball');
+                rawStandings = await allSportsApi.getBasketballStandings(league);
+                console.log('📊 Raw Basketball Standings:', JSON.stringify(rawStandings, null, 2));
+                standings = mapStandings(rawStandings, 'basketball');
+                console.log('📊 Mapped Basketball Standings:', JSON.stringify(standings, null, 2));
                 break;
             case 'cricket':
-                const cricketStandings = await allSportsApi.getCricketStandings(league);
-                standings = mapStandings(cricketStandings, 'cricket');
+                rawStandings = await allSportsApi.getCricketStandings(league);
+                console.log('📊 Raw Cricket Standings:', JSON.stringify(rawStandings, null, 2));
+                standings = mapStandings(rawStandings, 'cricket');
+                console.log('📊 Mapped Cricket Standings:', JSON.stringify(standings, null, 2));
                 break;
             default:
                 return res.status(400).json({
@@ -491,9 +498,13 @@ exports.getStandings = async (req, res) => {
                 });
         }
 
+        if (!standings || standings.length === 0) {
+            console.log('⚠️ No standings data available for league:', league);
+        }
+
         res.json({
             success: true,
-            data: standings
+            data: standings || []
         });
     } catch (error) {
         console.error('Error in getStandings:', error);

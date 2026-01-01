@@ -18,14 +18,31 @@ export interface Team extends BaseEntity {
 
 // For standings
 export interface Standing {
-    rank: number;
+    position: number;
+    rank?: number; // Backward compatibility
     team: Team;
-    played: number;
-    won: number;
-    drawn: number;
-    lost: number;
-    goalsFor: number;
-    goalsAgainst: number;
-    goalDifference: number;
-    points: number;
+    stats: {
+        played: number;
+        won: number;
+        drawn: number;
+        lost: number;
+        goalsFor: number;
+        goalsAgainst: number;
+        goalDifference: number;
+        points: number;
+        percentage?: string | null;
+        netRunRate?: string | null;
+    };
+    form?: string | null;
+    description?: string | null;
+    round?: string | null;
+    // Backward compatibility - flat structure
+    played?: number;
+    won?: number;
+    drawn?: number;
+    lost?: number;
+    goalsFor?: number;
+    goalsAgainst?: number;
+    goalDifference?: number;
+    points?: number;
 }
