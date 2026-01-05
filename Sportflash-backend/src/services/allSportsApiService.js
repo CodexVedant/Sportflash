@@ -58,7 +58,7 @@ class AllSportsApiService {
         }
     }
 
-    // ==================== FOOTBALL METHODS ====================
+    // === FOOTBALL METHODS ===
 
     /**
      * Get football countries
@@ -143,7 +143,7 @@ class AllSportsApiService {
         return await this.makeRequest('football', 'Players', { player_id: playerId });
     }
 
-    // ==================== BASKETBALL METHODS ====================
+    // === BASKETBALL METHODS ===
 
     /**
      * Get basketball countries
@@ -212,7 +212,7 @@ class AllSportsApiService {
         });
     }
 
-    // ==================== CRICKET METHODS ====================
+    // === CRICKET METHODS ===
 
     /**
      * Get cricket leagues
@@ -283,7 +283,7 @@ class AllSportsApiService {
         });
     }
 
-    // ==================== UNIFIED METHODS ====================
+    // === UNIFIED METHODS ===
 
     /**
      * Get live scores for all sports
