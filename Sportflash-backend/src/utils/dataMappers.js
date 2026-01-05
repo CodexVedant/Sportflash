@@ -463,8 +463,11 @@ const extractBasketballScore = (result, team) => {
  * Generic status mapper for all sports
  */
 const mapMatchStatus = (status, isLive) => {
-    if (['Finished', 'Ended', 'FT', 'AOT', 'After Over Time'].includes(status)) return 'finished';
-    if (['Postponed', 'Cancelled', 'Abd'].includes(status)) return status.toLowerCase();
+    // Finished statuses
+    if (['Finished', 'Ended', 'FT', 'AOT', 'After Over Time', 'Stumps'].includes(status)) return 'finished';
+
+    // Postponed/Cancelled/Interrupted statuses
+    if (['Postponed', 'Cancelled', 'Abd', 'Delay', 'Delayed', 'Rain Delay', 'Bad Light', 'Wet Outfield', 'Interrupted'].includes(status)) return 'postponed';
 
     if (['Not Started', 'NS'].includes(status)) return 'upcoming';
 
@@ -474,9 +477,8 @@ const mapMatchStatus = (status, isLive) => {
         // Basketball
         '1st Quarter', '2nd Quarter', '3rd Quarter', '4th Quarter',
         'Halftime', 'Overtime', 'In Progress', 'Brake',
-        // Cricket
-        'Innings Break', 'Tea Break', 'Lunch', 'Stumps',
-        'Rain Delay', 'Bad Light', 'Wet Outfield', 'Delay', 'Interrupted',
+        // Cricket (active play only)
+        'Innings Break', 'Tea Break', 'Lunch',
         // Football
         'HT', 'ET', 'Pen', 'Break',
         // General

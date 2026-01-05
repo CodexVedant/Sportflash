@@ -273,6 +273,16 @@ class AllSportsApiService {
         });
     }
 
+    /**
+     * Get cricket match commentary
+     * @param {string} matchId - Match event key
+     */
+    async getCricketCommentary(matchId) {
+        return await this.makeRequest('cricket', 'Livescore', {
+            match_id: matchId
+        });
+    }
+
     // ==================== UNIFIED METHODS ====================
 
     /**

@@ -218,12 +218,14 @@ app.get('/api/health', (req, res) => {
 // Import Routes
 const authRoutes = require('./routes/authRoutes');
 const matchRoutes = require('./routes/matchRoutes');
+const newsRoutes = require('./routes/newsRoutes');
 
 // Mount Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/matches', matchRoutes);
 app.use('/api/teams', require('./routes/teamRoutes'));
 app.use('/api/players', require('./routes/playerRoutes'));
+app.use('/api/news', newsRoutes);
 
 // Socket.IO Connection Handler
 io.on('connection', (socket) => {

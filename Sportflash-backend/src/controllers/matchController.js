@@ -564,6 +564,73 @@ exports.getHeadToHead = async (req, res) => {
 };
 
 /**
+ * @desc    Get match commentary (Cricket only)
+ * @route   GET /api/matches/:id/commentary
+ * @access  Public
+ */
+exports.getMatchCommentary = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { sport } = req.query;
+
+        if (!sport) {
+            return res.status(400).json({
+                success: false,
+                message: 'Sport parameter is required'
+            });
+        }
+
+        if (sport.toLowerCase() !== 'cricket') {
+            return res.status(400).json({
+                success: false,
+                message: 'Commentary is only available for cricket matches'
+            });
+        }
+
+        // Fetch match details with commentary
+        const matchData = await allSportsApi.getCricketCommentary(id);
+
+        if (!matchData || matchData.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: 'Match commentary not found'
+            });
+        }
+
+        // Find the specific match
+        const match = Array.isArray(matchData)
+            ? matchData.find(m => m.event_key === id)
+            : matchData;
+
+        if (!match) {
+            return res.status(404).json({
+                success: false,
+                message: 'Match not found'
+            });
+        }
+
+        // Extract commentary from the match data
+        const commentary = match.comments || null;
+
+        res.json({
+            success: true,
+            data: {
+                matchId: id,
+                commentary: commentary,
+                lastUpdated: new Date().toISOString()
+            }
+        });
+    } catch (error) {
+        console.error('Error in getMatchCommentary:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error fetching match commentary',
+            error: error.message
+        });
+    }
+};
+
+/**
  * @desc    Create a match (Admin only - for testing)
  * @route   POST /api/matches
  * @access  Private/Admin

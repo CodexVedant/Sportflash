@@ -27,6 +27,20 @@ export default function NewsDetailScreen() {
 
     const { data: article, isLoading, error } = useGetNewsDetailQuery(String(newsId || ''));
 
+    // Helper function to format time ago
+    const getTimeAgo = (dateString: string) => {
+        const date = new Date(dateString);
+        const now = new Date();
+        const diffMs = now.getTime() - date.getTime();
+        const diffMins = Math.floor(diffMs / 60000);
+        const diffHours = Math.floor(diffMins / 60);
+        const diffDays = Math.floor(diffHours / 24);
+
+        if (diffMins < 60) return `${diffMins}m ago`;
+        if (diffHours < 24) return `${diffHours}h ago`;
+        return `${diffDays}d ago`;
+    };
+
     const handleShare = async () => {
         try {
             await Share.share({
@@ -61,8 +75,8 @@ export default function NewsDetailScreen() {
             <ScrollView showsVerticalScrollIndicator={false}>
                 {/* Image Header */}
                 <View style={styles.imageContainer}>
-                    {article.image ? (
-                        <Image source={{ uri: article.image }} style={styles.image} />
+                    {article.imageUrl ? (
+                        <Image source={{ uri: article.imageUrl }} style={styles.image} />
                     ) : (
                         <View style={styles.placeholderImage}>
                             <Ionicons name="newspaper-outline" size={64} color="rgba(255,255,255,0.2)" />
@@ -99,8 +113,8 @@ export default function NewsDetailScreen() {
 
                     <View style={styles.meta}>
                         <Text style={styles.metaText}>{article.author || 'SportFlash Team'}</Text>
-                        <Text style={styles.dot}>â€¢</Text>
-                        <Text style={styles.metaText}>{article.time || 'Just now'}</Text>
+                        <Text style={styles.dot}>•</Text>
+                        <Text style={styles.metaText}>{getTimeAgo(article.publishedAt)}</Text>
                     </View>
 
                     <View style={styles.divider} />

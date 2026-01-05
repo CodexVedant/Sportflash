@@ -63,7 +63,7 @@ const MatchCard: React.FC<MatchCardProps> = ({
                     ) : (
                         <View style={styles.badgeContainer}>
                             <Text style={[styles.statusText, { color: theme.colors.textMuted }]}>
-                                {status.toUpperCase()}
+                                {displayStatus?.toUpperCase() || status.toUpperCase()}
                             </Text>
                         </View>
                     )}

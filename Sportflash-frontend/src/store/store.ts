@@ -40,6 +40,7 @@ export const store = configureStore({
     middleware: (getDefaultMiddleware) =>
         getDefaultMiddleware({
             serializableCheck: false,
+            immutableCheck: { warnAfter: 100 }, // Increase threshold for large state objects
         }).concat(
             matchesApi.middleware,
             newsApi.middleware,

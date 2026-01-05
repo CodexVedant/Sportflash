@@ -43,7 +43,7 @@ export default function BottomTabs() {
                     return <Ionicons name={iconName} size={size} color={color} />;
                 },
                 tabBarBackground: () => (
-                    <BlurView tint="dark" intensity={80} style={StyleSheet.absoluteFill} />
+                    <BlurView tint="dark" intensity={50} style={StyleSheet.absoluteFill} />
                 ),
             })}
         >

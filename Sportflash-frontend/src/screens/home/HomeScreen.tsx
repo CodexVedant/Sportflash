@@ -130,7 +130,7 @@ export default function HomeScreen({ navigation }: Props) {
                     ListFooterComponent={
                         <>
                             {/* Trending News Placeholder */}
-                            <TrendingNewsWidget />
+                            <TrendingNewsWidget sport={activeSport} />
                             {/* Bottom spacing for TabBar */}
                             <View style={{ height: 80 }} />
                         </>

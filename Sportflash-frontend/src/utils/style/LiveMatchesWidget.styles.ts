@@ -2,9 +2,13 @@ import { StyleSheet } from 'react-native';
 import { theme } from '@utils/theme';
 
 export const styles = StyleSheet.create({
+
     section: {
         marginBottom: theme.spacing.xl,
-        paddingHorizontal: theme.spacing.lg,
+        minHeight: 200,
+    },
+    matchesScroll: {
+        maxHeight: 780, // Limit height to make it a scrollable widget
     },
     sectionTitle: {
         color: theme.colors.textMuted,
@@ -13,20 +17,23 @@ export const styles = StyleSheet.create({
         marginBottom: theme.spacing.md,
         letterSpacing: 1,
     },
-    matchesScroll: {
-        flex: 1,
-    },
     leagueHeader: {
+        backgroundColor: theme.colors.surface,
         paddingVertical: 8,
-        paddingHorizontal: 4,
-        marginBottom: 4,
+        paddingHorizontal: 12,
+        marginBottom: theme.spacing.sm,
+        marginTop: theme.spacing.md,
+        borderRadius: 4,
+        borderLeftWidth: 3,
+        borderLeftColor: theme.colors.primary,
+        // Ensure zIndex is managed if needed, but in normal View flow it should be fine
+        zIndex: 10,
     },
     leagueTitle: {
-        color: theme.colors.textMuted,
+        color: theme.colors.text,
+        fontWeight: '700',
         fontSize: 12,
-        fontWeight: 'bold',
         textTransform: 'uppercase',
-        letterSpacing: 1,
     },
     emptyContainer: {
         padding: theme.spacing.xl,
@@ -37,6 +44,7 @@ export const styles = StyleSheet.create({
     },
     emptyText: {
         color: theme.colors.textMuted,
-        textAlign: 'center',
-    }
+        fontFamily: theme.fonts.medium,
+        fontSize: theme.sizes.md,
+    },
 });

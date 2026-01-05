@@ -4,13 +4,19 @@ export type NewsCategory = 'all' | 'football' | 'basketball' | 'cricket' | 'tenn
 
 export interface Article extends BaseEntity {
     title: string;
-    summary: string;
+    description?: string; // Backend returns 'description'
     content: string;
-    image?: string;
-    category: NewsCategory;
+    imageUrl?: string | null; // Backend returns 'imageUrl', not 'image'
+    category: NewsCategory | 'general'; // Backend can return 'general' category
     publishedAt: string;
-    source?: string;
+    source?: {
+        id: string;
+        name: string;
+    };
     url?: string;
-    author?: string;
-    time?: string;
+    author?: string | null;
+    // Additional metadata from backend
+    keywords?: string[];
+    country?: string[];
+    language?: string;
 }

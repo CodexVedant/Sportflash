@@ -9,6 +9,7 @@ const {
     getLeagues,
     getStandings,
     getHeadToHead,
+    getMatchCommentary,
     createMatch,
     updateMatch
 } = require('../controllers/matchController');
@@ -22,6 +23,7 @@ router.get('/leagues', getLeagues);
 router.get('/standings', getStandings);
 router.get('/h2h', getHeadToHead);
 router.get('/sport/:sport', getMatchesBySport);
+router.get('/:id/commentary', getMatchCommentary);
 router.get('/:id', getMatch);
 
 // Protected routes (Admin only)

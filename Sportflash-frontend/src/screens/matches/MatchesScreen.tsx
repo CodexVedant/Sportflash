@@ -34,9 +34,10 @@ export default function MatchesScreen({ navigation }: Props) {
     });
 
     // Conditionally fetch based on active tab
+    // Note: Live matches API returns both live AND finished matches
     const { data: liveMatches = [], isLoading: isLoadingLive, error: liveError, refetch: refetchLive } = useGetLiveMatchesQuery(
         undefined,
-        { skip: activeTab !== 'Live' }
+        { skip: activeTab === 'Upcoming' } // Fetch for both Live and Results tabs
     );
 
     const { data: upcomingMatches = [], isLoading: isLoadingUpcoming, error: upcomingError, refetch: refetchUpcoming } = useGetUpcomingMatchesQuery(

@@ -54,8 +54,8 @@ export default function NewsCategoryScreen() {
                 news.map((item: any) => (
                     <TouchableOpacity key={item.id} style={styles.newsItem} onPress={() => handleNewsPress(item)}>
                         <View style={styles.newsImagePlaceholder}>
-                            {item.image ? (
-                                <Image source={{ uri: item.image }} style={styles.image} />
+                            {item.imageUrl ? (
+                                <Image source={{ uri: item.imageUrl }} style={styles.image} />
                             ) : (
                                 <Ionicons name="image-outline" size={24} color={theme.colors.textMuted} />
                             )}
