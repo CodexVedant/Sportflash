@@ -10,6 +10,8 @@ class NewsDataService {
     constructor() {
         this.apiKey = process.env.NEWS_API_KEY;
         this.baseUrl = 'https://newsdata.io/api/1/latest';
+        // In-memory cache for articles (keyed by article_id)
+        this.articlesCache = new Map();
     }
 
     /**
@@ -126,7 +128,7 @@ class NewsDataService {
      * @returns {object} Mapped article
      */
     mapArticle(article) {
-        return {
+        const mappedArticle = {
             id: article.article_id,
             title: article.title,
             description: article.description || article.content || '',
@@ -145,6 +147,13 @@ class NewsDataService {
             country: article.country || [],
             language: article.language || 'en'
         };
+
+        // Cache the article for later retrieval by ID
+        if (mappedArticle.id) {
+            this.articlesCache.set(mappedArticle.id, mappedArticle);
+        }
+
+        return mappedArticle;
     }
 
     /**
@@ -163,7 +172,17 @@ class NewsDataService {
             return 'basketball';
         }
 
+
         return 'general';
+    }
+
+    /**
+     * Get article from cache by ID
+     * @param {string} id - Article ID
+     * @returns {object|null} Cached article or null
+     */
+    getArticleById(id) {
+        return this.articlesCache.get(id) || null;
     }
 }
 

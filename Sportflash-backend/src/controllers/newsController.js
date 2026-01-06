@@ -107,14 +107,20 @@ exports.getNewsById = async (req, res) => {
 
         console.log(`📰 Fetching news article - ID: ${id}`);
 
-        // Since NewsData.io doesn't have a direct "get by ID" endpoint,
-        // we'll need to search or cache articles
-        // For now, return a message that this needs to be implemented with caching
+        // Try to get article from cache
+        const article = newsDataService.getArticleById(id);
 
-        res.status(501).json({
-            success: false,
-            message: 'News detail endpoint requires caching implementation. Use the article URL from the list instead.'
-        });
+        if (article) {
+            res.json({
+                success: true,
+                data: article
+            });
+        } else {
+            res.status(404).json({
+                success: false,
+                message: 'Article not found. It may have expired from cache or never been loaded.'
+            });
+        }
     } catch (error) {
         console.error('Error in getNewsById:', error);
         res.status(500).json({
