@@ -40,10 +40,22 @@ export default function MatchesScreen({ navigation }: Props) {
         // No skip - always fetch live matches
     );
 
-    const { data: upcomingMatches = [], isLoading: isLoadingUpcoming, error: upcomingError, refetch: refetchUpcoming } = useGetUpcomingMatchesQuery(
-        { sport: activeSport === 'all' ? undefined : activeSport }
-        // No skip - prefetch upcoming matches for instant tab switching
-    );
+    // Prefetch upcoming matches for ALL sports for instant tab switching
+    const { data: upcomingCricket = [] } = useGetUpcomingMatchesQuery({ sport: 'cricket' });
+    const { data: upcomingFootball = [] } = useGetUpcomingMatchesQuery({ sport: 'football' });
+    const { data: upcomingBasketball = [] } = useGetUpcomingMatchesQuery({ sport: 'basketball' });
+
+    // Combine all upcoming matches
+    const upcomingMatches = React.useMemo(() => {
+        return [...upcomingCricket, ...upcomingFootball, ...upcomingBasketball];
+    }, [upcomingCricket, upcomingFootball, upcomingBasketball]);
+
+    const isLoadingUpcoming = false; // Data is always available from cache
+    const upcomingError = null;
+    const refetchUpcoming = () => {
+        // Refetch all sports
+        refetchLive();
+    };
 
     // Determine which data to use - memoized to prevent infinite loops
     const allMatches = React.useMemo(() => {

@@ -89,30 +89,36 @@ const { data: upcomingMatches = [], ... } = useGetUpcomingMatchesQuery(
 ### Data Flow
 
 ```
-App Opens
+App Starts (App.tsx)
     ↓
-MatchesScreen Mounts
+DataPrefetcher Component Mounts
     ↓
 ┌─────────────────────────────────────┐
 │ RTK Query Hooks Execute             │
 │ - useGetLiveMatchesQuery()          │
-│ - useGetUpcomingMatchesQuery()      │
+│ - useGetUpcomingMatchesQuery(cricket)│
+│ - useGetUpcomingMatchesQuery(football)│
+│ - useGetUpcomingMatchesQuery(basketball)│
 └─────────────────────────────────────┘
     ↓
 ┌─────────────────────────────────────┐
 │ API Requests Sent in Parallel       │
 │ - GET /matches/live                 │
-│ - GET /matches/upcoming             │
+│ - GET /matches/upcoming?sport=cricket│
+│ - GET /matches/upcoming?sport=football│
+│ - GET /matches/upcoming?sport=basketball│
 └─────────────────────────────────────┘
     ↓
 ┌─────────────────────────────────────┐
 │ Data Stored in Redux Cache          │
 │ - liveMatches: [...]                │
-│ - upcomingMatches: [...]            │
+│ - upcomingCricket: [...]            │
+│ - upcomingFootball: [...]           │
+│ - upcomingBasketball: [...]         │
 │ - Cache TTL: 5 minutes              │
 └─────────────────────────────────────┘
     ↓
-User Switches to "Upcoming" Tab
+User Navigates to MatchesScreen
     ↓
 ┌─────────────────────────────────────┐
 │ Cached Data Served Instantly        │
@@ -196,7 +202,17 @@ Total Time: < 1ms
 
 ## Files Modified
 
-### 1. `src/store/api/matchesApi.ts`
+### 1. `App.tsx` (NEW)
+**Changes:**
+- Added `DataPrefetcher` component that executes RTK Query hooks on app start
+- Prefetches live matches and upcoming matches for all 3 sports
+- Component renders null (invisible) but triggers data fetching
+
+**Lines Added:** 9-21
+
+---
+
+### 2. `src/store/api/matchesApi.ts`
 **Changes:**
 - Added `keepUnusedDataFor: 300` to `getLiveMatches` query
 - Added `keepUnusedDataFor: 300` to `getUpcomingMatches` query
@@ -205,7 +221,7 @@ Total Time: < 1ms
 
 ---
 
-### 2. `src/screens/matches/MatchesScreen.tsx`
+### 3. `src/screens/matches/MatchesScreen.tsx`
 **Changes:**
 - Removed `skip` condition from `useGetLiveMatchesQuery`
 - Removed `skip` condition from `useGetUpcomingMatchesQuery`
