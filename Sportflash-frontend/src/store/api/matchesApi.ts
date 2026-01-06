@@ -12,7 +12,8 @@ export const matchesApi = createApi({
             query: () => '/matches/live',
             transformResponse: (response: ApiResponse<Match[]>) => {
                 return response.data;
-            }
+            },
+            keepUnusedDataFor: 300, // Cache for 5 minutes
         }),
         getMatchDetails: builder.query<Match, string>({
             query: (id) => `/matches/${id}`,
@@ -36,7 +37,8 @@ export const matchesApi = createApi({
                 if (date) params.append('date', date);
                 return `/matches/upcoming?${params.toString()}`;
             },
-            transformResponse: (response: ApiResponse<Match[]>) => response.data
+            transformResponse: (response: ApiResponse<Match[]>) => response.data,
+            keepUnusedDataFor: 300, // Cache for 5 minutes for fast tab switching
         }),
     }),
 });

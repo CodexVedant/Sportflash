@@ -33,16 +33,16 @@ export default function MatchesScreen({ navigation }: Props) {
         dateRange: { start: null, end: null },
     });
 
-    // Conditionally fetch based on active tab
+    // Fetch both live and upcoming matches on mount for instant tab switching
     // Note: Live matches API returns both live AND finished matches
     const { data: liveMatches = [], isLoading: isLoadingLive, error: liveError, refetch: refetchLive } = useGetLiveMatchesQuery(
-        undefined,
-        { skip: activeTab === 'Upcoming' } // Fetch for both Live and Results tabs
+        undefined
+        // No skip - always fetch live matches
     );
 
     const { data: upcomingMatches = [], isLoading: isLoadingUpcoming, error: upcomingError, refetch: refetchUpcoming } = useGetUpcomingMatchesQuery(
-        { sport: activeSport === 'all' ? undefined : activeSport },
-        { skip: activeTab !== 'Upcoming' }
+        { sport: activeSport === 'all' ? undefined : activeSport }
+        // No skip - prefetch upcoming matches for instant tab switching
     );
 
     // Determine which data to use - memoized to prevent infinite loops
