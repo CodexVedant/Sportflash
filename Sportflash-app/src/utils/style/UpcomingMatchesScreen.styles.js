@@ -1,10 +1,14 @@
-import { StyleSheet } from 'react-native';
+import { StyleSheet, Platform } from 'react-native';
 import { theme } from '../theme';
 
 export const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: theme.colors.background,
+        ...(Platform.OS === 'web' && {
+            // Hide scrollbar on web
+            overflow: 'hidden',
+        }),
     },
     header: {
         paddingHorizontal: theme.spacing.lg,
@@ -84,6 +88,10 @@ export const styles = StyleSheet.create({
     },
     content: {
         flex: 1,
+        ...(Platform.OS === 'web' && {
+            scrollbarWidth: 'none', // Firefox
+            msOverflowStyle: 'none', // IE/Edge
+        }),
     },
     dateSection: {
         marginBottom: theme.spacing.xl,

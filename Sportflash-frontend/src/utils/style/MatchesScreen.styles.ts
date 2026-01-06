@@ -1,4 +1,4 @@
-import { StyleSheet } from 'react-native';
+import { StyleSheet, Platform } from 'react-native';
 import { theme } from '@utils/theme';
 
 export const styles = StyleSheet.create({
@@ -63,6 +63,10 @@ export const styles = StyleSheet.create({
     listContent: {
         padding: theme.spacing.lg,
         paddingBottom: 100,
+        ...(Platform.OS === 'web' && {
+            scrollbarWidth: 'none', // Firefox
+            msOverflowStyle: 'none', // IE/Edge
+        } as any),
     },
     sectionHeader: {
         backgroundColor: theme.colors.surface,
@@ -77,5 +81,12 @@ export const styles = StyleSheet.create({
         color: theme.colors.text,
         fontWeight: 'bold',
         fontSize: 14
+    },
+    scrollContainer: {
+        flex: 1,
+        ...(Platform.OS === 'web' && {
+            scrollbarWidth: 'none', // Firefox
+            msOverflowStyle: 'none', // IE/Edge
+        } as any),
     }
 });

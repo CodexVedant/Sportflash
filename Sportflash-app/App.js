@@ -13,6 +13,22 @@ export default function App() {
   useEffect(() => {
     if (Platform.OS === 'web') {
       document.body.style.backgroundColor = theme.colors.background;
+
+      // Hide scrollbars globally for webkit browsers (Chrome, Safari, Edge)
+      const style = document.createElement('style');
+      style.textContent = `
+        /* Hide scrollbar for Chrome, Safari and Opera */
+        *::-webkit-scrollbar {
+          display: none;
+        }
+        
+        /* Hide scrollbar for IE, Edge and Firefox */
+        * {
+          -ms-overflow-style: none;  /* IE and Edge */
+          scrollbar-width: none;  /* Firefox */
+        }
+      `;
+      document.head.appendChild(style);
     }
   }, []);
 

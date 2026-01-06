@@ -225,12 +225,14 @@ export default function MatchesScreen({ navigation }) {
                 <NetworkError onRetry={refetch} />
             ) : (
                 <SectionList
+                    style={styles.scrollContainer}
                     sections={groupedMatches}
                     keyExtractor={item => item._id}
                     renderItem={renderMatchItem}
                     renderSectionHeader={renderSectionHeader}
                     contentContainerStyle={styles.listContent}
                     stickySectionHeadersEnabled={true}
+                    showsVerticalScrollIndicator={false}
                     ListEmptyComponent={
                         <EmptyState
                             variant="noMatches"
