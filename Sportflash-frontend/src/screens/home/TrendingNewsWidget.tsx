@@ -28,10 +28,16 @@ export default function TrendingNewsWidget({ sport = 'all' }: TrendingNewsWidget
     };
 
     const category = getNewsCategory(sport);
-    const { data: newsItems = [], isLoading, error } = useGetNewsQuery(category);
+    const { data: newsItems = [], isLoading, error, refetch } = useGetNewsQuery(category);
+
+    // Automatically refetch when component mounts or sport changes
+    React.useEffect(() => {
+        refetch();
+    }, [sport, refetch]);
 
     // Get top 3 news items
     const topNews = newsItems.slice(0, 3);
+
 
     // Helper function to format time ago
     const getTimeAgo = (dateString: string) => {
@@ -53,6 +59,12 @@ export default function TrendingNewsWidget({ sport = 'all' }: TrendingNewsWidget
 
     const handleViewAll = () => {
         navigation.navigate('News');
+    };
+
+    const [imageErrors, setImageErrors] = React.useState<Record<string, boolean>>({});
+
+    const handleImageError = (newsId: string) => {
+        setImageErrors(prev => ({ ...prev, [newsId]: true }));
     };
 
     return (
@@ -93,11 +105,12 @@ export default function TrendingNewsWidget({ sport = 'all' }: TrendingNewsWidget
                             onPress={() => handleNewsPress(String(item.id))}
                         >
                             <View style={styles.newsImageContainer}>
-                                {item.imageUrl ? (
+                                {item.imageUrl && !imageErrors[String(item.id)] ? (
                                     <Image
                                         source={{ uri: item.imageUrl }}
                                         style={styles.newsImage}
                                         resizeMode="cover"
+                                        onError={() => handleImageError(String(item.id))}
                                     />
                                 ) : (
                                     <View style={styles.newsImagePlaceholder}>

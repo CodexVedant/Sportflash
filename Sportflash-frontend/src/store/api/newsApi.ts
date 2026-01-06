@@ -10,10 +10,12 @@ export const newsApi = createApi({
         getNews: builder.query<Article[], NewsCategory | void>({
             query: (category = 'all') => `/news?category=${category}`,
             transformResponse: (response: ApiResponse<Article[]>) => response.data,
+            keepUnusedDataFor: 0, // Don't cache - always fetch fresh news
         }),
         getTrendingNews: builder.query<Article[], void>({
             query: () => '/news/trending',
             transformResponse: (response: ApiResponse<Article[]>) => response.data,
+            keepUnusedDataFor: 0, // Don't cache - always fetch fresh news
         }),
         getNewsDetail: builder.query<Article, string>({
             query: (id) => `/news/${id}`,

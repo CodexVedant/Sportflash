@@ -9,7 +9,7 @@ const axios = require('axios');
 class NewsDataService {
     constructor() {
         this.apiKey = process.env.NEWS_API_KEY;
-        this.baseUrl = 'https://newsdata.io/api/1/news';
+        this.baseUrl = 'https://newsdata.io/api/1/latest';
     }
 
     /**
@@ -54,8 +54,7 @@ class NewsDataService {
      */
     async getSportsNews(category = 'all', limit = 10) {
         const params = {
-            category: 'sports',
-            size: limit
+            category: 'sports,top'
         };
 
         // Add sport-specific keywords if not 'all'
@@ -75,9 +74,7 @@ class NewsDataService {
      */
     async getTrendingNews(limit = 10) {
         return await this.makeRequest({
-            category: 'sports',
-            size: limit,
-            prioritydomain: 'top' // Get from top sources
+            category: 'sports,top'
         });
     }
 
@@ -90,9 +87,8 @@ class NewsDataService {
         const keywords = this.getCategoryKeywords(sport);
 
         return await this.makeRequest({
-            category: 'sports',
-            q: keywords,
-            size: limit
+            category: 'sports,top',
+            q: keywords
         });
     }
 
@@ -103,9 +99,8 @@ class NewsDataService {
      */
     async searchNews(query, limit = 10) {
         return await this.makeRequest({
-            category: 'sports',
-            q: query,
-            size: limit
+            category: 'sports,top',
+            q: query
         });
     }
 
@@ -116,9 +111,9 @@ class NewsDataService {
      */
     getCategoryKeywords(category) {
         const keywordMap = {
-            cricket: 'cricket OR IPL OR "Big Bash" OR "World Cup Cricket" OR T20 OR ODI OR Test',
-            football: 'football OR soccer OR "Premier League" OR "La Liga" OR "Champions League" OR FIFA OR UEFA',
-            basketball: 'basketball OR NBA OR "March Madness" OR NCAA OR "EuroLeague Basketball"',
+            cricket: 'cricket',
+            football: 'football',
+            basketball: 'basketball',
             all: null
         };
 
