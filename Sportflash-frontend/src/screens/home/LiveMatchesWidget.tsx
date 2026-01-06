@@ -65,9 +65,16 @@ export default function LiveMatchesWidget({ matches, loading, width, navigation,
             {loading ? (
                 <ActivityIndicator size="large" color={theme.colors.primary} />
             ) : flattenedData.length === 0 ? (
-                <View style={styles.emptyContainer}>
-                    <Text style={styles.emptyText}>No live matches right now.</Text>
-                </View>
+                <ScrollView
+                    style={styles.matchesScroll}
+                    nestedScrollEnabled={true}
+                    showsVerticalScrollIndicator={false}
+                >
+                    <View style={styles.emptyContainer}>
+                        <Text style={styles.emptyText}>No live matches right now.</Text>
+                    </View>
+                    {ListFooterComponent}
+                </ScrollView>
             ) : (
                 <ScrollView
                     style={styles.matchesScroll}
