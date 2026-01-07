@@ -23,12 +23,9 @@ import PreferencesScreen from '@screens/profile/PreferencesScreen';
 import NewsDetailScreen from '@screens/news/NewsDetailScreen';
 import LeagueDetailsScreen from '@screens/league/LeagueDetailsScreen';
 import TeamProfileScreen from '@screens/team/TeamProfileScreen';
-<<<<<<< HEAD
 import NotificationSettingsScreen from '@screens/profile/NotificationSettingsScreen';
 import PremiumScreen from '@screens/profile/PremiumScreen';
-=======
 import UpcomingMatchesScreen from '@screens/matches/UpcomingMatchesScreen';
->>>>>>> 711d5bb17f38719156db49e0acc340a092b3ba46
 
 import { theme } from '@utils/theme';
 

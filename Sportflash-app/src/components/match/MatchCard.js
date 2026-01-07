@@ -6,6 +6,7 @@ import LiveBadge from './LiveBadge';
 import TeamLogo from './TeamLogo';
 import { styles } from '@utils/style/MatchCard.styles';
 import { getSportColor } from '@utils/script/MatchCard.helpers';
+import { Ionicons } from '@expo/vector-icons';
 
 const MatchCard = ({ sport, status, displayStatus, league, homeTeam, awayTeam, score, timer, onPress, onNotificationPress, isSubscribed }) => {
     if (!homeTeam || !awayTeam) return null;

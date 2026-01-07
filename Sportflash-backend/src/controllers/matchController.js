@@ -72,51 +72,50 @@ exports.getUpcomingMatches = async (req, res) => {
         const { sport, date, days = 7 } = req.query;
 
         let upcomingMatches = [];
-        const targetDate = date || new Date().toISOString().split('T')[0];
 
-        if (sport) {
-            // Get upcoming matches for specific sport
-            const rawMatches = await allSportsApi.getFixturesBySport(sport, targetDate);
-
-            if (rawMatches) {
-                switch (sport.toLowerCase()) {
-                    case 'football':
-                    case 'soccer':
-                        upcomingMatches = rawMatches
-                            .map(mapFootballMatch)
-                            .filter(m => m !== null);
-                        break;
-                    case 'basketball':
-                        upcomingMatches = rawMatches
-                            .map(mapBasketballMatch)
-                            .filter(m => m !== null);
-                        break;
-                    case 'cricket':
-                        upcomingMatches = rawMatches
-                            .map(mapCricketMatch)
-                            .filter(m => m !== null);
-                        break;
+        // Helper to fetch for a Single Date
+        const fetchForDate = async (targetDate) => {
+            if (sport) {
+                // Specific Sport
+                const rawMatches = await allSportsApi.getFixturesBySport(sport, targetDate);
+                if (rawMatches) {
+                    switch (sport.toLowerCase()) {
+                        case 'football': case 'soccer': return rawMatches.map(mapFootballMatch).filter(m => m !== null);
+                        case 'basketball': return rawMatches.map(mapBasketballMatch).filter(m => m !== null);
+                        case 'cricket': return rawMatches.map(mapCricketMatch).filter(m => m !== null);
+                    }
                 }
-            }
-        } else {
-            // Get upcoming matches for all sports
-            const [footballFixtures, basketballFixtures, cricketFixtures] = await Promise.allSettled([
-                allSportsApi.getFootballFixtures({ date: targetDate }),
-                allSportsApi.getBasketballFixtures({ date: targetDate }),
-                allSportsApi.getCricketFixtures({ date: targetDate })
-            ]);
+            } else {
+                // All Sports
+                const [football, basketball, cricket] = await Promise.allSettled([
+                    allSportsApi.getFootballFixtures({ date: targetDate }),
+                    allSportsApi.getBasketballFixtures({ date: targetDate }),
+                    allSportsApi.getCricketFixtures({ date: targetDate })
+                ]);
 
-            upcomingMatches = [
-                ...(footballFixtures.status === 'fulfilled' && footballFixtures.value
-                    ? footballFixtures.value.map(mapFootballMatch).filter(m => m !== null)
-                    : []),
-                ...(basketballFixtures.status === 'fulfilled' && basketballFixtures.value
-                    ? basketballFixtures.value.map(mapBasketballMatch).filter(m => m !== null)
-                    : []),
-                ...(cricketFixtures.status === 'fulfilled' && cricketFixtures.value
-                    ? cricketFixtures.value.map(mapCricketMatch).filter(m => m !== null)
-                    : [])
-            ];
+                return [
+                    ...(football.status === 'fulfilled' && football.value ? football.value.map(mapFootballMatch).filter(m => m !== null) : []),
+                    ...(basketball.status === 'fulfilled' && basketball.value ? basketball.value.map(mapBasketballMatch).filter(m => m !== null) : []),
+                    ...(cricket.status === 'fulfilled' && cricket.value ? cricket.value.map(mapCricketMatch).filter(m => m !== null) : [])
+                ];
+            }
+            return [];
+        };
+
+        if (date) {
+            // Case 1: Specific Date (Used by UpcomingMatchesScreen)
+            upcomingMatches = await fetchForDate(date);
+        } else {
+            // Case 2: Date Range (Used by NotificationSettingsScreen)
+            const today = new Date();
+            for (let i = 0; i < parseInt(days); i++) {
+                const d = new Date(today);
+                d.setDate(d.getDate() + i);
+                const dateStr = d.toISOString().split('T')[0];
+
+                const matches = await fetchForDate(dateStr);
+                upcomingMatches.push(...matches);
+            }
         }
 
         // Sort by date/time
@@ -126,10 +125,13 @@ exports.getUpcomingMatches = async (req, res) => {
             return dateA - dateB;
         });
 
+        // Filter only upcoming
+        upcomingMatches = upcomingMatches.filter(m => m.status === 'upcoming' || m.status === 'Not Started');
+
         res.json({
             success: true,
             count: upcomingMatches.length,
-            date: targetDate,
+            date: date || 'range',
             data: upcomingMatches
         });
     } catch (error) {
@@ -344,66 +346,7 @@ exports.getMatch = async (req, res) => {
     }
 };
 
-/**
- * @desc    Get upcoming matches
- * @route   GET /api/matches/upcoming
- * @access  Public
- */
-exports.getUpcomingMatches = async (req, res) => {
-    try {
-        const { sport, days = 7 } = req.query;
 
-        // Get fixtures for the next N days
-        const today = new Date();
-        const matches = [];
-
-        for (let i = 0; i < parseInt(days); i++) {
-            const date = new Date(today);
-            date.setDate(date.getDate() + i);
-            const dateStr = date.toISOString().split('T')[0];
-
-            if (sport) {
-                const dayMatches = await allSportsApi.getFixturesBySport(sport, dateStr);
-                if (dayMatches) {
-                    matches.push(...dayMatches);
-                }
-            }
-        }
-
-        // Map matches based on sport
-        let mappedMatches = [];
-        if (sport) {
-            switch (sport.toLowerCase()) {
-                case 'football':
-                case 'soccer':
-                    mappedMatches = matches.map(mapFootballMatch).filter(m => m !== null);
-                    break;
-                case 'basketball':
-                    mappedMatches = matches.map(mapBasketballMatch).filter(m => m !== null);
-                    break;
-                case 'cricket':
-                    mappedMatches = matches.map(mapCricketMatch).filter(m => m !== null);
-                    break;
-            }
-        }
-
-        // Filter only upcoming matches
-        const upcomingMatches = mappedMatches.filter(m => m.status === 'upcoming');
-
-        res.json({
-            success: true,
-            count: upcomingMatches.length,
-            data: upcomingMatches
-        });
-    } catch (error) {
-        console.error('Error in getUpcomingMatches:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Error fetching upcoming matches',
-            error: error.message
-        });
-    }
-};
 
 /**
  * @desc    Get leagues

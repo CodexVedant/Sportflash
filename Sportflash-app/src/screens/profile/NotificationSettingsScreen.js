@@ -15,65 +15,6 @@ import { Switch } from 'react-native';
 
 import NotificationOptionsModal from '@components/notifications/NotificationOptionsModal';
 
-// Temporary Mock Data for Testing
-const MOCK_UPCOMING_MATCHES = [
-    {
-        id: 'mock_1',
-        sport: 'Cricket',
-        league: 'T20 World Cup',
-        homeTeam: { name: 'India', shortName: 'IND' },
-        awayTeam: { name: 'Australia', shortName: 'AUS' },
-        status: 'Upcoming',
-        displayStatus: 'Starts in 2d',
-        score: 'VS',
-        date: '2026-06-15T14:30:00Z'
-    },
-    {
-        id: 'mock_2',
-        sport: 'Cricket',
-        league: 'The Ashes',
-        homeTeam: { name: 'England', shortName: 'ENG' },
-        awayTeam: { name: 'Australia', shortName: 'AUS' },
-        status: 'Upcoming',
-        displayStatus: 'Starts in 4d',
-        score: 'VS',
-        date: '2026-06-17T10:00:00Z'
-    },
-    {
-        id: 'mock_3',
-        sport: 'Football',
-        league: 'Premier League',
-        homeTeam: { name: 'Man City', shortName: 'MCI' },
-        awayTeam: { name: 'Liverpool', shortName: 'LIV' },
-        status: 'Upcoming',
-        displayStatus: 'Sat, 8:00 PM',
-        score: 'VS',
-        date: '2026-06-18T19:30:00Z'
-    },
-    {
-        id: 'mock_4',
-        sport: 'Basketball',
-        league: 'NBA Finals',
-        homeTeam: { name: 'Lakers', shortName: 'LAL' },
-        awayTeam: { name: 'Celtics', shortName: 'BOS' },
-        status: 'Upcoming',
-        displayStatus: 'Fri, 6:00 AM',
-        score: 'VS',
-        date: '2026-06-19T00:30:00Z'
-    },
-    {
-        id: 'mock_5',
-        sport: 'Cricket',
-        league: 'IPL 2026',
-        homeTeam: { name: 'CSK', shortName: 'CSK' },
-        awayTeam: { name: 'MI', shortName: 'MI' },
-        status: 'Upcoming',
-        displayStatus: 'Starts in 1w',
-        score: 'VS',
-        date: '2026-06-25T14:00:00Z'
-    }
-];
-
 const SettingToggle = ({ label, value, onToggle }) => {
     const theme = useTheme();
     return (
@@ -123,9 +64,10 @@ export default function NotificationSettingsScreen() {
     };
 
     // Fetch Real Data (UPCOMING)
-    const { data: apiData = [], isLoading, refetch } = useGetUpcomingMatchesQuery();
-    // Use Mock Data if API is empty (for testing purposes)
-    const upcomingMatches = (apiData && apiData.length > 0) ? apiData : MOCK_UPCOMING_MATCHES;
+    const { data: apiData = [], isLoading, refetch } = useGetUpcomingMatchesQuery({
+        sport: activeTab.toLowerCase()
+    });
+    const upcomingMatches = apiData;
 
     const [refreshing, setRefreshing] = useState(false);
 
