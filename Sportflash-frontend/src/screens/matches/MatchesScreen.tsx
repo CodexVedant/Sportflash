@@ -1,0 +1,298 @@
+﻿import React, { useState, useEffect } from 'react';
+import { View, Text, TouchableOpacity, SectionList } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { theme } from '@utils/theme';
+import MatchCard from '@components/match/MatchCard';
+import BasketballMatchCard from '@components/match/BasketballMatchCard';
+import Sidebar from '@components/navigation/Sidebar';
+import { Ionicons } from '@expo/vector-icons';
+import { SkeletonList, EmptyState, NetworkError } from '@components/common';
+import { FilterPanel } from '@components/filter';
+import { NotificationBell, NotificationPanel } from '@components/notifications';
+import { useSelector } from 'react-redux';
+import TopBar from '@components/navigation/TopBar';
+import { useGetLiveMatchesQuery, useGetUpcomingMatchesQuery } from '@store/api/matchesApi';
+import { styles } from '@utils/style/MatchesScreen.styles';
+import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { RootStackParamList } from '@app-types/navigation';
+import { useAppSelector } from '@hooks/redux';
+
+type Props = NativeStackScreenProps<RootStackParamList, 'Matches'>;
+
+export default function MatchesScreen({ navigation }: Props) {
+    const { user } = useAppSelector(state => state.auth);
+    const [activeSport, setActiveSport] = useState('cricket');
+    const [activeTab, setActiveTab] = useState('Live');
+    const [sidebarVisible, setSidebarVisible] = useState(false);
+    const [filterVisible, setFilterVisible] = useState(false);
+    const [notificationVisible, setNotificationVisible] = useState(false);
+    const [filters, setFilters] = useState({
+        sport: 'all',
+        status: 'all',
+        league: 'all',
+        dateRange: { start: null, end: null },
+    });
+
+    // Fetch both live and upcoming matches on mount for instant tab switching
+    // Note: Live matches API returns both live AND finished matches
+    const { data: liveMatches = [], isLoading: isLoadingLive, error: liveError, refetch: refetchLive } = useGetLiveMatchesQuery(
+        undefined
+        // No skip - always fetch live matches
+    );
+
+    // Prefetch upcoming matches for ALL sports for instant tab switching
+    const { data: upcomingCricket = [] } = useGetUpcomingMatchesQuery({ sport: 'cricket' });
+    const { data: upcomingFootball = [] } = useGetUpcomingMatchesQuery({ sport: 'football' });
+    const { data: upcomingBasketball = [] } = useGetUpcomingMatchesQuery({ sport: 'basketball' });
+
+    // Combine all upcoming matches
+    const upcomingMatches = React.useMemo(() => {
+        return [...upcomingCricket, ...upcomingFootball, ...upcomingBasketball];
+    }, [upcomingCricket, upcomingFootball, upcomingBasketball]);
+
+    const isLoadingUpcoming = false; // Data is always available from cache
+    const upcomingError = null;
+    const refetchUpcoming = () => {
+        // Refetch all sports
+        refetchLive();
+    };
+
+    // Determine which data to use - memoized to prevent infinite loops
+    const allMatches = React.useMemo(() => {
+        return activeTab === 'Upcoming' ? upcomingMatches : liveMatches;
+    }, [activeTab, upcomingMatches, liveMatches]);
+
+    const isLoading = activeTab === 'Upcoming' ? isLoadingUpcoming : isLoadingLive;
+    const apiError = activeTab === 'Upcoming' ? upcomingError : liveError;
+    const refetch = activeTab === 'Upcoming' ? refetchUpcoming : refetchLive;
+
+    // Filter matches based on sport and status - use useMemo instead of useEffect
+    const filteredMatches = React.useMemo(() => {
+        let matches = Array.isArray(allMatches) ? [...allMatches] : [];
+
+        // Filter by sport
+        if (activeSport !== 'all') {
+            matches = matches.filter(match => match.sport?.toLowerCase() === activeSport);
+        }
+
+        // Filter by status
+        if (activeTab === 'Live') {
+            matches = matches.filter(match => match.status === 'live');
+        } else if (activeTab === 'Upcoming') {
+            matches = matches.filter(match => match.status === 'upcoming');
+        } else if (activeTab === 'Results') {
+            matches = matches.filter(match => match.status === 'finished');
+        }
+
+        // Apply additional filters
+        if (filters.league !== 'all') {
+            matches = matches.filter(match => {
+                const leagueName = typeof match.league === 'string' ? match.league : match.league?.name;
+                return leagueName?.toLowerCase().includes(filters.league.toLowerCase());
+            });
+        }
+
+        return matches;
+    }, [allMatches, activeSport, activeTab, filters]);
+
+    // Mock notifications
+    const [notifications] = useState([
+        {
+            id: 1,
+            type: 'match_start',
+            title: 'Match Starting Soon',
+            message: 'India vs Australia starts in 15 minutes',
+            timestamp: new Date(),
+            read: false,
+        },
+        {
+            id: 2,
+            type: 'goal',
+            title: 'GOAL!',
+            message: 'Manchester United scored! 1-0',
+            timestamp: new Date(Date.now() - 300000),
+            read: false,
+        },
+    ]);
+
+    const SPORT_TABS = [
+        { id: 'cricket', label: 'Cricket', icon: 'baseball-outline' },
+        { id: 'football', label: 'Football', icon: 'football-outline' },
+        { id: 'basketball', label: 'Basketball', icon: 'basketball-outline' },
+    ];
+
+    const STATUS_TABS = ['Live', 'Upcoming', 'Results'];
+
+    const handleApplyFilters = (newFilters: any) => {
+        setFilters(newFilters);
+        setFilterVisible(false);
+    };
+
+    // Group matches by league
+    const groupedMatches = React.useMemo(() => {
+        if (!filteredMatches.length) return [];
+
+        const groups = filteredMatches.reduce((acc, match) => {
+            const leagueName = (typeof match.league === 'string' ? match.league : match.league?.name) || 'Others';
+            if (!acc[leagueName]) {
+                acc[leagueName] = [];
+            }
+            acc[leagueName].push(match);
+            return acc;
+        }, {} as Record<string, any[]>);
+
+        return Object.keys(groups).sort().map(league => ({
+            title: league,
+            data: groups[league]
+        }));
+    }, [filteredMatches]);
+
+    const renderSectionHeader = ({ section: { title } }: { section: { title: string } }) => (
+        <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>{title}</Text>
+        </View>
+    );
+
+    const renderMatchItem = ({ item }: { item: any }) => (
+        <View style={{ marginBottom: 16 }}>
+            {item.sport === 'basketball' ? (
+                <BasketballMatchCard
+                    match={item}
+                    onPress={() => navigation.navigate('MatchDetail', { match: item })}
+                />
+            ) : (
+                <MatchCard
+                    sport={item.sport}
+                    status={item.status}
+                    displayStatus={item.displayStatus}
+                    league={item.league}
+                    homeTeam={item.homeTeam}
+                    awayTeam={item.awayTeam}
+                    score={item.status === 'finished' || item.status === 'live' ?
+                        (item.homeTeam.score && item.awayTeam.score ? `${item.homeTeam.score} - ${item.awayTeam.score}` : 'vs')
+                        : undefined
+                    }
+                    timer={
+                        item.sport === 'cricket'
+                            ? (item.cricketData?.overs ? `${item.cricketData.overs} Overs` : '')
+                            : (item.sport === 'basketball' && typeof item.timer === 'string' && item.timer.includes('Quarter'))
+                                ? item.timer
+                                : item.currentMinute || (item.scheduledAt ? new Date(item.scheduledAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '')
+                    }
+                    match={item} // Pass the full match object for flexibility if needed by new MatchCard
+                    onPress={() => navigation.navigate('MatchDetail', { match: item })}
+                />
+            )}
+        </View>
+    );
+
+    const unreadCount = notifications.filter(n => !n.read).length;
+
+    return (
+        <SafeAreaView style={styles.container}>
+            <Sidebar visible={sidebarVisible} onClose={() => setSidebarVisible(false)} />
+
+            <View style={styles.header}>
+                <View style={styles.headerRow}>
+                    <TouchableOpacity onPress={() => setSidebarVisible(true)} style={styles.menuBtn}>
+                        <Ionicons name="menu" size={28} color={theme.colors.text} />
+                    </TouchableOpacity>
+                    <Text style={styles.headerTitle}>Matches</Text>
+                </View>
+                <View style={styles.headerActions}>
+                    <TouchableOpacity
+                        onPress={() => navigation.navigate('UpcomingMatches', {})}
+                        style={[styles.iconBtn, { marginRight: 8 }]}
+                    >
+                        <Ionicons name="calendar-outline" size={24} color={theme.colors.primary} />
+                    </TouchableOpacity>
+                    <TouchableOpacity onPress={() => setFilterVisible(true)} style={styles.iconBtn}>
+                        <Ionicons name="options-outline" size={24} color={theme.colors.text} />
+                    </TouchableOpacity>
+                    {user && (
+                        <NotificationBell
+                            count={unreadCount}
+                            onPress={() => setNotificationVisible(true)}
+                        />
+                    )}
+                </View>
+            </View>
+
+            {/* Sport Tabs */}
+            <TopBar
+                activeTab={activeSport}
+                onTabChange={setActiveSport}
+                tabs={SPORT_TABS}
+            />
+
+            {/* Status Tabs */}
+            <View style={styles.tabsContainer}>
+                {STATUS_TABS.map(tab => (
+                    <TouchableOpacity
+                        key={tab}
+                        style={[styles.tab, activeTab === tab && styles.activeTab]}
+                        onPress={() => setActiveTab(tab)}
+                    >
+                        <Text style={[styles.tabText, activeTab === tab && styles.activeTabText]}>
+                            {tab}
+                        </Text>
+                    </TouchableOpacity>
+                ))}
+            </View>
+
+            {/* Content */}
+            {isLoading ? (
+                <SkeletonList type="match" count={5} />
+            ) : apiError ? (
+                <NetworkError onRetry={refetch as any} />
+            ) : (
+                <SectionList
+                    style={styles.scrollContainer}
+                    sections={groupedMatches}
+                    keyExtractor={item => item._id || item.id}
+                    renderItem={renderMatchItem}
+                    renderSectionHeader={renderSectionHeader}
+                    contentContainerStyle={styles.listContent}
+                    stickySectionHeadersEnabled={true}
+                    showsVerticalScrollIndicator={false}
+                    ListEmptyComponent={
+                        <EmptyState
+                            variant="noMatches"
+                            message={`No ${activeTab.toLowerCase()} matches found for ${activeSport === 'all' ? 'all sports' : activeSport}`}
+                            actionLabel="Clear Filters"
+                            onAction={() => {
+                                setActiveSport('all');
+                                setFilters({
+                                    sport: 'all',
+                                    status: 'all',
+                                    league: 'all',
+                                    dateRange: { start: null, end: null },
+                                });
+                            }}
+                        />
+                    }
+                />
+            )}
+
+            {/* Filter Panel */}
+            <FilterPanel
+                visible={filterVisible}
+                onClose={() => setFilterVisible(false)}
+                onApply={handleApplyFilters}
+                initialFilters={filters}
+            />
+
+            {/* Notification Panel */}
+            <NotificationPanel
+                visible={notificationVisible}
+                onClose={() => setNotificationVisible(false)}
+                notifications={notifications}
+                onNotificationPress={(notification) => {
+                    console.log('Notification pressed:', notification);
+                    setNotificationVisible(false);
+                }}
+            />
+        </SafeAreaView>
+    );
+}
+

@@ -1,7 +1,8 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
 import { theme } from '@utils/theme';
 import { Section, PlayerRow, EmptyData } from './SharedComponents';
+import { styles } from '@utils/style/CricketScorecard.styles';
 
 const CricketScorecard = ({ match, onPlayerPress }) => {
     const { score, scorecard, lineups, homeTeam, awayTeam } = match;
@@ -34,15 +35,15 @@ const CricketScorecard = ({ match, onPlayerPress }) => {
                                 <View key={idx} style={styles.row}>
                                     <View style={{ flex: 2 }}>
                                         <TouchableOpacity onPress={() => onPlayerPress && onPlayerPress({ name: batter.player, sport: 'cricket' })}>
-                                            <Text style={[styles.playerName, { color: theme.colors.primary }]}>{batter.player}</Text>
+                                            <Text style={[styles.playerName, { color: theme.colors.primary }]}>{batter.player || '-'}</Text>
                                         </TouchableOpacity>
-                                        <Text style={styles.dismissal}>{batter.status}</Text>
+                                        <Text style={styles.dismissal}>{batter.status || ''}</Text>
                                     </View>
-                                    <Text style={styles.statText}>{batter.runs}</Text>
-                                    <Text style={styles.statText}>{batter.balls}</Text>
-                                    <Text style={styles.statText}>{batter.fours}</Text>
-                                    <Text style={styles.statText}>{batter.sixes}</Text>
-                                    <Text style={styles.statText}>{batter.sr}</Text>
+                                    <Text style={styles.statText}>{batter.runs || '0'}</Text>
+                                    <Text style={styles.statText}>{batter.balls || '0'}</Text>
+                                    <Text style={styles.statText}>{batter.fours || '0'}</Text>
+                                    <Text style={styles.statText}>{batter.sixes || '0'}</Text>
+                                    <Text style={styles.statText}>{batter.sr || '0.00'}</Text>
                                 </View>
                             ))}
                         </Section>
@@ -61,14 +62,14 @@ const CricketScorecard = ({ match, onPlayerPress }) => {
                                 <View key={idx} style={styles.row}>
                                     <View style={{ flex: 2 }}>
                                         <TouchableOpacity onPress={() => onPlayerPress && onPlayerPress({ name: bowler.player, sport: 'cricket' })}>
-                                            <Text style={[styles.playerName, { color: theme.colors.primary }]}>{bowler.player}</Text>
+                                            <Text style={[styles.playerName, { color: theme.colors.primary }]}>{bowler.player || '-'}</Text>
                                         </TouchableOpacity>
                                     </View>
-                                    <Text style={styles.statText}>{bowler.overs}</Text>
-                                    <Text style={styles.statText}>{bowler.maidens}</Text>
-                                    <Text style={styles.statText}>{bowler.runs}</Text>
-                                    <Text style={styles.statText}>{bowler.wickets}</Text>
-                                    <Text style={styles.statText}>{bowler.economy}</Text>
+                                    <Text style={styles.statText}>{bowler.overs || '0'}</Text>
+                                    <Text style={styles.statText}>{bowler.maidens || '0'}</Text>
+                                    <Text style={styles.statText}>{bowler.runs || '0'}</Text>
+                                    <Text style={styles.statText}>{bowler.wickets || '0'}</Text>
+                                    <Text style={styles.statText}>{bowler.economy || '0.00'}</Text>
                                 </View>
                             ))}
                         </Section>
@@ -84,7 +85,14 @@ const CricketScorecard = ({ match, onPlayerPress }) => {
                             lineups.home.startXI.map((player, idx) => (
                                 <PlayerRow
                                     key={idx}
-                                    {...player}
+                                    name={player.name}
+                                    number={player.number}
+                                    position={player.position}
+                                    isCaptain={player.isCaptain}
+                                    isWicketKeeper={player.isWicketKeeper}
+                                    battingStyle={player.battingStyle}
+                                    bowlingStyle={player.bowlingStyle}
+                                    sport="cricket"
                                     onPress={() => onPlayerPress && onPlayerPress({ ...player, sport: 'cricket' })}
                                 />
                             ))
@@ -97,7 +105,14 @@ const CricketScorecard = ({ match, onPlayerPress }) => {
                             lineups.away.startXI.map((player, idx) => (
                                 <PlayerRow
                                     key={idx}
-                                    {...player}
+                                    name={player.name}
+                                    number={player.number}
+                                    position={player.position}
+                                    isCaptain={player.isCaptain}
+                                    isWicketKeeper={player.isWicketKeeper}
+                                    battingStyle={player.battingStyle}
+                                    bowlingStyle={player.bowlingStyle}
+                                    sport="cricket"
                                     onPress={() => onPlayerPress && onPlayerPress({ ...player, sport: 'cricket' })}
                                 />
                             ))
@@ -110,80 +125,4 @@ const CricketScorecard = ({ match, onPlayerPress }) => {
         </ScrollView>
     );
 };
-
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-    },
-    inningContainer: {
-        marginBottom: theme.spacing.xl,
-    },
-    inningHeader: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        paddingVertical: theme.spacing.md,
-        borderBottomWidth: 1,
-        borderBottomColor: 'rgba(255,255,255,0.1)',
-        marginBottom: theme.spacing.sm,
-    },
-    inningTitle: {
-        color: theme.colors.primary,
-        fontSize: theme.sizes.md,
-        fontWeight: 'bold',
-    },
-    inningScore: {
-        color: theme.colors.text,
-        fontSize: theme.sizes.md,
-        fontWeight: 'bold',
-    },
-    tableHeader: {
-        flexDirection: 'row',
-        paddingVertical: theme.spacing.xs,
-        borderBottomWidth: 1,
-        borderBottomColor: 'rgba(255,255,255,0.05)',
-        marginBottom: theme.spacing.xs,
-    },
-    headerText: {
-        flex: 1,
-        color: theme.colors.textMuted,
-        fontSize: 12,
-        textAlign: 'center',
-        fontWeight: '700',
-        textTransform: 'uppercase',
-    },
-    row: {
-        flexDirection: 'row',
-        paddingVertical: theme.spacing.md,
-        borderBottomWidth: 1,
-        borderBottomColor: 'rgba(255,255,255,0.05)',
-        alignItems: 'flex-start', // Align for multiline dismissal
-    },
-    playerName: {
-        color: theme.colors.text,
-        fontSize: 15,
-        fontWeight: '600',
-        marginBottom: 2,
-    },
-    dismissal: {
-        color: theme.colors.textMuted,
-        fontSize: 12,
-        fontStyle: 'italic',
-    },
-    statText: {
-        flex: 1,
-        color: theme.colors.text,
-        fontSize: 14,
-        textAlign: 'center',
-        fontWeight: '500',
-        alignSelf: 'center',
-    },
-    emptyText: {
-        color: theme.colors.textMuted,
-        fontStyle: 'italic',
-        textAlign: 'center',
-        padding: 10,
-    },
-});
-
 export default CricketScorecard;

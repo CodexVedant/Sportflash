@@ -1,6 +1,7 @@
 import React from 'react';
-import { View, Text, Image, StyleSheet } from 'react-native';
+import { View, Text, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { styles } from '@utils/style/TeamLogo.styles';
 
 export default function TeamLogo({ logo, name, size = 32, fontSize = 24, containerSize = 50, style }) {
     const isUrl = logo && (logo.startsWith('http') || logo.startsWith('file'));
@@ -17,11 +18,3 @@ export default function TeamLogo({ logo, name, size = 32, fontSize = 24, contain
         </View>
     );
 }
-
-const styles = StyleSheet.create({
-    logoPlaceholder: {
-        backgroundColor: 'rgba(255,255,255,0.1)',
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-});

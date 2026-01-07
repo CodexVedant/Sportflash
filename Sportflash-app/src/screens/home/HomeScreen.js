@@ -1,9 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Animated, TouchableOpacity, useWindowDimensions, Platform, ActivityIndicator } from 'react-native';
+import { View, Text, TouchableOpacity, useWindowDimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { theme } from '@utils/theme';
-import { LinearGradient } from 'expo-linear-gradient';
-import MatchCard from '@components/match/MatchCard';
 import { Ionicons } from '@expo/vector-icons';
 import SearchModal from '@components/common/SearchModal';
 import { useGetLiveMatchesQuery } from '@store/api/matchesApi';
@@ -18,8 +16,9 @@ import LiveMatchesWidget from '@screens/home/LiveMatchesWidget';
 import TrendingNewsWidget from '@screens/home/TrendingNewsWidget';
 import MenuToggle from '@components/navigation/MenuToggle';
 import TopBar from '@components/navigation/TopBar';
-
-import Sidebar, { SidebarContent } from '@components/navigation/Sidebar';
+import Sidebar from '@components/navigation/Sidebar';
+import { styles } from '@utils/style/HomeScreen.styles';
+import { SPORT_TABS, isDesktopSize, getMockNotifications } from '@utils/script/HomeScreen.helpers';
 
 export default function HomeScreen({ navigation }) {
     const dispatch = useDispatch();
@@ -82,35 +81,10 @@ export default function HomeScreen({ navigation }) {
     }, [dispatch]);
 
     // Mock notifications (Keeping existing logic)
-    const [notifications] = useState([
-        {
-            id: 1,
-            type: 'match_start',
-            title: 'Match Starting Soon',
-            message: 'India vs Australia starts in 15 minutes',
-            timestamp: new Date(),
-            read: false,
-        },
-        {
-            id: 2,
-            type: 'goal',
-            title: 'GOAL!',
-            message: 'Manchester United scored! 1-0',
-            timestamp: new Date(Date.now() - 300000),
-            read: false,
-        },
-    ]);
-
-    const SPORT_TABS = [
-        { id: 'cricket', label: 'Cricket', icon: 'baseball-outline' },
-        { id: 'football', label: 'Football', icon: 'football-outline' },
-        { id: 'basketball', label: 'Basketball', icon: 'basketball-outline' },
-    ];
+    const [notifications] = useState(getMockNotifications());
 
     // Responsive Logic
-    const isDesktop = width > 768;
-    const MAX_WIDTH = 1200;
-    const contentWidth = isDesktop ? Math.min(width, MAX_WIDTH) : width;
+    const isDesktop = isDesktopSize(width);
 
 
 
@@ -200,111 +174,4 @@ export default function HomeScreen({ navigation }) {
     );
 }
 
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: theme.colors.background,
-    },
-    header: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        paddingHorizontal: theme.spacing.lg,
-        paddingVertical: theme.spacing.md,
-        borderBottomWidth: 1,
-        borderBottomColor: 'rgba(255,255,255,0.05)',
-        position: 'relative',
-    },
-    menuBtn: {
-        zIndex: 20,
-    },
-    logoContainer: {
-        position: 'absolute',
-        left: 0,
-        right: 0,
-        alignItems: 'center',
-        justifyContent: 'center',
-        pointerEvents: 'none',
-    },
-    emptyContainer: {
-        padding: theme.spacing.xl,
-        alignItems: 'center',
-        justifyContent: 'center',
-        backgroundColor: 'rgba(255,255,255,0.02)',
-        borderRadius: theme.borderRadius.lg,
-    },
-    emptyText: {
-        color: theme.colors.textMuted,
-        fontFamily: theme.fonts.medium,
-        fontSize: theme.sizes.md,
-    },
-    logoText: {
-        fontSize: 24,
-        fontFamily: theme.fonts.display,
-        fontWeight: 'bold',
-        color: theme.colors.text,
-        letterSpacing: 1,
-    },
-    highlight: {
-        color: theme.colors.primary,
-    },
-    actions: {
-        flexDirection: 'row',
-        zIndex: 10,
-        alignItems: 'center', // Fix vertical alignment
-    },
-    scrollContent: {
-        padding: theme.spacing.lg,
-    },
-    section: {
-        marginBottom: theme.spacing.xl,
-    },
-    sectionTitle: {
-        color: theme.colors.textMuted,
-        fontSize: theme.sizes.sm,
-        fontWeight: '600',
-        marginBottom: theme.spacing.md,
-        letterSpacing: 1,
-    },
-    newsPlaceholder: {
-        height: 150,
-        backgroundColor: theme.colors.surface,
-        borderRadius: theme.borderRadius.md,
-        justifyContent: 'center',
-        alignItems: 'center',
-        borderWidth: 1,
-        borderColor: 'rgba(255,255,255,0.05)',
-    },
-    // Desktop Styles
-    headerDesktop: {
-        paddingHorizontal: theme.spacing.xl,
-        justifyContent: 'space-between',
-    },
-    logoContainerDesktop: {
-        position: 'relative', // Reset absolute position on desktop
-        alignItems: 'flex-start',
-        left: 'auto',
-        right: 'auto',
-    },
-    contentContainer: {
-        width: '100%',
-    },
-    contentContainerDesktop: {
-        maxWidth: 1200,
-        alignSelf: 'center',
-    },
-    gridContainer: {
-        width: '100%',
-    },
-    loginBtn: {
-        backgroundColor: theme.colors.primary,
-        paddingHorizontal: 16,
-        paddingVertical: 8,
-        borderRadius: 20,
-    },
-    loginBtnText: {
-        color: '#fff',
-        fontFamily: theme.fonts.bold,
-        fontSize: 14,
-    }
-});
+

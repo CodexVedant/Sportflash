@@ -13,6 +13,7 @@ import ProfileScreen from '@screens/profile/ProfileScreen';
 
 // Theme
 import { theme } from '@utils/theme';
+import { styles } from '@utils/style/BottomTabs.styles';
 
 const Tab = createBottomTabNavigator();
 
@@ -55,15 +56,3 @@ export default function BottomTabs() {
         </Tab.Navigator>
     );
 }
-
-const styles = StyleSheet.create({
-    tabBar: {
-        position: 'absolute',
-        bottom: 0,
-        backgroundColor: 'transparent',
-        borderTopWidth: 0,
-        height: 80, // Taller tab bar
-        paddingBottom: 20,
-        elevation: 0,
-    }
-});

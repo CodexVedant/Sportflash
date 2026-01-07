@@ -1,10 +1,11 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text } from 'react-native';
 import { theme } from '@utils/theme';
 import FootballStats from './scorecard/FootballStats';
 import BasketballStats from './scorecard/BasketballStats';
 import CricketScorecard from './scorecard/CricketScorecard';
 import { EmptyData } from './scorecard/SharedComponents';
+import { styles } from '@utils/style/Scorecard.styles';
 
 export default function Scorecard({ match, onPlayerPress }) {
     if (!match) return <EmptyData message="No match data available" />;
@@ -35,21 +36,3 @@ export default function Scorecard({ match, onPlayerPress }) {
         </View>
     );
 }
-
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        paddingBottom: theme.spacing.xl,
-    },
-    section: {
-        padding: theme.spacing.lg,
-        alignItems: 'center',
-        justifyContent: 'center',
-        backgroundColor: 'rgba(255,255,255,0.02)',
-        borderRadius: theme.borderRadius.md,
-    },
-    emptyText: {
-        color: theme.colors.textMuted,
-        fontStyle: 'italic',
-    },
-});

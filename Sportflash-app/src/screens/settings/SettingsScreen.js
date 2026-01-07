@@ -1,14 +1,31 @@
-import React, { useContext, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useDispatch, useSelector } from 'react-redux';
+import { useNavigation } from '@react-navigation/native';
 import { theme } from '@utils/theme';
-import { AuthContext } from '@context/AuthContext';
+import { logout } from '@store/slices/authSlice';
 import Sidebar from '@components/navigation/Sidebar';
 import { Ionicons } from '@expo/vector-icons';
+import { styles } from '@utils/style/SettingsScreen.styles';
 
 export default function SettingsScreen() {
-    const { logout } = useContext(AuthContext);
+    const dispatch = useDispatch();
+    const navigation = useNavigation();
+    const { user } = useSelector((state) => state.auth);
     const [sidebarVisible, setSidebarVisible] = useState(false);
+
+    const handleLogout = () => {
+        dispatch(logout());
+    };
+
+    const handleLogin = () => {
+        navigation.navigate('Login');
+    };
+
+    const handleRegister = () => {
+        navigation.navigate('Register');
+    };
 
     return (
         <SafeAreaView style={styles.container}>
@@ -24,53 +41,21 @@ export default function SettingsScreen() {
             </View>
 
             <View style={styles.content}>
-                <TouchableOpacity style={styles.logoutBtn} onPress={logout}>
-                    <Text style={styles.logoutText}>Logout</Text>
-                </TouchableOpacity>
+                {user ? (
+                    <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout}>
+                        <Text style={styles.logoutText}>Log Out</Text>
+                    </TouchableOpacity>
+                ) : (
+                    <View style={styles.authButtonsContainer}>
+                        <TouchableOpacity style={styles.loginBtn} onPress={handleLogin}>
+                            <Text style={styles.loginText}>Login</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity style={styles.registerBtn} onPress={handleRegister}>
+                            <Text style={styles.registerText}>Register</Text>
+                        </TouchableOpacity>
+                    </View>
+                )}
             </View>
         </SafeAreaView>
     );
 }
-
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: theme.colors.background,
-    },
-    header: {
-        paddingHorizontal: theme.spacing.lg,
-        paddingVertical: theme.spacing.md,
-        borderBottomWidth: 1,
-        borderBottomColor: 'rgba(255,255,255,0.05)',
-    },
-    headerRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-    },
-    menuBtn: {
-        marginRight: 16,
-    },
-    headerTitle: {
-        color: theme.colors.text,
-        fontSize: 20,
-        fontFamily: theme.fonts.bold,
-    },
-    content: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    logoutBtn: {
-        backgroundColor: theme.colors.surface,
-        paddingHorizontal: 32,
-        paddingVertical: 12,
-        borderRadius: 8,
-        borderWidth: 1,
-        borderColor: theme.colors.primary,
-    },
-    logoutText: {
-        color: theme.colors.primary,
-        fontSize: 16,
-        fontWeight: 'bold',
-    }
-});

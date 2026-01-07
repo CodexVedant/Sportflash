@@ -61,25 +61,30 @@ const mapFootballMatch = (match) => {
         goalscorers: match.goalscorers || [],
         cards: match.cards || [],
         substitutes: match.substitutes || [],
-        lineups: normalizeLineups(match.lineups),
+        lineups: normalizeLineups(match.lineups, 'football'),
         statistics: match.statistics || []
     };
 };
 
 /**
- * Normalize Lineups
+ * Normalize Lineups - Sport Aware
  */
-const normalizeLineups = (lineups) => {
+const normalizeLineups = (lineups, sport = 'football') => {
     if (!lineups) return null;
 
     // API can return 'home' or 'home_team'
     const home = lineups.home || lineups.home_team;
     const away = lineups.away || lineups.away_team;
 
+    // Choose mapper based on sport
+    const mapper = sport === 'cricket' ? mapCricketLineupPlayer :
+        sport === 'basketball' ? mapBasketballLineupPlayer :
+            mapFootballLineupPlayer;
+
     // Helper to map and filter invalid entries (API often returns nulls for football)
     const process = (list) => {
         if (!list || !Array.isArray(list)) return [];
-        return list.map(mapLineupPlayer).filter(p => p.name);
+        return list.map(mapper).filter(p => p.name);
     };
 
     return {
@@ -94,11 +99,66 @@ const normalizeLineups = (lineups) => {
     };
 };
 
-const mapLineupPlayer = (p) => {
+/**
+ * Map Cricket Lineup Player
+ */
+const mapCricketLineupPlayer = (p) => {
     return {
         name: p.player || p.lineup_player || p.player_name || p.name,
         number: p.number || p.lineup_number || p.player_number || '',
-        position: p.position || p.lineup_position || p.player_position || ''
+        position: p.position || p.lineup_position || p.player_position || p.player_type || '',
+        // Cricket-specific
+        battingStyle: p.batting_style || p.battingStyle || '',
+        bowlingStyle: p.bowling_style || p.bowlingStyle || '',
+        isCaptain: p.captain === '1' || p.is_captain === true || p.isCaptain === true || false,
+        isWicketKeeper: p.wicket_keeper === '1' || p.isWicketKeeper === true ||
+            p.position === 'Wicket Keeper' || p.position === 'WK' || false,
+        // Stats (if available)
+        runs: p.runs || p.R || null,
+        wickets: p.wickets || p.W || null,
+        strikeRate: p.strike_rate || p.SR || null,
+        economyRate: p.economy_rate || p.economy || p.ER || null,
+        oversBowled: p.overs_bowled || p.overs || p.O || null
+    };
+};
+
+/**
+ * Map Football Lineup Player
+ */
+const mapFootballLineupPlayer = (p) => {
+    return {
+        name: p.player || p.lineup_player || p.player_name || p.name,
+        number: p.number || p.lineup_number || p.player_number || '',
+        position: p.position || p.lineup_position || p.player_position || '',
+        // Football-specific
+        isCaptain: p.captain === '1' || p.is_captain === true || p.isCaptain === true || false,
+        isGoalkeeper: p.position === 'Goalkeeper' || p.position === 'GK' ||
+            p.player_position === 'Goalkeeper' || false,
+        // Stats (if available)
+        goals: p.goals || p.player_goals || null,
+        assists: p.assists || p.player_assists || null,
+        yellowCards: p.yellow_cards || p.player_yellow_cards || null,
+        redCards: p.red_cards || p.player_red_cards || null,
+        minutesPlayed: p.minutes_played || p.player_minutes_played || null
+    };
+};
+
+/**
+ * Map Basketball Lineup Player
+ */
+const mapBasketballLineupPlayer = (p) => {
+    return {
+        name: p.player || p.lineup_player || p.player_name || p.name,
+        number: p.number || p.lineup_number || p.player_number || '',
+        position: p.position || p.lineup_position || p.player_position || '',
+        // Basketball-specific (no captain/goalkeeper in basketball lineups typically)
+        // Stats (if available)
+        points: p.points || p.player_points || null,
+        rebounds: p.rebounds || p.total_rebounds || p.player_total_rebounds || null,
+        assists: p.assists || p.player_assists || null,
+        steals: p.steals || p.player_steals || null,
+        blocks: p.blocks || p.player_blocks || null,
+        fieldGoalPercentage: p.field_goal_percentage || p.fg_percentage || p.FG || null
     };
 };
 
@@ -144,9 +204,12 @@ const mapBasketballMatch = (match) => {
             logo: match.event_away_team_logo || null,
             score: extractBasketballScore(match.event_final_result, 'away')
         },
+        venue: {
+            name: match.event_stadium
+        },
         score: {
             final: match.event_final_result,
-            quarters: quartersData.list
+            quarters: quartersData.quarters
         },
         currentQuarter: match.event_quarter || null,
         // Backward compatibility for frontend
@@ -155,7 +218,7 @@ const mapBasketballMatch = (match) => {
             ...quartersData.stats
         },
         isLive: match.event_live === '1',
-        lineups: normalizeLineups(match.lineups),
+        lineups: normalizeLineups(match.lineups, 'basketball'),
         statistics: match.statistics || [],
         playerStatistics: match.player_statistics || null
     };
@@ -167,17 +230,28 @@ const mapBasketballMatch = (match) => {
 const formatBasketballQuarters = (scores) => {
     const defaultStats = {};
     const list = [];
+    const quartersObj = {};
 
-    if (!scores) return { stats: defaultStats, list };
+    if (!scores) {
+        return { stats: defaultStats, list, quarters: null };
+    }
+
     const keys = Object.keys(scores);
 
     keys.forEach(key => {
         let qData = scores[key];
+
         if (Array.isArray(qData)) qData = qData[0];
 
         if (qData) {
             const h = qData.score_home;
             const a = qData.score_away;
+
+            // Store with original key for frontend compatibility
+            quartersObj[key] = [{
+                score_home: h,
+                score_away: a
+            }];
 
             // Normalize key (1st Quarter -> "q1", 1 -> "q1")
             const qNum = key.replace(/\D/g, '');
@@ -189,8 +263,9 @@ const formatBasketballQuarters = (scores) => {
         }
     });
 
-    return { stats: defaultStats, list };
+    return { stats: defaultStats, list, quarters: quartersObj };
 };
+
 
 /**
  * Map Cricket match data to unified format
@@ -241,7 +316,7 @@ const mapCricketMatch = (match) => {
         comments: match.comments || null,
         wickets: match.wickets || null,
         extra: match.extra || null,
-        lineups: normalizeLineups(match.lineups),
+        lineups: normalizeLineups(match.lineups, 'cricket'),
         // Backward compatibility
         cricketData: {
             overs: extractCricketOvers(match)
@@ -399,8 +474,11 @@ const extractBasketballScore = (result, team) => {
  * Generic status mapper for all sports
  */
 const mapMatchStatus = (status, isLive) => {
-    if (['Finished', 'Ended', 'FT', 'AOT', 'After Over Time'].includes(status)) return 'finished';
-    if (['Postponed', 'Cancelled', 'Abd'].includes(status)) return status.toLowerCase();
+    // Finished statuses
+    if (['Finished', 'Ended', 'FT', 'AOT', 'After Over Time', 'Stumps'].includes(status)) return 'finished';
+
+    // Postponed/Cancelled/Interrupted statuses
+    if (['Postponed', 'Cancelled', 'Abd', 'Delay', 'Delayed', 'Rain Delay', 'Bad Light', 'Wet Outfield', 'Interrupted'].includes(status)) return 'postponed';
 
     if (['Not Started', 'NS'].includes(status)) return 'upcoming';
 
@@ -410,9 +488,8 @@ const mapMatchStatus = (status, isLive) => {
         // Basketball
         '1st Quarter', '2nd Quarter', '3rd Quarter', '4th Quarter',
         'Halftime', 'Overtime', 'In Progress', 'Brake',
-        // Cricket
-        'Innings Break', 'Tea Break', 'Lunch', 'Stumps',
-        'Rain Delay', 'Bad Light', 'Wet Outfield', 'Delay', 'Interrupted',
+        // Cricket (active play only)
+        'Innings Break', 'Tea Break', 'Lunch',
         // Football
         'HT', 'ET', 'Pen', 'Break',
         // General

@@ -71,20 +71,35 @@ export const mapMatchToUI = (match) => {
         status: match.status,
         displayStatus: match.displayStatus,
         league: match.league,
+        date: match.date || match.dateStart, // Pass date
+        time: match.time, // Pass time
+
+        // Detailed Info Objects
+        leagueInfo: match.leagueInfo,
+        venue: match.venue,
+
+        // Sport Specific Details
+        matchType: match.matchType,
+        toss: match.toss,
+        manOfMatch: match.manOfMatch,
 
         homeTeam: {
             name: match.homeTeam?.name || 'Unknown Team',
             logo: match.homeTeam?.logo,
             score: match.sport === 'cricket'
                 ? formatCricketScore(match.homeTeam?.score, match.scorecard, 'home')
-                : match.homeTeam?.score
+                : match.homeTeam?.score,
+            formation: match.homeTeam?.formation, // Pass formation
+            id: match.homeTeam?.id
         },
         awayTeam: {
             name: match.awayTeam?.name || 'Unknown Team',
             logo: match.awayTeam?.logo,
             score: match.sport === 'cricket'
                 ? formatCricketScore(match.awayTeam?.score, match.scorecard, 'away')
-                : match.awayTeam?.score
+                : match.awayTeam?.score,
+            formation: match.awayTeam?.formation, // Pass formation
+            id: match.awayTeam?.id
         },
         score: centerInfo,
         timer: timer,
@@ -117,10 +132,13 @@ export const mapMatchToUI = (match) => {
             if (typeof match.score.quarters === 'string') {
                 quarters = match.score.quarters.split(',').map(s => s.trim().split('-'));
             } else if (Array.isArray(match.score.quarters)) {
-                // Assume it might be an array of objects or strings, but handle gracefully
-                return match.basketballData || {};
+                // If it's the object format from backend { '1': [{...}], ... }
+                // We typically handle this in the component, but here we can pass it through
+                return match.score.quarters;
             }
             if (quarters.length === 0) return match.basketballData || {};
+
+            // Format for frontend consumption if string
             return {
                 ...match.basketballData,
                 home_q1: quarters[0]?.[0], away_q1: quarters[0]?.[1],

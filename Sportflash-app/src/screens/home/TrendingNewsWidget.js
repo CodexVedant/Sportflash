@@ -1,6 +1,7 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text } from 'react-native';
 import { theme } from '@utils/theme';
+import { styles } from '@utils/style/TrendingNewsWidget.styles';
 
 export default function TrendingNewsWidget() {
     return (
@@ -12,25 +13,3 @@ export default function TrendingNewsWidget() {
         </View>
     );
 }
-
-const styles = StyleSheet.create({
-    section: {
-        marginBottom: theme.spacing.xl,
-    },
-    sectionTitle: {
-        color: theme.colors.textMuted,
-        fontSize: theme.sizes.sm,
-        fontWeight: '600',
-        marginBottom: theme.spacing.md,
-        letterSpacing: 1,
-    },
-    newsPlaceholder: {
-        height: 150,
-        backgroundColor: theme.colors.surface,
-        borderRadius: theme.borderRadius.md,
-        justifyContent: 'center',
-        alignItems: 'center',
-        borderWidth: 1,
-        borderColor: 'rgba(255,255,255,0.05)',
-    },
-});

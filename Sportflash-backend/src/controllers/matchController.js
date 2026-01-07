@@ -63,6 +63,86 @@ exports.getMatches = async (req, res) => {
 };
 
 /**
+ * @desc    Get upcoming matches
+ * @route   GET /api/matches/upcoming
+ * @access  Public
+ */
+exports.getUpcomingMatches = async (req, res) => {
+    try {
+        const { sport, date, days = 7 } = req.query;
+
+        let upcomingMatches = [];
+        const targetDate = date || new Date().toISOString().split('T')[0];
+
+        if (sport) {
+            // Get upcoming matches for specific sport
+            const rawMatches = await allSportsApi.getFixturesBySport(sport, targetDate);
+
+            if (rawMatches) {
+                switch (sport.toLowerCase()) {
+                    case 'football':
+                    case 'soccer':
+                        upcomingMatches = rawMatches
+                            .map(mapFootballMatch)
+                            .filter(m => m !== null);
+                        break;
+                    case 'basketball':
+                        upcomingMatches = rawMatches
+                            .map(mapBasketballMatch)
+                            .filter(m => m !== null);
+                        break;
+                    case 'cricket':
+                        upcomingMatches = rawMatches
+                            .map(mapCricketMatch)
+                            .filter(m => m !== null);
+                        break;
+                }
+            }
+        } else {
+            // Get upcoming matches for all sports
+            const [footballFixtures, basketballFixtures, cricketFixtures] = await Promise.allSettled([
+                allSportsApi.getFootballFixtures({ date: targetDate }),
+                allSportsApi.getBasketballFixtures({ date: targetDate }),
+                allSportsApi.getCricketFixtures({ date: targetDate })
+            ]);
+
+            upcomingMatches = [
+                ...(footballFixtures.status === 'fulfilled' && footballFixtures.value
+                    ? footballFixtures.value.map(mapFootballMatch).filter(m => m !== null)
+                    : []),
+                ...(basketballFixtures.status === 'fulfilled' && basketballFixtures.value
+                    ? basketballFixtures.value.map(mapBasketballMatch).filter(m => m !== null)
+                    : []),
+                ...(cricketFixtures.status === 'fulfilled' && cricketFixtures.value
+                    ? cricketFixtures.value.map(mapCricketMatch).filter(m => m !== null)
+                    : [])
+            ];
+        }
+
+        // Sort by date/time
+        upcomingMatches.sort((a, b) => {
+            const dateA = new Date(a.date || a.startTime || 0);
+            const dateB = new Date(b.date || b.startTime || 0);
+            return dateA - dateB;
+        });
+
+        res.json({
+            success: true,
+            count: upcomingMatches.length,
+            date: targetDate,
+            data: upcomingMatches
+        });
+    } catch (error) {
+        console.error('Error in getUpcomingMatches:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error fetching upcoming matches',
+            error: error.message
+        });
+    }
+};
+
+/**
  * @desc    Get live matches
  * @route   GET /api/matches/live
  * @access  Public
@@ -389,20 +469,21 @@ exports.getStandings = async (req, res) => {
         }
 
         let standings = null;
+        let rawStandings = null;
 
         switch (sport?.toLowerCase()) {
             case 'football':
             case 'soccer':
-                const footballStandings = await allSportsApi.getFootballStandings(league);
-                standings = mapStandings(footballStandings, 'football');
+                rawStandings = await allSportsApi.getFootballStandings(league);
+                standings = mapStandings(rawStandings, 'football');
                 break;
             case 'basketball':
-                const basketballStandings = await allSportsApi.getBasketballStandings(league);
-                standings = mapStandings(basketballStandings, 'basketball');
+                rawStandings = await allSportsApi.getBasketballStandings(league);
+                standings = mapStandings(rawStandings, 'basketball');
                 break;
             case 'cricket':
-                const cricketStandings = await allSportsApi.getCricketStandings(league);
-                standings = mapStandings(cricketStandings, 'cricket');
+                rawStandings = await allSportsApi.getCricketStandings(league);
+                standings = mapStandings(rawStandings, 'cricket');
                 break;
             default:
                 return res.status(400).json({
@@ -411,9 +492,13 @@ exports.getStandings = async (req, res) => {
                 });
         }
 
+        if (!standings || standings.length === 0) {
+            // Quietly handle empty standings without logging to console/terminal
+        }
+
         res.json({
             success: true,
-            data: standings
+            data: standings || []
         });
     } catch (error) {
         console.error('Error in getStandings:', error);
@@ -473,6 +558,73 @@ exports.getHeadToHead = async (req, res) => {
         res.status(500).json({
             success: false,
             message: 'Error fetching H2H data',
+            error: error.message
+        });
+    }
+};
+
+/**
+ * @desc    Get match commentary (Cricket only)
+ * @route   GET /api/matches/:id/commentary
+ * @access  Public
+ */
+exports.getMatchCommentary = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { sport } = req.query;
+
+        if (!sport) {
+            return res.status(400).json({
+                success: false,
+                message: 'Sport parameter is required'
+            });
+        }
+
+        if (sport.toLowerCase() !== 'cricket') {
+            return res.status(400).json({
+                success: false,
+                message: 'Commentary is only available for cricket matches'
+            });
+        }
+
+        // Fetch match details with commentary
+        const matchData = await allSportsApi.getCricketCommentary(id);
+
+        if (!matchData || matchData.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: 'Match commentary not found'
+            });
+        }
+
+        // Find the specific match
+        const match = Array.isArray(matchData)
+            ? matchData.find(m => m.event_key === id)
+            : matchData;
+
+        if (!match) {
+            return res.status(404).json({
+                success: false,
+                message: 'Match not found'
+            });
+        }
+
+        // Extract commentary from the match data
+        const commentary = match.comments || null;
+
+        res.json({
+            success: true,
+            data: {
+                matchId: id,
+                commentary: commentary,
+                lastUpdated: new Date().toISOString()
+            }
+        });
+    } catch (error) {
+        console.error('Error in getMatchCommentary:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error fetching match commentary',
             error: error.message
         });
     }

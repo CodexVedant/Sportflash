@@ -80,7 +80,12 @@ userSchema.pre('save', async function () {
 
 // Compare password method
 userSchema.methods.comparePassword = async function (candidatePassword) {
-    return await bcrypt.compare(candidatePassword, this.password);
+    console.log('🔐 comparePassword called');
+    console.log('   Candidate:', candidatePassword);
+    console.log('   Stored:', this.password);
+    const result = await bcrypt.compare(candidatePassword, this.password);
+    console.log('   Result:', result);
+    return result;
 };
 
 // Remove sensitive data from JSON response

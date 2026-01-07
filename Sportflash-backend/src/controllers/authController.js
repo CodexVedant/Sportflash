@@ -15,21 +15,34 @@ exports.register = async (req, res) => {
     try {
         const { name, email, password } = req.body;
 
+        console.log('📝 Registration attempt for:', email);
+
+        // Normalize email
+        const normalizedEmail = email?.trim().toLowerCase();
+        console.log('   Normalized email:', normalizedEmail);
+
         // Check if user exists
-        const userExists = await User.findOne({ email });
+        const userExists = await User.findOne({ email: normalizedEmail });
         if (userExists) {
+            console.log('❌ User already exists:', email);
             return res.status(400).json({
                 success: false,
                 message: 'User already exists with this email'
             });
         }
 
+        console.log('✅ Creating new user:', email);
+        console.log('🔑 Password before hashing:', password);
+
         // Create user
         const user = await User.create({
             name,
-            email,
+            email: normalizedEmail,
             password
         });
+
+        console.log('✅ User created successfully:', email);
+        console.log('🔑 Password after hashing:', user.password);
 
         // Generate token
         const token = generateToken(user._id);
@@ -47,6 +60,7 @@ exports.register = async (req, res) => {
             }
         });
     } catch (error) {
+        console.error('🔴 Registration error:', error);
         res.status(500).json({
             success: false,
             message: error.message
@@ -61,8 +75,16 @@ exports.login = async (req, res) => {
     try {
         const { email, password } = req.body;
 
+        console.log('🔐 Login attempt for:', email);
+        console.log('   Raw email:', JSON.stringify(email));
+        console.log('   Raw password:', JSON.stringify(password));
+
+        // Normalize email
+        const normalizedEmail = email?.trim().toLowerCase();
+        console.log('   Normalized email:', normalizedEmail);
+
         // Validate email & password
-        if (!email || !password) {
+        if (!normalizedEmail || !password) {
             return res.status(400).json({
                 success: false,
                 message: 'Please provide email and password'
@@ -70,26 +92,35 @@ exports.login = async (req, res) => {
         }
 
         // Check for user (include password field)
-        const user = await User.findOne({ email }).select('+password');
+        const user = await User.findOne({ email: normalizedEmail }).select('+password');
         if (!user) {
+            console.log('❌ User not found:', email);
             return res.status(401).json({
                 success: false,
                 message: 'Invalid credentials'
             });
         }
+
+        console.log('✅ User found:', email);
+        console.log('🔑 Stored password hash:', user.password);
+        console.log('🔑 Provided password:', password);
 
         // Check if password matches
         const isMatch = await user.comparePassword(password);
+        console.log('🔍 Password match result:', isMatch);
+
         if (!isMatch) {
+            console.log('❌ Password mismatch for:', email);
             return res.status(401).json({
                 success: false,
                 message: 'Invalid credentials'
             });
         }
 
-        // Update last login
-        user.lastLogin = new Date();
-        await user.save();
+        console.log('✅ Login successful for:', email);
+
+        // Update last login (without triggering password re-hash)
+        await User.updateOne({ _id: user._id }, { lastLogin: new Date() });
 
         // Generate token
         const token = generateToken(user._id);
@@ -108,6 +139,7 @@ exports.login = async (req, res) => {
             }
         });
     } catch (error) {
+        console.error('🔴 Login error:', error);
         res.status(500).json({
             success: false,
             message: error.message

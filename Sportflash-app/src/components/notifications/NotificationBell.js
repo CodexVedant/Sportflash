@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Animated } from 'react-native';
+import { View, Text, TouchableOpacity, Animated } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { theme } from '@utils/theme';
+import { styles } from '@utils/style/NotificationBell.styles';
 
 export default function NotificationBell({ count = 0, onPress }) {
     const [scaleAnim] = useState(new Animated.Value(1));
@@ -47,29 +48,3 @@ export default function NotificationBell({ count = 0, onPress }) {
         </TouchableOpacity>
     );
 }
-
-const styles = StyleSheet.create({
-    container: {
-        position: 'relative',
-        padding: 8,
-    },
-    badge: {
-        position: 'absolute',
-        top: 4,
-        right: 4,
-        backgroundColor: '#EF4444',
-        borderRadius: 10,
-        minWidth: 18,
-        height: 18,
-        justifyContent: 'center',
-        alignItems: 'center',
-        paddingHorizontal: 4,
-        borderWidth: 2,
-        borderColor: theme.colors.background,
-    },
-    badgeText: {
-        fontSize: 10,
-        fontFamily: theme.fonts?.bold || 'System',
-        color: '#fff',
-    },
-});

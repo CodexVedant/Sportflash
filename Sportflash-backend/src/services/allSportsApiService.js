@@ -58,7 +58,7 @@ class AllSportsApiService {
         }
     }
 
-    // ==================== FOOTBALL METHODS ====================
+    // === FOOTBALL METHODS ===
 
     /**
      * Get football countries
@@ -104,7 +104,7 @@ class AllSportsApiService {
      * @param {string} leagueId - League ID
      */
     async getFootballStandings(leagueId) {
-        return await this.makeRequest('football', 'Standings', { league_id: leagueId });
+        return await this.makeRequest('football', 'Standings', { leagueId: leagueId });
     }
 
     /**
@@ -112,7 +112,7 @@ class AllSportsApiService {
      * @param {string} teamId - Team ID
      */
     async getFootballTeam(teamId) {
-        return await this.makeRequest('football', 'Teams', { team_id: teamId });
+        return await this.makeRequest('football', 'Teams', { teamId: teamId });
     }
 
     /**
@@ -132,7 +132,7 @@ class AllSportsApiService {
      * @param {string} leagueId - League ID
      */
     async getFootballTopScorers(leagueId) {
-        return await this.makeRequest('football', 'Topscorers', { league_id: leagueId });
+        return await this.makeRequest('football', 'Topscorers', { leagueId: leagueId });
     }
 
     /**
@@ -143,7 +143,7 @@ class AllSportsApiService {
         return await this.makeRequest('football', 'Players', { player_id: playerId });
     }
 
-    // ==================== BASKETBALL METHODS ====================
+    // === BASKETBALL METHODS ===
 
     /**
      * Get basketball countries
@@ -157,7 +157,7 @@ class AllSportsApiService {
      * @param {string} countryId - Optional country ID filter
      */
     async getBasketballLeagues(countryId = null) {
-        const params = countryId ? { country_id: countryId } : {};
+        const params = countryId ? { countryId: countryId } : {};
         return await this.makeRequest('basketball', 'Leagues', params);
     }
 
@@ -178,8 +178,8 @@ class AllSportsApiService {
         const params = {};
         if (date) params.from = date;
         if (date) params.to = date;
-        if (leagueId) params.league_id = leagueId;
-        if (teamId) params.team_id = teamId;
+        if (leagueId) params.leagueId = leagueId;
+        if (teamId) params.teamId = teamId;
 
         return await this.makeRequest('basketball', 'Fixtures', params);
     }
@@ -197,7 +197,7 @@ class AllSportsApiService {
      * @param {string} teamId - Team ID
      */
     async getBasketballTeam(teamId) {
-        return await this.makeRequest('basketball', 'Teams', { team_id: teamId });
+        return await this.makeRequest('basketball', 'Teams', { teamId: teamId });
     }
 
     /**
@@ -212,7 +212,7 @@ class AllSportsApiService {
         });
     }
 
-    // ==================== CRICKET METHODS ====================
+    // === CRICKET METHODS ===
 
     /**
      * Get cricket leagues
@@ -250,7 +250,7 @@ class AllSportsApiService {
      */
     async getCricketStandings(leagueId) {
         // Cricket API specific parameter naming
-        return await this.makeRequest('cricket', 'Standings', { league_id: leagueId });
+        return await this.makeRequest('cricket', 'Standings', { leagueId: leagueId });
     }
 
     /**
@@ -258,7 +258,7 @@ class AllSportsApiService {
      * @param {string} teamId - Team ID
      */
     async getCricketTeam(teamId) {
-        return await this.makeRequest('cricket', 'Teams', { team_id: teamId });
+        return await this.makeRequest('cricket', 'Teams', { teamId: teamId });
     }
 
     /**
@@ -273,7 +273,17 @@ class AllSportsApiService {
         });
     }
 
-    // ==================== UNIFIED METHODS ====================
+    /**
+     * Get cricket match commentary
+     * @param {string} matchId - Match event key
+     */
+    async getCricketCommentary(matchId) {
+        return await this.makeRequest('cricket', 'Livescore', {
+            match_id: matchId
+        });
+    }
+
+    // === UNIFIED METHODS ===
 
     /**
      * Get live scores for all sports

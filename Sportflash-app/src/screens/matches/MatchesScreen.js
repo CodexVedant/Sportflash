@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, SectionList } from 'react-native';
+import { View, Text, TouchableOpacity, SectionList } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { theme } from '@utils/theme';
 import MatchCard from '@components/match/MatchCard';
@@ -11,7 +11,8 @@ import { FilterPanel } from '@components/filter';
 import { NotificationBell, NotificationPanel } from '@components/notifications';
 import { useSelector } from 'react-redux';
 import TopBar from '@components/navigation/TopBar';
-import { useGetLiveMatchesQuery } from '@store/api/matchesApi';
+import { useGetLiveMatchesQuery, useGetUpcomingMatchesQuery } from '@store/api/matchesApi';
+import { styles } from '@utils/style/MatchesScreen.styles';
 
 export default function MatchesScreen({ navigation }) {
     const { user } = useSelector(state => state.auth);
@@ -27,9 +28,51 @@ export default function MatchesScreen({ navigation }) {
         dateRange: { start: null, end: null },
     });
 
-    // Fetch matches using RTK Query
-    const { data: allMatches = [], isLoading, error: apiError, refetch } = useGetLiveMatchesQuery();
-    const [filteredMatches, setFilteredMatches] = useState([]);
+    // Conditionally fetch based on active tab
+    const { data: liveMatches = [], isLoading: isLoadingLive, error: liveError, refetch: refetchLive } = useGetLiveMatchesQuery(
+        undefined,
+        { skip: activeTab !== 'Live' }
+    );
+
+    const { data: upcomingMatches = [], isLoading: isLoadingUpcoming, error: upcomingError, refetch: refetchUpcoming } = useGetUpcomingMatchesQuery(
+        { sport: activeSport === 'all' ? undefined : activeSport },
+        { skip: activeTab !== 'Upcoming' }
+    );
+
+    // Determine which data to use - memoized to prevent infinite loops
+    const allMatches = React.useMemo(() => {
+        return activeTab === 'Upcoming' ? upcomingMatches : liveMatches;
+    }, [activeTab, upcomingMatches, liveMatches]);
+
+    const isLoading = activeTab === 'Upcoming' ? isLoadingUpcoming : isLoadingLive;
+    const apiError = activeTab === 'Upcoming' ? upcomingError : liveError;
+    const refetch = activeTab === 'Upcoming' ? refetchUpcoming : refetchLive;
+
+    // Filter matches based on sport and status - use useMemo instead of useEffect
+    const filteredMatches = React.useMemo(() => {
+        let matches = [...allMatches];
+
+        // Filter by sport
+        if (activeSport !== 'all') {
+            matches = matches.filter(match => match.sport?.toLowerCase() === activeSport);
+        }
+
+        // Filter by status
+        if (activeTab === 'Live') {
+            matches = matches.filter(match => match.status === 'live');
+        } else if (activeTab === 'Upcoming') {
+            matches = matches.filter(match => match.status === 'upcoming');
+        } else if (activeTab === 'Results') {
+            matches = matches.filter(match => match.status === 'finished');
+        }
+
+        // Apply additional filters
+        if (filters.league !== 'all') {
+            matches = matches.filter(match => match.league?.toLowerCase().includes(filters.league.toLowerCase()));
+        }
+
+        return matches;
+    }, [allMatches, activeSport, activeTab, filters]);
 
     // Mock notifications
     const [notifications] = useState([
@@ -58,32 +101,6 @@ export default function MatchesScreen({ navigation }) {
     ];
 
     const STATUS_TABS = ['Live', 'Upcoming', 'Results'];
-
-    // Filter matches based on sport and status
-    useEffect(() => {
-        let matches = [...allMatches];
-
-        // Filter by sport
-        if (activeSport !== 'all') {
-            matches = matches.filter(match => match.sport?.toLowerCase() === activeSport);
-        }
-
-        // Filter by status
-        if (activeTab === 'Live') {
-            matches = matches.filter(match => match.status === 'live');
-        } else if (activeTab === 'Upcoming') {
-            matches = matches.filter(match => match.status === 'upcoming');
-        } else if (activeTab === 'Results') {
-            matches = matches.filter(match => match.status === 'finished');
-        }
-
-        // Apply additional filters
-        if (filters.league !== 'all') {
-            matches = matches.filter(match => match.league?.toLowerCase().includes(filters.league.toLowerCase()));
-        }
-
-        setFilteredMatches(matches);
-    }, [allMatches, activeSport, activeTab, filters]);
 
     const handleApplyFilters = (newFilters) => {
         setFilters(newFilters);
@@ -161,6 +178,12 @@ export default function MatchesScreen({ navigation }) {
                     <Text style={styles.headerTitle}>Matches</Text>
                 </View>
                 <View style={styles.headerActions}>
+                    <TouchableOpacity
+                        onPress={() => navigation.navigate('UpcomingMatches')}
+                        style={[styles.iconBtn, { marginRight: 8 }]}
+                    >
+                        <Ionicons name="calendar-outline" size={24} color={theme.colors.primary} />
+                    </TouchableOpacity>
                     <TouchableOpacity onPress={() => setFilterVisible(true)} style={styles.iconBtn}>
                         <Ionicons name="options-outline" size={24} color={theme.colors.text} />
                     </TouchableOpacity>
@@ -202,12 +225,14 @@ export default function MatchesScreen({ navigation }) {
                 <NetworkError onRetry={refetch} />
             ) : (
                 <SectionList
+                    style={styles.scrollContainer}
                     sections={groupedMatches}
                     keyExtractor={item => item._id}
                     renderItem={renderMatchItem}
                     renderSectionHeader={renderSectionHeader}
                     contentContainerStyle={styles.listContent}
                     stickySectionHeadersEnabled={true}
+                    showsVerticalScrollIndicator={false}
                     ListEmptyComponent={
                         <EmptyState
                             variant="noMatches"
@@ -248,82 +273,3 @@ export default function MatchesScreen({ navigation }) {
         </SafeAreaView>
     );
 }
-
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: theme.colors.background,
-    },
-    header: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        paddingHorizontal: theme.spacing.lg,
-        paddingVertical: theme.spacing.md,
-        borderBottomWidth: 1,
-        borderBottomColor: 'rgba(255,255,255,0.05)',
-    },
-    headerRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-    },
-    headerTitle: {
-        fontSize: theme.sizes.xl,
-        fontFamily: theme.fonts.display,
-        color: theme.colors.text,
-    },
-    headerActions: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 8,
-    },
-    iconBtn: {
-        padding: 8,
-    },
-    menuBtn: {
-        marginRight: 16,
-    },
-    tabsContainer: {
-        flexDirection: 'row',
-        padding: theme.spacing.md,
-        gap: 12,
-    },
-    tab: {
-        paddingVertical: 8,
-        paddingHorizontal: 16,
-        borderRadius: 20,
-        backgroundColor: 'rgba(255,255,255,0.05)',
-        borderWidth: 1,
-        borderColor: 'rgba(255,255,255,0.1)',
-    },
-    activeTab: {
-        backgroundColor: theme.colors.primary,
-        borderColor: theme.colors.primary,
-    },
-    tabText: {
-        color: theme.colors.textMuted,
-        fontFamily: theme.fonts.medium,
-    },
-    activeTabText: {
-        color: '#fff',
-    },
-    listContent: {
-        padding: theme.spacing.lg,
-        paddingBottom: 100,
-    },
-    sectionHeader: {
-        backgroundColor: theme.colors.surface,
-        paddingVertical: 8,
-        paddingHorizontal: 16,
-        marginBottom: 8,
-        borderRadius: 8,
-        borderLeftWidth: 4,
-        borderLeftColor: theme.colors.primary
-    },
-    sectionTitle: {
-        color: theme.colors.text,
-        fontWeight: 'bold',
-        fontSize: 14
-    }
-});
-

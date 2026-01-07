@@ -1,8 +1,9 @@
 import React from 'react';
-import { TouchableOpacity, StyleSheet } from 'react-native';
+import { TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { theme } from '@utils/theme';
+import { styles } from '@utils/style/BackButton.styles';
 
 const BackButton = ({
     color = theme.colors.text,
@@ -37,11 +38,4 @@ const BackButton = ({
         </TouchableOpacity>
     );
 };
-
-const styles = StyleSheet.create({
-    container: {
-        padding: 4, // Hit slop area
-    }
-});
-
 export default BackButton;

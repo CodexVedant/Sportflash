@@ -1,7 +1,8 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, Text, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { theme } from '@utils/theme';
 import { Ionicons } from '@expo/vector-icons';
+import { styles } from '@utils/style/Button.styles';
 
 export default function Button({
     title,
@@ -73,20 +74,3 @@ export default function Button({
         </TouchableOpacity>
     );
 }
-
-const styles = StyleSheet.create({
-    button: {
-        borderRadius: theme.borderRadius.md,
-        alignItems: 'center',
-        justifyContent: 'center',
-        flexDirection: 'row',
-    },
-    content: {
-        flexDirection: 'row',
-        alignItems: 'center',
-    },
-    text: {
-        fontFamily: theme.fonts.semiBold,
-        textAlign: 'center',
-    }
-});

@@ -1,7 +1,8 @@
 import React, { useEffect } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text } from 'react-native';
 import Animated, { useSharedValue, useAnimatedStyle, withRepeat, withTiming, withSequence } from 'react-native-reanimated';
 import { theme } from '@utils/theme';
+import { styles } from '@utils/style/LiveBadge.styles';
 
 export default function LiveBadge({ sport, status, style }) {
     const opacity = useSharedValue(0.5);
@@ -41,20 +42,3 @@ export default function LiveBadge({ sport, status, style }) {
         </View>
     );
 }
-
-const styles = StyleSheet.create({
-    badgeContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 6,
-    },
-    dot: {
-        width: 8,
-        height: 8,
-        borderRadius: 4,
-    },
-    statusText: {
-        fontSize: theme.sizes.xs,
-        fontWeight: 'bold',
-    },
-});

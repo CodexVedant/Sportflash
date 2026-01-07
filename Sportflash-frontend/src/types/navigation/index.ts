@@ -1,0 +1,24 @@
+export type RootStackParamList = {
+    Main: undefined;
+    Login: undefined;
+    Register: undefined;
+    MatchDetail: { match?: any; id?: string; sport?: string };
+    Series: { id: string; sport: string };
+    Following: undefined;
+    Bookmarks: undefined;
+    Settings: undefined;
+    LeagueDetails: { leagueId: string; sport?: string; name?: string; round?: string };
+    TeamProfile: { teamId?: string; teamName?: string; sport?: string; team?: any };
+    PlayerProfile: { playerId?: string; player?: any; sport?: string };
+    Notifications: undefined;
+    Preferences: undefined;
+    UpcomingMatches: { sport?: string; date?: string };
+    Home: undefined;
+    Matches: undefined;
+    BasketballMatch: undefined;
+    CricketMatch: undefined;
+    FootballMatch: undefined;
+    News: undefined;
+    NewsCategory: { category: string; };
+    NewsDetail: { article?: any; newsId?: string | number };
+};

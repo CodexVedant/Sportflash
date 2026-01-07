@@ -28,7 +28,26 @@ export const matchesApi = createApi({
             query: ({ sport, leagueId }) => `/matches/standings?sport=${sport}&league=${leagueId}`,
             transformResponse: (response) => response.data
         }),
+        getUpcomingMatches: builder.query({
+            query: ({ sport, date } = {}) => {
+                const params = new URLSearchParams();
+                if (sport) params.append('sport', sport);
+                if (date) params.append('date', date);
+                return `/matches/upcoming?${params.toString()}`;
+            },
+            transformResponse: (response) => response.data
+        }),
     }),
 });
 
+<<<<<<< HEAD
 export const { useGetLiveMatchesQuery, useGetUpcomingMatchesQuery, useGetMatchDetailsQuery, useGetMatchH2HQuery, useGetMatchStandingsQuery } = matchesApi;
+=======
+export const {
+    useGetLiveMatchesQuery,
+    useGetMatchDetailsQuery,
+    useGetMatchH2HQuery,
+    useGetMatchStandingsQuery,
+    useGetUpcomingMatchesQuery
+} = matchesApi;
+>>>>>>> 711d5bb17f38719156db49e0acc340a092b3ba46
