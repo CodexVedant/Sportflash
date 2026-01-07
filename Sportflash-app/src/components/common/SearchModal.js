@@ -3,7 +3,9 @@ import { View, Text, StyleSheet, Modal, TextInput, TouchableOpacity, ScrollView,
 import { BlurView } from 'expo-blur';
 import { Ionicons } from '@expo/vector-icons';
 import { theme } from '@utils/theme';
-import { useToast } from '@context/ToastContext';
+import { useDispatch } from 'react-redux';
+import { showToast } from '@store/actions/toastActions';
+// import { useToast } from '@context/ToastContext';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -12,7 +14,8 @@ export default function SearchModal({ visible, onClose }) {
     const [recentSearches, setRecentSearches] = useState([]);
     const [results, setResults] = useState([]);
     const [activeFilter, setActiveFilter] = useState('All');
-    const { showToast } = useToast();
+    // const { showToast } = useToast();
+    const dispatch = useDispatch();
     const { width, height } = useWindowDimensions();
 
     const isDesktop = width > 768;
@@ -81,7 +84,7 @@ export default function SearchModal({ visible, onClose }) {
     }, [query, activeFilter]);
 
     const handleSelect = async (item) => {
-        // showToast(`Selected: ${item.title}`);
+        // dispatch(showToast({ type: 'info', text1: 'Selected', text2: item.title }));
 
         let newRecent = [item.title, ...recentSearches.filter(r => r !== item.title)].slice(0, 5);
         setRecentSearches(newRecent);

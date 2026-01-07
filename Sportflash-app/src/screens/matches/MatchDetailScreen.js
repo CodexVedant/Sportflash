@@ -11,7 +11,8 @@ import Scorecard from '@components/match/Scorecard';
 import Commentary from '@components/match/Commentary';
 import H2HStats from '@components/match/H2HStats';
 import StandingsWidget from '@components/match/StandingsWidget';
-import { useToast } from '@context/ToastContext';
+// import { useToast } from '@context/ToastContext'; // Removed
+import { showToast } from '@store/actions/toastActions';
 import { useDispatch, useSelector } from 'react-redux';
 import { updateUserPreferences } from '@store/slices/authSlice';
 import socket from '@services/socket';
@@ -23,7 +24,7 @@ import { mapMatchToUI } from '@utils/matchMappers';
 export default function MatchDetailScreen({ navigation, route }) {
     const { match } = route.params || {};
     const [activeTab, setActiveTab] = useState('Scorecard');
-    const { showToast } = useToast();
+    // const { showToast } = useToast(); // Removed in favor of Redux
     const dispatch = useDispatch();
     const { user } = useSelector(state => state.auth);
     const { width } = useWindowDimensions();
@@ -82,7 +83,7 @@ export default function MatchDetailScreen({ navigation, route }) {
 
     const handleFollow = useCallback(async (teamName) => {
         if (!user) {
-            showToast('Please login to follow teams', 'info');
+            dispatch(showToast({ type: 'info', text1: 'Login Required', text2: 'Please login to follow teams' }));
             return;
         }
 
@@ -92,17 +93,17 @@ export default function MatchDetailScreen({ navigation, route }) {
 
             if (currentTeams.includes(teamName)) {
                 newTeams = currentTeams.filter(t => t !== teamName);
-                showToast(`Unfollowed ${teamName}`);
+                dispatch(showToast({ type: 'success', text1: 'Unfollowed', text2: `You unfollowed ${teamName}` }));
             } else {
                 newTeams = [...currentTeams, teamName];
-                showToast(`Following ${teamName}`);
+                dispatch(showToast({ type: 'success', text1: 'Following', text2: `You are now following ${teamName}` }));
             }
 
             await dispatch(updateUserPreferences({ favoriteTeams: newTeams })).unwrap();
         } catch (error) {
-            showToast('Failed to update favorites', 'error');
+            dispatch(showToast({ type: 'error', text1: 'Error', text2: 'Failed to update favorites' }));
         }
-    }, [user, dispatch, showToast]);
+    }, [user, dispatch]);
 
     const getSportColor = () => {
         switch (matchData.sport?.toLowerCase()) {

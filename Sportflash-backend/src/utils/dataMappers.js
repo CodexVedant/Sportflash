@@ -9,6 +9,12 @@
 const mapFootballMatch = (match) => {
     if (!match) return null;
 
+    // VALIDATION: Reject Cricket matches lurking in Football response
+    // Cricket matches have 'event_type' (ODI, T20) or 'event_home_rr'
+    if (match.event_type || match.event_home_rr) {
+        return null;
+    }
+
     return {
         _id: match.event_key,
         id: match.event_key,
@@ -101,6 +107,11 @@ const mapLineupPlayer = (p) => {
  */
 const mapBasketballMatch = (match) => {
     if (!match) return null;
+
+    // VALIDATION: Reject Cricket matches
+    if (match.event_type || match.event_home_rr) {
+        return null;
+    }
 
     // Format Quarters
     const quartersData = formatBasketballQuarters(match.scores);

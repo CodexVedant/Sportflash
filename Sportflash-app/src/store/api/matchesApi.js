@@ -13,6 +13,10 @@ export const matchesApi = createApi({
                 return response.data;
             }
         }),
+        getUpcomingMatches: builder.query({
+            query: () => '/matches/upcoming',
+            transformResponse: (response) => response.data
+        }),
         getMatchDetails: builder.query({
             query: (id) => `/matches/${id}`,
         }),
@@ -27,4 +31,4 @@ export const matchesApi = createApi({
     }),
 });
 
-export const { useGetLiveMatchesQuery, useGetMatchDetailsQuery, useGetMatchH2HQuery, useGetMatchStandingsQuery } = matchesApi;
+export const { useGetLiveMatchesQuery, useGetUpcomingMatchesQuery, useGetMatchDetailsQuery, useGetMatchH2HQuery, useGetMatchStandingsQuery } = matchesApi;

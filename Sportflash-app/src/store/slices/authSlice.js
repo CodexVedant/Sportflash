@@ -76,6 +76,11 @@ const authSlice = createSlice({
     reducers: {
         clearError: (state) => {
             state.error = null;
+        },
+        setPremiumStatus: (state, action) => {
+            if (state.user) {
+                state.user.isPremium = action.payload;
+            }
         }
     },
     extraReducers: (builder) => {
@@ -134,5 +139,5 @@ const authSlice = createSlice({
     },
 });
 
-export const { clearError } = authSlice.actions;
+export const { clearError, setPremiumStatus } = authSlice.actions;
 export default authSlice.reducer;

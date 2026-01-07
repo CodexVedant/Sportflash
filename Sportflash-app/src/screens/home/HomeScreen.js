@@ -9,8 +9,10 @@ import SearchModal from '@components/common/SearchModal';
 import { useGetLiveMatchesQuery } from '@store/api/matchesApi';
 import { useSelector, useDispatch } from 'react-redux';
 import { NotificationBell, NotificationPanel } from '@components/notifications';
+import NotificationOptionsModal from '@components/notifications/NotificationOptionsModal';
 import { initSocketListeners } from '@store/thunks/socketThunks';
 import { selectAllLiveMatches } from '@store/slices/liveMatchesSlice';
+import { updatePreference } from '@store/slices/notificationsSlice';
 import { mapMatchToUI } from '@utils/matchMappers';
 import LiveMatchesWidget from '@screens/home/LiveMatchesWidget';
 import TrendingNewsWidget from '@screens/home/TrendingNewsWidget';
@@ -32,7 +34,33 @@ export default function HomeScreen({ navigation }) {
 
     // Redux State - Single Source of Truth
     const allLiveMatches = useSelector(selectAllLiveMatches);
+    const preferences = useSelector(state => state.notifications.preferences || {}); // Get Preferences
     const { isLoading: isMatchesLoading } = useGetLiveMatchesQuery();
+
+    // Notification Logic (Modal & Selection)
+    const [modalVisible, setModalVisible] = useState(false);
+    const [selectedMatch, setSelectedMatch] = useState(null);
+
+    const handleBellPress = (match) => {
+        setSelectedMatch(match);
+        setModalVisible(true);
+    };
+
+    const handleSavePreferences = (newPrefs) => {
+        if (!selectedMatch) return;
+
+        // Update Redux state
+        const updates = {
+            [`match_${selectedMatch.id}`]: newPrefs.match,
+            [`series_${selectedMatch.league}`]: newPrefs.series,
+            [`team_${selectedMatch.homeTeam?.name}`]: newPrefs.homeTeam,
+            [`team_${selectedMatch.awayTeam?.name}`]: newPrefs.awayTeam,
+        };
+
+        Object.entries(updates).forEach(([key, value]) => {
+            dispatch(updatePreference({ key, value }));
+        });
+    };
 
     // Derived State (Filtering)
     const matches = React.useMemo(() => {
@@ -91,6 +119,16 @@ export default function HomeScreen({ navigation }) {
         <SafeAreaView style={styles.container}>
             <SearchModal visible={searchVisible} onClose={() => setSearchVisible(false)} />
             <Sidebar visible={sidebarVisible} onClose={() => setSidebarVisible(false)} />
+
+            {/* Notification Subscription Modal */}
+            <NotificationOptionsModal
+                visible={modalVisible}
+                match={selectedMatch}
+                onClose={() => setModalVisible(false)}
+                onSave={handleSavePreferences}
+                initialPreferences={preferences}
+            />
+
             <NotificationPanel
                 visible={notificationVisible}
                 onClose={() => setNotificationVisible(false)}
@@ -146,6 +184,8 @@ export default function HomeScreen({ navigation }) {
                     width={width}
                     navigation={navigation}
                     gap={theme.spacing.md}
+                    preferences={preferences} // Pass preferences so widget knows what's subscribed
+                    onNotificationPress={handleBellPress} // Pass handler
                     ListFooterComponent={
                         <>
                             {/* Trending News Placeholder */}

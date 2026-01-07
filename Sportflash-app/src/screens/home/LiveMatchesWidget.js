@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, ActivityIndicator, ScrollView } from 'react-nat
 import { theme } from '@utils/theme';
 import MatchCard from '@components/match/MatchCard';
 
-export default function LiveMatchesWidget({ matches, loading, width, navigation, gap, ListFooterComponent }) {
+export default function LiveMatchesWidget({ matches, loading, width, navigation, gap, ListFooterComponent, preferences = {}, onNotificationPress }) {
 
     // Logic for layout
     const isDesktop = width > 768;
@@ -81,6 +81,15 @@ export default function LiveMatchesWidget({ matches, loading, width, navigation,
                                     score={item.score}
                                     timer={item.timer}
                                     onPress={() => navigation.navigate('MatchDetail', { match: item })}
+                                    onNotificationPress={() => onNotificationPress(item)}
+                                    isSubscribed={
+                                        !!(
+                                            preferences[`match_${item.id}`] ||
+                                            preferences[`series_${item.league}`] ||
+                                            preferences[`team_${item.homeTeam?.name}`] ||
+                                            preferences[`team_${item.awayTeam?.name}`]
+                                        )
+                                    }
                                 />
                             </View>
                         );

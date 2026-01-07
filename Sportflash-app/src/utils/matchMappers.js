@@ -1,3 +1,52 @@
+const formatCricketScore = (teamScore, scorecard, teamType) => {
+    // If we have no scorecard, return original score
+    if (!scorecard || !teamScore) return teamScore;
+
+    try {
+        // Prepare simplified score for matching (remove overs)
+        const cleanScore = (s) => (s || '').split('(')[0].trim();
+        const currentScore = cleanScore(teamScore);
+
+        // Find which inning matches the current score
+        // Keys are usually "1", "2", "3", "4"
+        const inningKeys = Object.keys(scorecard).sort();
+
+        let matchedKey = null;
+        for (const key of inningKeys) {
+            const inning = scorecard[key];
+            if (!inning?.score) continue;
+
+            if (cleanScore(inning.score) === currentScore) {
+                matchedKey = key;
+                break;
+            }
+        }
+
+        if (matchedKey) {
+            // Heuristic: Innings 1 & 3 are one team, 2 & 4 are the other.
+            // If matchedKey is 1 or 3 -> This team owns 1 & 3.
+            // If matchedKey is 2 or 4 -> This team owns 2 & 4.
+            const isOdd = parseInt(matchedKey) % 2 !== 0;
+            const targetKeys = isOdd ? ['1', '3'] : ['2', '4'];
+
+            // Build combined string
+            const scores = [];
+            targetKeys.forEach(k => {
+                if (scorecard[k] && scorecard[k].score) {
+                    scores.push(scorecard[k].score);
+                }
+            });
+
+            if (scores.length > 0) {
+                return scores.join(' & ');
+            }
+        }
+    } catch (e) {
+        // Fallback silently
+    }
+    return teamScore;
+};
+
 export const mapMatchToUI = (match) => {
     let timer = match.currentMinute;
     let centerInfo = null;
@@ -22,15 +71,20 @@ export const mapMatchToUI = (match) => {
         status: match.status,
         displayStatus: match.displayStatus,
         league: match.league,
+
         homeTeam: {
             name: match.homeTeam?.name || 'Unknown Team',
             logo: match.homeTeam?.logo,
-            score: match.homeTeam?.score
+            score: match.sport === 'cricket'
+                ? formatCricketScore(match.homeTeam?.score, match.scorecard, 'home')
+                : match.homeTeam?.score
         },
         awayTeam: {
             name: match.awayTeam?.name || 'Unknown Team',
             logo: match.awayTeam?.logo,
-            score: match.awayTeam?.score
+            score: match.sport === 'cricket'
+                ? formatCricketScore(match.awayTeam?.score, match.scorecard, 'away')
+                : match.awayTeam?.score
         },
         score: centerInfo,
         timer: timer,

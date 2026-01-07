@@ -7,7 +7,7 @@ import Animated, { useSharedValue, useAnimatedStyle, withRepeat, withTiming, wit
 import LiveBadge from './LiveBadge';
 import TeamLogo from './TeamLogo';
 
-const MatchCard = ({ sport, status, displayStatus, league, homeTeam, awayTeam, score, timer, onPress }) => {
+const MatchCard = ({ sport, status, displayStatus, league, homeTeam, awayTeam, score, timer, onPress, onNotificationPress, isSubscribed }) => {
     if (!homeTeam || !awayTeam) return null;
 
     // Determine Colors based on Sport
@@ -35,18 +35,35 @@ const MatchCard = ({ sport, status, displayStatus, league, homeTeam, awayTeam, s
                 end={{ x: 1, y: 1 }}
                 style={[styles.card, { borderColor: sportColor }]}
             >
-                {/* Header: Live Badge + League */}
+                {/* Header: Live Badge + League + Notification Bell */}
                 <View style={styles.header}>
-                    {status === 'live' ? (
-                        <LiveBadge sport={sport} status={displayStatus} />
-                    ) : (
-                        <View style={styles.badgeContainer}>
-                            <Text style={[styles.statusText, { color: theme.colors.textMuted }]}>
-                                {status.toUpperCase()}
-                            </Text>
-                        </View>
+                    <View style={styles.headerLeft}>
+                        {status === 'live' ? (
+                            <LiveBadge sport={sport} status={displayStatus} />
+                        ) : (
+                            <View style={styles.badgeContainer}>
+                                <Text style={[styles.statusText, { color: theme.colors.textMuted }]}>
+                                    {status.toUpperCase()}
+                                </Text>
+                            </View>
+                        )}
+                        <Text style={styles.league} numberOfLines={1}>{league}</Text>
+                    </View>
+
+                    {/* Notification Bell */}
+                    {onNotificationPress && (
+                        <TouchableOpacity
+                            onPress={onNotificationPress}
+                            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                            style={styles.bellButton}
+                        >
+                            <Ionicons
+                                name={isSubscribed ? "notifications" : "notifications-outline"}
+                                size={20}
+                                color={isSubscribed ? theme.colors.warning : theme.colors.textMuted}
+                            />
+                        </TouchableOpacity>
                     )}
-                    <Text style={styles.league}>{league}</Text>
                 </View>
 
                 {/* Scores Area */}
@@ -106,7 +123,17 @@ const styles = StyleSheet.create({
     header: {
         flexDirection: 'row',
         justifyContent: 'space-between',
+        alignItems: 'center',
         marginBottom: theme.spacing.md,
+    },
+    headerLeft: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        flex: 1,
+        gap: 8,
+    },
+    bellButton: {
+        padding: 4,
     },
     badgeContainer: {
         flexDirection: 'row',
@@ -125,6 +152,7 @@ const styles = StyleSheet.create({
     league: {
         color: theme.colors.textMuted,
         fontSize: theme.sizes.xs,
+        flex: 1,
     },
     scoreContainer: {
         flexDirection: 'row',
@@ -154,7 +182,7 @@ const styles = StyleSheet.create({
     score: {
         color: theme.colors.text,
         fontSize: 14,
-        opacity: 0.8,
+        opacity: 0.9,
     },
     subText: {
         color: theme.colors.textMuted,

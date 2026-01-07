@@ -23,6 +23,8 @@ import PreferencesScreen from '@screens/profile/PreferencesScreen';
 import NewsDetailScreen from '@screens/news/NewsDetailScreen';
 import LeagueDetailsScreen from '@screens/league/LeagueDetailsScreen';
 import TeamProfileScreen from '@screens/team/TeamProfileScreen';
+import NotificationSettingsScreen from '@screens/profile/NotificationSettingsScreen';
+import PremiumScreen from '@screens/profile/PremiumScreen';
 
 import { theme } from '@utils/theme';
 
@@ -38,6 +40,8 @@ const NavigationTheme = {
         border: 'transparent',
     },
 };
+
+import StickyNotification from '@components/notifications/StickyNotification';
 
 export default function AppNavigator() {
     const dispatch = useDispatch();
@@ -80,9 +84,12 @@ export default function AppNavigator() {
                 <Stack.Screen name="TeamProfile" component={TeamProfileScreen} />
                 <Stack.Screen name="PlayerProfile" component={PlayerProfileScreen} />
                 <Stack.Screen name="Notifications" component={NotificationsScreen} />
+                <Stack.Screen name="NotificationSettings" component={NotificationSettingsScreen} />
+                <Stack.Screen name="Premium" component={PremiumScreen} />
                 <Stack.Screen name="Preferences" component={PreferencesScreen} />
                 <Stack.Screen name="NewsDetail" component={NewsDetailScreen} />
             </Stack.Navigator>
+            <StickyNotification />
         </NavigationContainer>
     );
 }

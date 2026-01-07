@@ -46,6 +46,20 @@ export default function SettingsScreen() {
                 </View>
 
                 <View style={styles.section}>
+                    <Text style={styles.sectionHeader}>Preferences</Text>
+                    <TouchableOpacity
+                        style={styles.row}
+                        onPress={() => navigation.navigate('NotificationSettings')}
+                    >
+                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                            <Ionicons name="notifications-outline" size={24} color={theme.colors.text} style={{ marginRight: 12 }} />
+                            <Text style={styles.rowLabel}>Notifications</Text>
+                        </View>
+                        <Ionicons name="chevron-forward" size={20} color={theme.colors.textMuted} />
+                    </TouchableOpacity>
+                </View>
+
+                <View style={styles.section}>
                     <Text style={styles.sectionHeader}>General</Text>
                     <TouchableOpacity style={styles.row}>
                         <Text style={styles.rowLabel}>Privacy Policy</Text>
