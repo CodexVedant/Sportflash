@@ -4,7 +4,31 @@ const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
 const { Server } = require('socket.io');
-require('dotenv').config();
+const path = require('path');
+const fs = require('fs');
+
+// Load environment variables from multiple possible locations
+// Priority: 1) /etc/secrets/.env (Render Secret Files)
+//          2) .env in project root
+//          3) .env in src directory
+const envPaths = [
+    '/etc/secrets/.env',
+    path.join(__dirname, '..', '.env'),
+    path.join(__dirname, '.env')
+];
+
+for (const envPath of envPaths) {
+    if (fs.existsSync(envPath)) {
+        console.log(`📄 Loading environment from: ${envPath}`);
+        require('dotenv').config({ path: envPath });
+        break;
+    }
+}
+
+// Fallback to default dotenv behavior if no file found
+if (!process.env.ALLSPORTS_API_KEY) {
+    require('dotenv').config();
+}
 
 const app = express();
 const server = http.createServer(app);

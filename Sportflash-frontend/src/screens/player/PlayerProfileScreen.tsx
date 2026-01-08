@@ -155,7 +155,7 @@ export default function PlayerProfileScreen({ route, navigation }: Props) {
     if (error && !player) {
         return (
             <View style={[styles.container, styles.center]}>
-                <Ionicons name="alert-circle-outline" size={64} color={theme.colors.error} />
+                <Ionicons name="alert-circle-outline" size={64} color={theme.colors.danger} />
                 <Text style={{ color: theme.colors.text, marginTop: 16, fontSize: 18, fontWeight: '600' }}>
                     Failed to load player
                 </Text>
@@ -237,7 +237,7 @@ export default function PlayerProfileScreen({ route, navigation }: Props) {
                     {/* Player Info Card */}
                     {playerData && (
                         <View style={{
-                            backgroundColor: theme.colors.card,
+                            backgroundColor: theme.colors.surface,
                             borderRadius: 12,
                             padding: 16,
                             marginBottom: 16
@@ -302,7 +302,7 @@ export default function PlayerProfileScreen({ route, navigation }: Props) {
                     <View style={{
                         marginTop: 16,
                         padding: 12,
-                        backgroundColor: theme.colors.card,
+                        backgroundColor: theme.colors.surface,
                         borderRadius: 8,
                         opacity: 0.7
                     }}>
