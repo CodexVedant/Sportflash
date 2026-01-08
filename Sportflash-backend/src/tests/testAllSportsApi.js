@@ -11,7 +11,6 @@ const {
     mapCricketMatch
 } = require('../utils/dataMappers');
 
-// Colors for console output
 const colors = {
     reset: '\x1b[0m',
     green: '\x1b[32m',
