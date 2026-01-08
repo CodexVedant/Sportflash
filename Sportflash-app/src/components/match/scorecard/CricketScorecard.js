@@ -14,6 +14,20 @@ const CricketScorecard = ({ match, onPlayerPress }) => {
             {/* Innings Tabs or List */}
             {Object.keys(scorecard).map((inningKey, index) => {
                 const inning = scorecard[inningKey];
+
+                // Helper to find ID from lineups, fallback to name-based ID
+                const getPlayerId = (name) => {
+                    if (!lineups) return `name_${name}`; // Fallback immediately
+                    const allPlayers = [
+                        ...(lineups.home?.startXI || []),
+                        ...(lineups.home?.substitutes || []),
+                        ...(lineups.away?.startXI || []),
+                        ...(lineups.away?.substitutes || [])
+                    ];
+                    const found = allPlayers.find(p => p.name === name);
+                    return (found && found.id) ? found.id : `name_${name}`;
+                };
+
                 return (
                     <View key={index} style={styles.inningContainer}>
                         <View style={styles.inningHeader}>
@@ -34,7 +48,11 @@ const CricketScorecard = ({ match, onPlayerPress }) => {
                             {inning.batting?.map((batter, idx) => (
                                 <View key={idx} style={styles.row}>
                                     <View style={{ flex: 2 }}>
-                                        <TouchableOpacity onPress={() => onPlayerPress && onPlayerPress({ name: batter.player, sport: 'cricket' })}>
+                                        <TouchableOpacity onPress={() => onPlayerPress && onPlayerPress({
+                                            name: batter.player,
+                                            id: getPlayerId(batter.player),
+                                            sport: 'cricket'
+                                        })}>
                                             <Text style={[styles.playerName, { color: theme.colors.primary }]}>{batter.player || '-'}</Text>
                                         </TouchableOpacity>
                                         <Text style={styles.dismissal}>{batter.status || ''}</Text>
@@ -61,7 +79,11 @@ const CricketScorecard = ({ match, onPlayerPress }) => {
                             {inning.bowling?.map((bowler, idx) => (
                                 <View key={idx} style={styles.row}>
                                     <View style={{ flex: 2 }}>
-                                        <TouchableOpacity onPress={() => onPlayerPress && onPlayerPress({ name: bowler.player, sport: 'cricket' })}>
+                                        <TouchableOpacity onPress={() => onPlayerPress && onPlayerPress({
+                                            name: bowler.player,
+                                            id: getPlayerId(bowler.player),
+                                            sport: 'cricket'
+                                        })}>
                                             <Text style={[styles.playerName, { color: theme.colors.primary }]}>{bowler.player || '-'}</Text>
                                         </TouchableOpacity>
                                     </View>

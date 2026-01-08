@@ -34,6 +34,14 @@ export const matchesApi = createApi({
             },
             transformResponse: (response) => response.data
         }),
+        getFollowedMatches: builder.mutation({
+            query: (data) => ({
+                url: '/matches/following',
+                method: 'POST',
+                body: data,
+            }),
+            transformResponse: (response) => response.data
+        }),
     }),
 });
 
@@ -42,5 +50,6 @@ export const {
     useGetMatchDetailsQuery,
     useGetMatchH2HQuery,
     useGetMatchStandingsQuery,
-    useGetUpcomingMatchesQuery
+    useGetUpcomingMatchesQuery,
+    useGetFollowedMatchesMutation
 } = matchesApi;

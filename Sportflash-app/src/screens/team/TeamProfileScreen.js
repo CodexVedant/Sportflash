@@ -4,14 +4,47 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { theme } from '@utils/theme';
 import { Ionicons } from '@expo/vector-icons';
 import { useGetTeamQuery } from '@store/api/teamsApi';
+import { useSelector, useDispatch } from 'react-redux';
+import { updateUserPreferences } from '@store/slices/authSlice';
 import { styles } from '@utils/style/TeamProfileScreen.styles';
 
 export default function TeamProfileScreen({ navigation, route }) {
     const { teamId, teamName, sport = 'football' } = route.params || {};
     const [activeTab, setActiveTab] = useState('Overview');
 
+    const dispatch = useDispatch();
+    const user = useSelector(state => state.auth.user);
+    const favoriteTeams = user?.preferences?.favoriteTeams || [];
+
+    // Check if following (handle both string IDs and objects) - robust comparison
+    const isFollowing = favoriteTeams.some(t => {
+        const idToCheck = typeof t === 'string' ? t : t.id;
+        return String(idToCheck) === String(teamId);
+    });
+
     // Fetch Team Details from API
     const { data: teamData, isLoading, error } = useGetTeamQuery({ id: teamId, sport });
+
+    const toggleFollow = () => {
+        let newFavorites;
+        if (isFollowing) {
+            // Unfollow
+            newFavorites = favoriteTeams.filter(t => {
+                const idToCheck = typeof t === 'string' ? t : t.id;
+                return String(idToCheck) !== String(teamId);
+            });
+        } else {
+            // Follow - save full object
+            const teamToSave = {
+                id: teamId,
+                name: teamData?.name || teamName || 'Unknown Team',
+                sport: sport,
+                logo: teamData?.logo
+            };
+            newFavorites = [...favoriteTeams, teamToSave];
+        }
+        dispatch(updateUserPreferences({ favoriteTeams: newFavorites }));
+    };
 
     const renderTabContent = () => {
         switch (activeTab) {
@@ -89,8 +122,12 @@ export default function TeamProfileScreen({ navigation, route }) {
                     <Ionicons name="arrow-back" size={24} color={theme.colors.text} />
                 </TouchableOpacity>
                 <Text style={styles.headerTitle} numberOfLines={1}>{teamData.name}</Text>
-                <TouchableOpacity>
-                    <Ionicons name="star-outline" size={24} color={theme.colors.text} />
+                <TouchableOpacity onPress={toggleFollow}>
+                    <Ionicons
+                        name={isFollowing ? "star" : "star-outline"}
+                        size={24}
+                        color={isFollowing ? "#FFD700" : theme.colors.text}
+                    />
                 </TouchableOpacity>
             </View>
 

@@ -52,15 +52,15 @@ export const styles = StyleSheet.create({
         marginBottom: 8,
     },
     teamName: {
-        color: theme.colors.text,
+        color: '#FFFFFF', // Force white for visibility on dark gradient
         fontWeight: 'bold',
         fontSize: 16, // theme.sizes.md,
         marginBottom: 4,
     },
     score: {
-        color: theme.colors.text,
+        color: '#FFFFFF', // Force white
         fontSize: 14,
-        opacity: 0.8,
+        opacity: 0.9,
     },
     subText: {
         color: theme.colors.textMuted,

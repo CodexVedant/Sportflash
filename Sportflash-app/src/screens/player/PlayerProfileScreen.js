@@ -6,21 +6,51 @@ import { Ionicons } from '@expo/vector-icons';
 import PlayerHeader from '@components/player/PlayerHeader';
 import PlayerStats from '@components/player/PlayerStats';
 import { useGetPlayerDetailsQuery } from '@store/api/playersApi';
+import { useSelector, useDispatch } from 'react-redux';
+import { updateUserPreferences } from '@store/slices/authSlice';
 import { styles } from '@utils/style/PlayerProfileScreen.styles';
 
 export default function PlayerProfileScreen({ route, navigation }) {
     // Get player from params
-    const { player: initialPlayer, playerId, sport = 'football' } = route.params || {};
+    const { player: initialPlayer, playerId, sport: paramSport } = route.params || {};
 
+    // Determine Sport: passed explicitly or inside player object or default
+    const sport = paramSport || initialPlayer?.sport || 'football';
+
+    // Determine ID: passed explicitly or inside player object
     // Determine ID: passed explicitly or inside player object
     const id = playerId || initialPlayer?.id;
 
-    const { data: playerData, isLoading, error } = useGetPlayerDetailsQuery({ id, sport }, { skip: !id });
+    const { data: playerData, isLoading, error, refetch } = useGetPlayerDetailsQuery(
+        { id, sport },
+        {
+            skip: !id,
+            refetchOnMountOrArgChange: true
+        }
+    );
+
+    // Force refetch on mount to ensure we get the latest backend enrichment
+    useEffect(() => {
+        if (id) refetch();
+    }, [id]);
 
     // Derive display data (API > Initial > Mock)
+    // Derived display data
     const player = playerData || initialPlayer;
 
-    const [isFollowing, setIsFollowing] = useState(false);
+    const dispatch = useDispatch();
+    const user = useSelector(state => state.auth.user);
+    const favoritePlayers = user?.preferences?.favoritePlayers || [];
+
+    // Check if following
+    const isInitiallyFollowing = favoritePlayers.some(p => p.id === id);
+
+    const [isFollowing, setIsFollowing] = useState(isInitiallyFollowing);
+
+    // Sync state if favorites change externally (or on first load)
+    useEffect(() => {
+        setIsFollowing(favoritePlayers.some(p => p.id === id));
+    }, [favoritePlayers, id]);
 
     // Map API stats to UI format
     const stats = playerData ? [
@@ -35,7 +65,27 @@ export default function PlayerProfileScreen({ route, navigation }) {
     const achievements = [];
 
     const toggleFollow = () => {
-        setIsFollowing(!isFollowing);
+        const newStatus = !isFollowing;
+        setIsFollowing(newStatus); // Optimistic UI update
+
+        let newFavorites;
+        if (newStatus) {
+            // Add to favorites
+            // Construct player object to save
+            const playerToSave = {
+                id: player.id || playerId,
+                name: player.name || player.player_name || 'Unknown Player',
+                sport: sport,
+                team: player.team?.name || player.team || '',
+                image: player.photo || player.image
+            };
+            newFavorites = [...favoritePlayers, playerToSave];
+        } else {
+            // Remove from favorites
+            newFavorites = favoritePlayers.filter(p => p.id !== id);
+        }
+
+        dispatch(updateUserPreferences({ favoritePlayers: newFavorites }));
     };
 
     if (isLoading && !player) {
@@ -57,7 +107,7 @@ export default function PlayerProfileScreen({ route, navigation }) {
     // Merge API data into player object passed to Header
     const displayPlayer = {
         ...player,
-        image: player.photo || player.image || 'https://api.dicebear.com/7.x/avataaars/png?seed=Player', // API field is 'photo', mock was 'image'
+        image: player.photo || player.image || 'https://api.dicebear.com/7.x/avataaars/png?seed=Player',
         team: player.team?.name || player.team,
         isFollowing: isFollowing
     };

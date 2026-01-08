@@ -11,7 +11,8 @@ const {
     getHeadToHead,
     getMatchCommentary,
     createMatch,
-    updateMatch
+    updateMatch,
+    getFollowedMatches
 } = require('../controllers/matchController');
 const { protect, authorize } = require('../middleware/auth');
 
@@ -19,6 +20,7 @@ const { protect, authorize } = require('../middleware/auth');
 router.get('/', getMatches);
 router.get('/live', getLiveMatches);
 router.get('/upcoming', getUpcomingMatches);
+router.post('/following', getFollowedMatches); // Using POST to send large array of teams
 router.get('/leagues', getLeagues);
 router.get('/standings', getStandings);
 router.get('/h2h', getHeadToHead);

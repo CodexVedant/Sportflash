@@ -45,8 +45,17 @@ export default function MatchDetailScreen({ navigation, route }) {
     const homeScore = matchData.homeTeam?.score || '0';
     const awayScore = matchData.awayTeam?.score || '0';
     const timer = matchData.timer || '';
-    const isFollowingHome = user?.preferences?.favoriteTeams?.includes(matchData.homeTeam?.name);
-    const isFollowingAway = user?.preferences?.favoriteTeams?.includes(matchData.awayTeam?.name);
+    const isFollowingHome = user?.preferences?.favoriteTeams?.some(t => {
+        const tId = typeof t === 'string' ? t : t.id;
+        const hId = matchData.homeTeam?.id;
+        // Fallback to name match if ID missing (legacy)
+        return String(tId) === String(hId) || (typeof t === 'string' && t === matchData.homeTeam?.name) || t.name === matchData.homeTeam?.name;
+    });
+    const isFollowingAway = user?.preferences?.favoriteTeams?.some(t => {
+        const tId = typeof t === 'string' ? t : t.id;
+        const aId = matchData.awayTeam?.id;
+        return String(tId) === String(aId) || (typeof t === 'string' && t === matchData.awayTeam?.name) || t.name === matchData.awayTeam?.name;
+    });
 
     // Initial Fetch (if needed, though HomeScreen likely fetched it)
     const { refetch } = useGetLiveMatchesQuery();
@@ -89,22 +98,43 @@ export default function MatchDetailScreen({ navigation, route }) {
         }
 
         try {
-            let currentTeams = user.preferences?.favoriteTeams || [];
-            let newTeams;
+            const currentTeams = user.preferences?.favoriteTeams || [];
+            // Identify which team is being toggled
+            const isHome = teamName === matchData.homeTeam?.name;
+            const team = isHome ? matchData.homeTeam : matchData.awayTeam;
 
-            if (currentTeams.includes(teamName)) {
-                newTeams = currentTeams.filter(t => t !== teamName);
+            // Check if following
+            const isFollowing = currentTeams.some(t => {
+                const tId = typeof t === 'string' ? t : t.id;
+                return String(tId) === String(team.id) || (typeof t === 'string' && t === teamName) || t.name === teamName;
+            });
+
+            let newTeams;
+            if (isFollowing) {
+                // Unfollow
+                newTeams = currentTeams.filter(t => {
+                    const tId = typeof t === 'string' ? t : t.id;
+                    return String(tId) !== String(team.id) && t !== teamName && t.name !== teamName;
+                });
                 dispatch(showToast({ type: 'success', text1: 'Unfollowed', text2: `You unfollowed ${teamName}` }));
             } else {
-                newTeams = [...currentTeams, teamName];
+                // Follow (Save Object)
+                const teamToSave = {
+                    id: team.id,
+                    name: team.name || teamName,
+                    sport: matchData.sport,
+                    logo: team.logo
+                };
+                newTeams = [...currentTeams, teamToSave];
                 dispatch(showToast({ type: 'success', text1: 'Following', text2: `You are now following ${teamName}` }));
             }
 
             await dispatch(updateUserPreferences({ favoriteTeams: newTeams })).unwrap();
         } catch (error) {
+            console.error('Follow Error:', error);
             dispatch(showToast({ type: 'error', text1: 'Error', text2: 'Failed to update favorites' }));
         }
-    }, [user, dispatch]);
+    }, [user, dispatch, matchData]);
 
     const getSportColor = () => {
         switch (matchData.sport?.toLowerCase()) {
@@ -135,7 +165,14 @@ export default function MatchDetailScreen({ navigation, route }) {
                 return (
                     <Scorecard
                         match={matchData}
-                        onPlayerPress={(player) => navigation.navigate('PlayerProfile', { player })}
+                        onPlayerPress={(player) => {
+                            dispatch(showToast({
+                                type: 'info',
+                                text1: 'Debug Navigation',
+                                text2: `ID: ${player.id} | Sport: ${player.sport}`
+                            }));
+                            navigation.navigate('PlayerProfile', { player });
+                        }}
                     />
                 );
             case 'H2H':

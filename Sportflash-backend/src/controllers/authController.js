@@ -171,12 +171,19 @@ exports.getMe = async (req, res) => {
 // @access  Private
 exports.updatePreferences = async (req, res) => {
     try {
-        const { favoriteTeams, favoriteSports, notifications } = req.body;
+        const { favoriteTeams, favoriteSports, favoritePlayers, notifications } = req.body;
 
         const user = await User.findById(req.user.id);
 
-        if (favoriteTeams) user.preferences.favoriteTeams = favoriteTeams;
+        if (favoriteTeams) {
+            // Sanitize: convert legacy string IDs to objects
+            user.preferences.favoriteTeams = favoriteTeams.map(t => {
+                if (typeof t === 'string') return { id: t };
+                return t;
+            });
+        }
         if (favoriteSports) user.preferences.favoriteSports = favoriteSports;
+        if (favoritePlayers) user.preferences.favoritePlayers = favoritePlayers;
         if (notifications !== undefined) user.preferences.notifications = notifications;
 
         await user.save();
@@ -186,6 +193,7 @@ exports.updatePreferences = async (req, res) => {
             data: user
         });
     } catch (error) {
+        console.error('Error updating preferences:', error);
         res.status(500).json({
             success: false,
             message: error.message

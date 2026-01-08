@@ -24,7 +24,14 @@ export const usersApi = createApi({
                 body: data,
             }),
         }),
+        updatePreferences: builder.mutation({
+            query: (data) => ({
+                url: '/auth/preferences',
+                method: 'PUT',
+                body: data,
+            }),
+        }),
     }),
 });
 
-export const { useGetUserProfileQuery, useUpdateProfileMutation } = usersApi;
+export const { useGetUserProfileQuery, useUpdateProfileMutation, useUpdatePreferencesMutation } = usersApi;

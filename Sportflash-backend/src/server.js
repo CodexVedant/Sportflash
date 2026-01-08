@@ -1,5 +1,6 @@
 const express = require('express');
 const http = require('http');
+// Restart Trigger 9
 const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
@@ -27,142 +28,45 @@ const { mapFootballMatch,
 // ==================== LIVE SCORE FETCHING ====================
 
 /**
- * Fetch Football Live Scores from AllSportsAPI
- */
-const fetchFootballScores = async () => {
-    console.log('⚽ Fetching football live scores...');
-
-    try {
-        const matches = await allSportsApi.getFootballLiveScores();
-
-        if (matches && matches.length > 0) {
-            // Map to unified format
-            const mappedMatches = matches.map(mapFootballMatch).filter(m => m !== null);
-
-            // Broadcast global list update
-            io.emit('football_update', mappedMatches);
-
-            // Broadcast specific match updates to rooms
-            mappedMatches.forEach(match => {
-                if (match?.id) {
-                    io.to(`match_${match.id}`).emit('score_update', match);
-                }
-            });
-
-            console.log(`✅ Football scores updated: ${mappedMatches.length} matches`);
-            return mappedMatches;
-        } else {
-            console.log('ℹ️  No live football matches at the moment');
-            io.emit('football_update', []);
-            return [];
-        }
-    } catch (error) {
-        console.error('❌ Error fetching football scores:', error.message);
-        return null;
-    }
-};
-
-/**
- * Fetch Basketball Live Scores from AllSportsAPI
- */
-const fetchBasketballScores = async () => {
-    console.log('🏀 Fetching basketball live scores...');
-
-    try {
-        const matches = await allSportsApi.getBasketballLiveScores();
-
-        if (matches && matches.length > 0) {
-            // Map to unified format
-            const mappedMatches = matches.map(mapBasketballMatch).filter(m => m !== null);
-
-            // Broadcast global list update
-            io.emit('basketball_update', mappedMatches);
-
-            // Broadcast specific match updates to rooms
-            mappedMatches.forEach(match => {
-                if (match?.id) {
-                    io.to(`match_${match.id}`).emit('score_update', match);
-                }
-            });
-
-            console.log(`✅ Basketball scores updated: ${mappedMatches.length} games`);
-            return mappedMatches;
-        } else {
-            console.log('ℹ️  No live basketball games at the moment');
-            io.emit('basketball_update', []);
-            return [];
-        }
-    } catch (error) {
-        console.error('❌ Error fetching basketball scores:', error.message);
-        return null;
-    }
-};
-
-/**
- * Fetch Cricket Live Scores from AllSportsAPI
- */
-const fetchCricketScores = async () => {
-    console.log('🏏 Fetching cricket live scores...');
-
-    try {
-        const matches = await allSportsApi.getCricketLiveScores();
-
-        if (matches && matches.length > 0) {
-            // Map to unified format
-            const mappedMatches = matches.map(mapCricketMatch).filter(m => m !== null);
-
-            // Broadcast global list update
-            io.emit('cricket_update', mappedMatches);
-
-            // Broadcast specific match updates to rooms
-            mappedMatches.forEach(match => {
-                if (match?.id) {
-                    io.to(`match_${match.id}`).emit('score_update', match);
-                }
-            });
-
-            console.log(`✅ Cricket scores updated: ${mappedMatches.length} matches`);
-            return mappedMatches;
-        } else {
-            console.log('ℹ️  No live cricket matches at the moment');
-            io.emit('cricket_update', []);
-            return [];
-        }
-    } catch (error) {
-        console.error('❌ Error fetching cricket scores:', error.message);
-        return null;
-    }
-};
-
-/**
- * Fetch all live scores
+ * Fetch All Live Scores from AllSportsAPI
  */
 const fetchAllLiveScores = async () => {
     console.log('\n🔄 ========== Fetching All Live Scores ==========');
 
     try {
-        // Fetch all sports in parallel
-        const [cricket, football, basketball] = await Promise.allSettled([
-            fetchCricketScores(),
-            fetchFootballScores(),
-            fetchBasketballScores()
-        ]);
+        const allScores = await allSportsApi.getAllLiveScores();
 
-        // Combine all scores
-        const allScores = {
-            cricket: cricket.status === 'fulfilled' ? cricket.value : null,
-            football: football.status === 'fulfilled' ? football.value : null,
-            basketball: basketball.status === 'fulfilled' ? basketball.value : null,
-            timestamp: new Date().toISOString()
+        const mappedScores = {
+            football: (allScores.football || []).map(mapFootballMatch).filter(m => m !== null),
+            basketball: (allScores.basketball || []).map(mapBasketballMatch).filter(m => m !== null),
+            cricket: (allScores.cricket || []).map(mapCricketMatch).filter(m => m !== null),
         };
 
-        // Broadcast combined scores
-        io.emit('all_scores_update', allScores);
-        console.log('✅ All scores broadcasted successfully');
-        console.log(`📊 Total matches: ${(allScores.cricket?.length || 0) +
-            (allScores.football?.length || 0) +
-            (allScores.basketball?.length || 0)
-            }`);
+        if (mappedScores.football.length > 0) {
+            io.emit('football_update', mappedScores.football);
+            console.log(`✅ Broadcasted ${mappedScores.football.length} Football matches`);
+        }
+        if (mappedScores.basketball.length > 0) {
+            io.emit('basketball_update', mappedScores.basketball);
+            console.log(`✅ Broadcasted ${mappedScores.basketball.length} Basketball matches`);
+        }
+        if (mappedScores.cricket.length > 0) {
+            io.emit('cricket_update', mappedScores.cricket);
+            console.log(`✅ Broadcasted ${mappedScores.cricket.length} Cricket matches`);
+        }
+
+        // Unified broadcast
+        io.emit('all_scores_update', {
+            football: mappedScores.football,
+            basketball: mappedScores.basketball,
+            cricket: mappedScores.cricket,
+            timestamp: new Date().toISOString()
+        });
+
+        const total = mappedScores.football.length + mappedScores.basketball.length + mappedScores.cricket.length;
+        if (total === 0) console.log('ℹ️  No live matches at the moment');
+
+        console.log(`📊 Stats: ⚽ ${mappedScores.football.length} | 🏀 ${mappedScores.basketball.length} | 🏏 ${mappedScores.cricket.length}`);
         console.log('='.repeat(50) + '\n');
 
     } catch (error) {
@@ -189,6 +93,18 @@ app.use(cors({
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan('dev'));
+
+// Global Request Logger
+app.use((req, res, next) => {
+    const fs = require('fs');
+    const path = require('path');
+    const logFile = path.resolve('debug_requests.log');
+    const msg = `[${new Date().toISOString()}] ${req.method} ${req.url}\n`;
+    try {
+        fs.appendFileSync(logFile, msg);
+    } catch (e) { }
+    next();
+});
 
 // Make io accessible to routes
 app.set('io', io);

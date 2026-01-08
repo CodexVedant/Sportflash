@@ -31,11 +31,21 @@ const userSchema = new mongoose.Schema({
     },
     preferences: {
         favoriteTeams: [{
-            type: String
+            id: String,
+            name: String,
+            sport: String,
+            logo: String
         }],
         favoriteSports: [{
             type: String,
             enum: ['cricket', 'football', 'basketball']
+        }],
+        favoritePlayers: [{
+            id: String,
+            name: String,
+            sport: String,
+            team: String,
+            image: String
         }],
         notifications: {
             type: Boolean,

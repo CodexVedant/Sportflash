@@ -1,0 +1,26 @@
+[2026-01-08T13:46:07.723Z] 📢 getPlayer called for ID: name_Afif Hossain, Sport: cricket
+[2026-01-08T13:46:07.725Z] ⚠️ ID missing. Performing fallback search for name: Afif Hossain
+[2026-01-08T13:46:07.726Z] 🔍 Enriching image for [Afif Hossain] via CricketData API...
+[2026-01-08T13:46:08.753Z]    -> CricAPI Status: success, Found: 1
+[2026-01-08T13:46:08.755Z]    -> Match found: Afif Hossain, Image: undefined
+[2026-01-08T13:46:08.757Z]    -> ⚠️ Player found but no image.
+[2026-01-08T13:46:18.197Z] 📢 getPlayer called for ID: name_Afif Hossain, Sport: cricket
+[2026-01-08T13:46:18.198Z] ⚠️ ID missing. Performing fallback search for name: Afif Hossain
+[2026-01-08T13:46:18.200Z] 🔍 Enriching image for [Afif Hossain] via CricketData API...
+[2026-01-08T13:46:19.094Z]    -> CricAPI Status: success, Found: 1
+[2026-01-08T13:46:19.095Z]    -> Match found: Afif Hossain, Image: undefined
+[2026-01-08T13:46:19.095Z]    -> ⚠️ Player found but no image.
+[2026-01-08T13:46:26.420Z] 📢 getPlayer called for ID: name_Parvez Hossain Emon, Sport: cricket
+[2026-01-08T13:46:26.422Z] ⚠️ ID missing. Performing fallback search for name: Parvez Hossain Emon
+[2026-01-08T13:46:26.423Z] 🔍 Enriching image for [Parvez Hossain Emon] via CricketData API...
+[2026-01-08T13:46:28.067Z]    -> CricAPI Status: success, Found: 1
+[2026-01-08T13:46:28.068Z]    -> Match found: Parvez Hossain Emon, Image: undefined
+[2026-01-08T13:46:28.068Z]    -> ⚠️ Player found but no image.
+[2026-01-08T13:48:58.550Z] 📢 getPlayer called for ID: name_Afif Hossain, Sport: cricket
+[2026-01-08T13:48:58.551Z] ⚠️ ID missing. Performing fallback search for name: Afif Hossain
+[2026-01-08T13:48:58.552Z] 🔍 Enriching image for [Afif Hossain] via CricketData API...
+[2026-01-08T13:48:59.847Z]    -> CricAPI Status: success, Found: 1
+[2026-01-08T13:48:59.848Z]    -> Match found: Afif Hossain, Keys: id, name, country
+[2026-01-08T13:48:59.848Z]    -> ⚠️ Player found but no image.
+[2026-01-08T13:48:59.849Z] 🔍 Enriching image for [Afif Hossain] via Wikipedia...
+[2026-01-08T13:49:00.497Z]    -> Wiki Error: Request failed with status code 403

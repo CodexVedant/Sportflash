@@ -93,6 +93,10 @@ exports.getUpcomingMatches = async (req, res) => {
                     allSportsApi.getCricketFixtures({ date: targetDate })
                 ]);
 
+                if (football.status === 'rejected') console.error(`❌ Football fetch failed for ${targetDate}:`, football.reason.message);
+                if (basketball.status === 'rejected') console.error(`❌ Basketball fetch failed for ${targetDate}:`, basketball.reason.message);
+                if (cricket.status === 'rejected') console.error(`❌ Cricket fetch failed for ${targetDate}:`, cricket.reason.message);
+
                 return [
                     ...(football.status === 'fulfilled' && football.value ? football.value.map(mapFootballMatch).filter(m => m !== null) : []),
                     ...(basketball.status === 'fulfilled' && basketball.value ? basketball.value.map(mapBasketballMatch).filter(m => m !== null) : []),
@@ -108,15 +112,29 @@ exports.getUpcomingMatches = async (req, res) => {
         } else {
             // Case 2: Date Range (Used by NotificationSettingsScreen)
             const today = new Date();
+            console.log(`📅 Fetching upcoming matches for ${days} days starting ${today.toISOString().split('T')[0]}`);
+
             for (let i = 0; i < parseInt(days); i++) {
                 const d = new Date(today);
                 d.setDate(d.getDate() + i);
                 const dateStr = d.toISOString().split('T')[0];
 
                 const matches = await fetchForDate(dateStr);
+                console.log(`   - Date ${dateStr}: Found ${matches.length} matches (before filter)`);
                 upcomingMatches.push(...matches);
             }
         }
+
+        // Deduplicate matches (API might return overlapping results for date ranges)
+        const uniqueMatches = [];
+        const seenIds = new Set();
+        for (const m of upcomingMatches) {
+            if (!seenIds.has(m.id)) {
+                seenIds.add(m.id);
+                uniqueMatches.push(m);
+            }
+        }
+        upcomingMatches = uniqueMatches;
 
         // Sort by date/time
         upcomingMatches.sort((a, b) => {
@@ -127,6 +145,7 @@ exports.getUpcomingMatches = async (req, res) => {
 
         // Filter only upcoming
         upcomingMatches = upcomingMatches.filter(m => m.status === 'upcoming' || m.status === 'Not Started');
+        console.log(`📤 getUpcomingMatches: Returning ${upcomingMatches.length} valid upcoming matches`);
 
         res.json({
             success: true,
@@ -202,6 +221,178 @@ exports.getLiveMatches = async (req, res) => {
             message: 'Error fetching live matches',
             error: error.message
         });
+    }
+};
+
+/**
+ * @desc    Get matches by sport
+ * @route   GET /api/matches/sport/:sport
+ * @access  Public
+ */
+/**
+ * @desc    Get matches for followed teams
+ * @route   POST /api/matches/following
+ * @access  Private (but we rely on body param for simplicity in this public API style)
+ */
+exports.getFollowedMatches = async (req, res) => {
+    try {
+        const { teams = [], players = [] } = req.body;
+        const days = 14; // Fetch next 14 days
+
+        if (teams.length === 0 && players.length === 0) {
+            return res.json({ success: true, count: 0, data: [] });
+        }
+
+        const today = new Date().toISOString().split('T')[0];
+        const futureDate = new Date();
+        futureDate.setDate(futureDate.getDate() + days);
+        const toDate = futureDate.toISOString().split('T')[0];
+
+        // Group by sport to optimize fetching if we were to broadcast, but here 
+        // we might just iterate.
+        // Given AllSportsAPI structure, we must make 1 API call per team if we want robust filtering,
+        // OR filtering from Date Range.
+        // Let's try Parallel fetching by Team ID for precision.
+
+        // However, 'players' usually don't have 'matches' endpoint directly easily.
+        // We will assume 'players' belong to a 'team' and we might want to fetch that team's matches?
+        // Or if the user follows a player, they want to see games where that player plays.
+        // For now, let's focus on TEAMS. Players-following usually implies following their team visually.
+
+        // Process Teams AND Players
+        console.log(`🔍 getFollowedMatches: Processing ${teams.length} teams and ${players.length} players`);
+
+        // Extract teams from followed players
+        const playerTeams = players
+            .filter(p => p.team && p.team.id)
+            .map(p => ({
+                id: p.team.id,
+                name: p.team.name,
+                sport: p.sport || 'football' // Fallback or inferred
+            }));
+
+        // Combine unique teams
+        const allTargetTeams = [...teams, ...playerTeams];
+        // Remove duplicates by ID
+        const uniqueTeams = Array.from(new Map(allTargetTeams.map(item => [String(item.id), item])).values());
+
+        console.log(`   - Total unique teams to fetch: ${uniqueTeams.length}`);
+
+        // OPTIMIZATION: Pre-fetch Live Matches for unique sports to avoid N API calls
+        const uniqueSports = [...new Set(uniqueTeams.map(t => t.sport?.toLowerCase()))];
+        const liveMatchesBySport = {};
+
+        await Promise.all(uniqueSports.map(async (sport) => {
+            if (!sport) return;
+            try {
+                let liveRaw = [];
+                if (['football', 'soccer'].includes(sport)) {
+                    liveRaw = await allSportsApi.getFootballLiveScores();
+                    liveMatchesBySport[sport] = (liveRaw || []).map(mapFootballMatch);
+                } else if (sport === 'basketball') {
+                    liveRaw = await allSportsApi.getBasketballLiveScores();
+                    liveMatchesBySport[sport] = (liveRaw || []).map(mapBasketballMatch);
+                } else if (sport === 'cricket') {
+                    liveRaw = await allSportsApi.getCricketLiveScores();
+                    liveMatchesBySport[sport] = (liveRaw || []).map(mapCricketMatch);
+                }
+                console.log(`   - Pre-fetched ${liveMatchesBySport[sport]?.length || 0} LIVE matches for ${sport}`);
+            } catch (e) {
+                console.error(`   - Failed to fetch live matches for ${sport}:`, e.message);
+            }
+        }));
+
+        const promises = uniqueTeams.map(async (team) => {
+            if (!team.id || !team.sport) return [];
+
+            try {
+                const params = { from: today, to: toDate, teamId: team.id };
+                console.log(`   - Fetching for team ${team.name} (ID: ${team.id}, Sport: ${team.sport})...`);
+
+                let matches = [];
+
+                switch (team.sport.toLowerCase()) {
+                    case 'football': case 'soccer':
+                        let fParams = { ...params };
+                        // Football sometimes needs league_id if team_id not enough? No, team_id should work.
+                        const fRaw = await allSportsApi.getFootballFixtures(fParams);
+                        matches = (fRaw || []).map(mapFootballMatch);
+                        break;
+                    case 'basketball':
+                        const bRaw = await allSportsApi.getBasketballFixtures(params);
+                        matches = (bRaw || []).map(mapBasketballMatch);
+                        break;
+                    case 'cricket':
+                        const cRaw = await allSportsApi.getCricketFixtures(params);
+                        matches = (cRaw || []).map(mapCricketMatch);
+                        break;
+                }
+
+                // 2. Filter Pre-fetched Live Matches for this team
+                const sportLive = liveMatchesBySport[team.sport.toLowerCase()] || [];
+                const teamLive = sportLive.filter(m =>
+                    m && (String(m.homeTeam?.id) === String(team.id) || String(m.awayTeam?.id) === String(team.id))
+                );
+
+                if (teamLive.length > 0) {
+                    console.log(`     -> Merging ${teamLive.length} LIVE matches for ${team.name}`);
+                    // Merge: Live Matches FIRST
+                    // Deduplicate: If an ID exists in both, prefer LIVE version
+                    const liveIds = new Set(teamLive.map(m => m.id));
+                    matches = matches.filter(m => !liveIds.has(m.id)); // Remove scheduled version
+                    matches = [...teamLive, ...matches]; // Prepend Live
+                }
+
+                // Explicitly filter matches to ensure they belong to the requested team
+                // This guards against API ignoring the teamId parameter
+                if (matches.length > 0) {
+                    matches = matches.filter(m =>
+                        String(m.homeTeam?.id) === String(team.id) ||
+                        String(m.awayTeam?.id) === String(team.id)
+                    );
+                }
+                if (matches && matches.length > 0) {
+                    console.log(`     -> Found ${matches.length} matches for ${team.name}`);
+                    console.log(`     -> First Match: ${matches[0].homeTeam?.name} vs ${matches[0].awayTeam?.name}`);
+                } else {
+                    console.log(`     -> No matches found for ${team.name}`);
+                }
+                return matches || [];
+            } catch (e) {
+                console.error(`Error fetching for team ${team.name}:`, e.message);
+                return [];
+            }
+        });
+
+        const results = await Promise.all(promises);
+        // Filter out nulls AND finished matches
+        let allMatches = results.flat().filter(m => m && m.status !== 'finished');
+
+        // Sort by date
+        allMatches.sort((a, b) => {
+            const dateA = new Date(a.date || a.startTime || 0);
+            const dateB = new Date(b.date || b.startTime || 0);
+            return dateA - dateB;
+        });
+
+        // Deduplicate locally just in case
+        const uniqueMatches = [];
+        const seenIds = new Set();
+        for (const m of allMatches) {
+            if (!seenIds.has(m.id)) {
+                seenIds.add(m.id);
+                uniqueMatches.push(m);
+            }
+        }
+
+        res.json({
+            success: true,
+            count: uniqueMatches.length,
+            data: uniqueMatches
+        });
+    } catch (error) {
+        console.error('Error in getFollowedMatches:', error);
+        res.status(500).json({ success: false, message: error.message });
     }
 };
 

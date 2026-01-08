@@ -27,7 +27,7 @@ const MatchHeader = ({ match, homeScore, awayScore, timer, onFollow, onTeamPress
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                         <Text style={styles.teamNameHero}>{match.homeTeam.name}</Text>
                         <TouchableOpacity onPress={() => onFollow(match.homeTeam.name)}>
-                            <Ionicons name={isFollowingHome ? "star" : "star-outline"} size={16} color={isFollowingHome ? theme.colors.warning : theme.colors.textMuted} />
+                            <Ionicons name={isFollowingHome ? "star" : "star-outline"} size={16} color={isFollowingHome ? "#FFD700" : theme.colors.textMuted} />
                         </TouchableOpacity>
                     </View>
                 </View>
@@ -57,7 +57,7 @@ const MatchHeader = ({ match, homeScore, awayScore, timer, onFollow, onTeamPress
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                         <Text style={styles.teamNameHero}>{match.awayTeam.name}</Text>
                         <TouchableOpacity onPress={() => onFollow(match.awayTeam.name)}>
-                            <Ionicons name={isFollowingAway ? "star" : "star-outline"} size={16} color={isFollowingAway ? theme.colors.warning : theme.colors.textMuted} />
+                            <Ionicons name={isFollowingAway ? "star" : "star-outline"} size={16} color={isFollowingAway ? "#FFD700" : theme.colors.textMuted} />
                         </TouchableOpacity>
                     </View>
                 </View>
@@ -81,7 +81,7 @@ const MatchHeader = ({ match, homeScore, awayScore, timer, onFollow, onTeamPress
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                     <Text style={styles.teamNameHero}>{match.homeTeam.name}</Text>
                     <TouchableOpacity onPress={() => onFollow(match.homeTeam.name)}>
-                        <Ionicons name={isFollowingHome ? "star" : "star-outline"} size={16} color={isFollowingHome ? theme.colors.warning : theme.colors.textMuted} />
+                        <Ionicons name={isFollowingHome ? "star" : "star-outline"} size={16} color={isFollowingHome ? "#FFD700" : theme.colors.textMuted} />
                     </TouchableOpacity>
                 </View>
                 <Animated.Text style={styles.teamScore}>
@@ -107,7 +107,7 @@ const MatchHeader = ({ match, homeScore, awayScore, timer, onFollow, onTeamPress
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                     <Text style={styles.teamNameHero}>{match.awayTeam.name}</Text>
                     <TouchableOpacity onPress={() => onFollow(match.awayTeam.name)}>
-                        <Ionicons name={isFollowingAway ? "star" : "star-outline"} size={16} color={isFollowingAway ? theme.colors.warning : theme.colors.textMuted} />
+                        <Ionicons name={isFollowingAway ? "star" : "star-outline"} size={16} color={isFollowingAway ? "#FFD700" : theme.colors.textMuted} />
                     </TouchableOpacity>
                 </View>
                 <Text style={styles.teamScore}>{awayScore}</Text>
