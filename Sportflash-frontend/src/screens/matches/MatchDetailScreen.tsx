@@ -54,8 +54,25 @@ export default function MatchDetailScreen({ navigation, route }: Props) {
     const awayScore = matchData.awayTeam?.score || '0';
     const timer = matchData.timer || '';
 
-    const isFollowingHome = user?.preferences?.favoriteTeams?.includes(matchData.homeTeam?.name);
-    const isFollowingAway = user?.preferences?.favoriteTeams?.includes(matchData.awayTeam?.name);
+    const isFollowingHome = React.useMemo(() => {
+        return user?.preferences?.favoriteTeams?.some(t => {
+            const tId = typeof t === 'string' ? t : t.id;
+            const hId = matchData.homeTeam?.id;
+            return (hId && String(tId) === String(hId)) ||
+                (typeof t === 'string' && t === matchData.homeTeam?.name) ||
+                (typeof t !== 'string' && t?.name === matchData.homeTeam?.name);
+        });
+    }, [user?.preferences?.favoriteTeams, matchData.homeTeam]);
+
+    const isFollowingAway = React.useMemo(() => {
+        return user?.preferences?.favoriteTeams?.some(t => {
+            const tId = typeof t === 'string' ? t : t.id;
+            const aId = matchData.awayTeam?.id;
+            return (aId && String(tId) === String(aId)) ||
+                (typeof t === 'string' && t === matchData.awayTeam?.name) ||
+                (typeof t !== 'string' && t?.name === matchData.awayTeam?.name);
+        });
+    }, [user?.preferences?.favoriteTeams, matchData.awayTeam]);
 
     // Initial Fetch (if needed, though HomeScreen likely fetched it)
     const { refetch } = useGetLiveMatchesQuery(undefined);
@@ -101,7 +118,7 @@ export default function MatchDetailScreen({ navigation, route }: Props) {
             commentaryList.reverse();
         }
 
-        // Basketball Commentary (Simulated from Quarter Scores)
+        // Basketball Commentary
         if (matchData.sport === 'basketball' && matchData.basketballData) {
             const b = matchData.basketballData;
             if (b.home_q4) commentaryList.push({ time: 'Q4', text: `End of Q4: ${b.home_q4} - ${b.away_q4}`, key: 'q4' });
@@ -121,22 +138,47 @@ export default function MatchDetailScreen({ navigation, route }: Props) {
         }
 
         try {
-            let currentTeams = user.preferences?.favoriteTeams || [];
-            let newTeams;
+            const currentTeams = user.preferences?.favoriteTeams || [];
 
-            if (currentTeams.includes(teamName)) {
-                newTeams = currentTeams.filter(t => t !== teamName);
-                showToast(`Unfollowed ${teamName}`);
+            // Determine Team Data
+            const isHome = teamName === matchData.homeTeam?.name;
+            const teamData = isHome ? matchData.homeTeam : matchData.awayTeam;
+
+            // Check if following (Robust check)
+            const isFollowing = currentTeams.some((t: any) => {
+                const tId = typeof t === 'string' ? t : t.id;
+                return (teamData.id && String(tId) === String(teamData.id)) ||
+                    (typeof t === 'string' && t === teamName) ||
+                    (typeof t !== 'string' && t?.name === teamName);
+            });
+
+            let newTeams;
+            if (isFollowing) {
+                // Unfollow
+                newTeams = currentTeams.filter((t: any) => {
+                    const tId = typeof t === 'string' ? t : t.id;
+                    const tName = typeof t === 'string' ? t : t.name;
+                    return String(tId) !== String(teamData.id) && tName !== teamName;
+                });
+                showToast(`Unfollowed ${teamName}`, 'success');
             } else {
-                newTeams = [...currentTeams, teamName];
-                showToast(`Following ${teamName}`);
+                // Follow - Save Object if possible
+                const teamToSave = {
+                    id: teamData.id,
+                    name: teamData.name || teamName,
+                    sport: matchData.sport,
+                    logo: teamData.logo
+                };
+                newTeams = [...currentTeams, teamToSave];
+                showToast(`Following ${teamName}`, 'success');
             }
 
             await dispatch(updateUserPreferences({ favoriteTeams: newTeams })).unwrap();
         } catch (error) {
+            console.error('Follow Error:', error);
             showToast('Failed to update favorites', 'error');
         }
-    }, [user, dispatch, showToast]);
+    }, [user, dispatch, showToast, matchData]);
 
     const getSportColor = () => {
         switch (matchData.sport?.toLowerCase()) {
@@ -186,7 +228,9 @@ export default function MatchDetailScreen({ navigation, route }: Props) {
                 return (
                     <Scorecard
                         match={matchData}
-                        onPlayerPress={(player) => navigation.navigate('PlayerProfile', { player })}
+                        onPlayerPress={(player) => navigation.navigate('PlayerProfile', {
+                            player: { ...player, sport: matchData.sport || 'football' }
+                        })}
                     />
                 );
             case 'H2H':

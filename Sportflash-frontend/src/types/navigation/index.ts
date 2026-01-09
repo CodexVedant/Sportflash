@@ -11,6 +11,8 @@ export type RootStackParamList = {
     TeamProfile: { teamId?: string; teamName?: string; sport?: string; team?: any };
     PlayerProfile: { playerId?: string; player?: any; sport?: string };
     Notifications: undefined;
+    NotificationSettings: undefined;
+    Premium: undefined;
     Preferences: undefined;
     UpcomingMatches: { sport?: string; date?: string };
     Home: undefined;

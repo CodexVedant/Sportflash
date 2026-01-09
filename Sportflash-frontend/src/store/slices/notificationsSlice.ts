@@ -4,17 +4,27 @@ import { NotificationItem } from '@app-types/models/notification';
 export interface NotificationsState {
     items: NotificationItem[];
     unreadCount: number;
+    preferences: { [key: string]: boolean };
+    globalSettings: { [key: string]: any };
 }
 
 const initialState: NotificationsState = {
     items: [],
     unreadCount: 0,
+    preferences: {},
+    globalSettings: {},
 };
 
 const notificationsSlice = createSlice({
     name: 'notifications',
     initialState,
     reducers: {
+        updatePreference: (state, action: PayloadAction<{ key: string; value: boolean }>) => {
+            state.preferences[action.payload.key] = action.payload.value;
+        },
+        updateGlobalSetting: (state, action: PayloadAction<{ key: string; value: any }>) => {
+            state.globalSettings[action.payload.key] = action.payload.value;
+        },
         addNotification: (state, action: PayloadAction<NotificationItem>) => {
             state.items.unshift(action.payload);
             state.unreadCount += 1;
@@ -37,6 +47,6 @@ const notificationsSlice = createSlice({
     },
 });
 
-export const { addNotification, markAsRead, markAllAsRead, setNotifications } = notificationsSlice.actions;
+export const { addNotification, markAsRead, markAllAsRead, setNotifications, updatePreference, updateGlobalSetting } = notificationsSlice.actions;
 export default notificationsSlice.reducer;
 

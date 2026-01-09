@@ -6,6 +6,7 @@ export interface NotificationItem extends BaseEntity {
     title: string;
     message: string;
     read: boolean;
-    type: NotificationType;
+    type: string; // broadened from NotificationType for compatibility or update NotificationType union
     link?: string;
+    timestamp: string;
 }

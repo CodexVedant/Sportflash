@@ -21,11 +21,13 @@ import BookmarksScreen from '@screens/profile/BookmarksScreen';
 import SettingsScreen from '@screens/profile/SettingsScreen';
 import PlayerProfileScreen from '@screens/player/PlayerProfileScreen';
 import NotificationsScreen from '@screens/profile/NotificationsScreen';
+import NotificationSettingsScreen from '@screens/profile/NotificationSettingsScreen';
 import PreferencesScreen from '@screens/profile/PreferencesScreen';
 import NewsDetailScreen from '@screens/news/NewsDetailScreen';
 import LeagueDetailsScreen from '@screens/league/LeagueDetailsScreen';
 import TeamProfileScreen from '@screens/team/TeamProfileScreen';
 import UpcomingMatchesScreen from '@screens/matches/UpcomingMatchesScreen';
+import PremiumScreen from '@screens/profile/PremiumScreen';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -86,9 +88,11 @@ export default function AppNavigator() {
                 <Stack.Screen name="TeamProfile" component={TeamProfileScreen} />
                 <Stack.Screen name="PlayerProfile" component={PlayerProfileScreen} />
                 <Stack.Screen name="Notifications" component={NotificationsScreen} />
+                <Stack.Screen name="NotificationSettings" component={NotificationSettingsScreen} />
                 <Stack.Screen name="Preferences" component={PreferencesScreen} />
                 <Stack.Screen name="NewsDetail" component={NewsDetailScreen} />
                 <Stack.Screen name="UpcomingMatches" component={UpcomingMatchesScreen} />
+                <Stack.Screen name="Premium" component={PremiumScreen} />
             </Stack.Navigator>
         </NavigationContainer>
     );

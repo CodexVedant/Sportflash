@@ -40,6 +40,14 @@ export const matchesApi = createApi({
             transformResponse: (response: ApiResponse<Match[]>) => response.data,
             keepUnusedDataFor: 300, // Cache for 5 minutes for fast tab switching
         }),
+        getFollowedMatches: builder.mutation<Match[], { teams: any[]; players?: any[] }>({
+            query: (body) => ({
+                url: '/matches/following',
+                method: 'POST',
+                body,
+            }),
+            transformResponse: (response: ApiResponse<Match[]>) => response.data,
+        }),
     }),
 });
 
@@ -48,6 +56,7 @@ export const {
     useGetMatchDetailsQuery,
     useGetMatchH2HQuery,
     useGetMatchStandingsQuery,
-    useGetUpcomingMatchesQuery
+    useGetUpcomingMatchesQuery,
+    useGetFollowedMatchesMutation
 } = matchesApi;
 

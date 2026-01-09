@@ -6,7 +6,10 @@ import { Ionicons } from '@expo/vector-icons';
 import SearchModal from '@components/common/SearchModal';
 import { useGetLiveMatchesQuery } from '@store/api/matchesApi';
 import { useSelector, useDispatch } from 'react-redux';
-import { NotificationBell, NotificationPanel } from '@components/notifications';
+import { NotificationBell, NotificationPanel, NotificationOptionsModal } from '@components/notifications';
+import { updatePreference } from '@store/slices/notificationsSlice';
+import { useToast } from '@context/ToastContext';
+import { Match } from '@app-types/models/match';
 import { initSocketListeners } from '@store/thunks/socketThunks';
 import { selectAllLiveMatches } from '@store/slices/liveMatchesSlice';
 import { mapMatchToUI } from '@utils/matchMappers';
@@ -16,7 +19,7 @@ import MenuToggle from '@components/navigation/MenuToggle';
 import TopBar from '@components/navigation/TopBar';
 import Sidebar from '@components/navigation/Sidebar';
 import { styles } from '@utils/style/HomeScreen.styles';
-import { SPORT_TABS, isDesktopSize, getMockNotifications } from '@utils/script/HomeScreen.helpers';
+import { SPORT_TABS, isDesktopSize } from '@utils/script/HomeScreen.helpers';
 import { useAppDispatch, useAppSelector } from '@hooks/redux';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '@app-types/navigation';
@@ -26,7 +29,36 @@ type Props = NativeStackScreenProps<RootStackParamList, 'Home'>;
 export default function HomeScreen({ navigation }: Props) {
     const dispatch = useAppDispatch();
     const { user } = useAppSelector(state => state.auth);
+    const { showToast } = useToast();
     const { width } = useWindowDimensions();
+    const preferences = useAppSelector(state => state.notifications.preferences || {});
+
+    // Notification Logic (Modal & Selection)
+    const [modalVisible, setModalVisible] = useState(false);
+    const [selectedMatch, setSelectedMatch] = useState<Match | null>(null);
+
+    const handleBellPress = (match: Match) => {
+        setSelectedMatch(match);
+        setModalVisible(true);
+    };
+
+    const handleSavePreferences = (newPrefs: any) => {
+        if (!selectedMatch) return;
+
+        // Update Redux state
+        const updates = {
+            [`match_${selectedMatch.id}`]: newPrefs.match,
+            [`series_${selectedMatch.league}`]: newPrefs.series, // Ensure league is string or handle object
+            [`team_${selectedMatch.homeTeam?.name}`]: newPrefs.homeTeam,
+            [`team_${selectedMatch.awayTeam?.name}`]: newPrefs.awayTeam,
+        };
+
+        Object.entries(updates).forEach(([key, value]) => {
+            dispatch(updatePreference({ key, value: Boolean(value) }));
+        });
+
+        showToast("Notification preferences updated", "success");
+    };
 
     // UI Local State
     const [searchVisible, setSearchVisible] = useState(false);
@@ -62,8 +94,8 @@ export default function HomeScreen({ navigation }: Props) {
         // Optional: return () => dispatch(stopSocketListeners());
     }, [dispatch]);
 
-    // Mock notifications (Keeping existing logic)
-    const [notifications] = useState(getMockNotifications());
+    // Notifications from Redux
+    const notifications = useAppSelector(state => state.notifications.items);
 
     // Responsive Logic
     const isDesktop = isDesktopSize(width);
@@ -72,6 +104,15 @@ export default function HomeScreen({ navigation }: Props) {
         <SafeAreaView style={styles.container}>
             <SearchModal visible={searchVisible} onClose={() => setSearchVisible(false)} />
             <Sidebar visible={sidebarVisible} onClose={() => setSidebarVisible(false)} />
+            {/* Notification Subscription Modal */}
+            <NotificationOptionsModal
+                visible={modalVisible}
+                match={selectedMatch}
+                onClose={() => setModalVisible(false)}
+                onSave={handleSavePreferences}
+                initialPreferences={preferences}
+            />
+
             <NotificationPanel
                 visible={notificationVisible}
                 onClose={() => setNotificationVisible(false)}
@@ -122,19 +163,19 @@ export default function HomeScreen({ navigation }: Props) {
             {/* Live Section */}
             <View style={[styles.contentContainer, isDesktop && styles.contentContainerDesktop, { flex: 1 }]}>
                 <LiveMatchesWidget
-                    matches={matches} // Use filtered/derived matches here
+                    matches={matches}
                     loading={loading}
                     width={width}
                     navigation={navigation}
                     gap={theme.spacing.md}
                     ListFooterComponent={
                         <>
-                            {/* Trending News Placeholder */}
                             <TrendingNewsWidget sport={activeSport} />
-                            {/* Bottom spacing for TabBar */}
                             <View style={{ height: 80 }} />
                         </>
                     }
+                    preferences={preferences}
+                    onNotificationPress={handleBellPress}
                 />
             </View>
         </SafeAreaView>

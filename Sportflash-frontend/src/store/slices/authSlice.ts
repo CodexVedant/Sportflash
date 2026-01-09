@@ -99,12 +99,29 @@ export const updateUserPreferences = createAsyncThunk<User, UserPreferences, { r
     }
 );
 
+export const savePushToken = createAsyncThunk<void, string>(
+    'auth/savePushToken',
+    async (token, { rejectWithValue }) => {
+        try {
+            await api.put('/auth/pushtoken', { token });
+        } catch (error: any) {
+            console.error('Failed to save push token:', error);
+            // Optionally reject, but we mostly fire-and-forget
+        }
+    }
+);
+
 const authSlice = createSlice({
     name: 'auth',
     initialState,
     reducers: {
         clearError: (state) => {
             state.error = null;
+        },
+        setPremiumStatus: (state, action: PayloadAction<boolean>) => {
+            if (state.user) {
+                state.user.isPremium = action.payload;
+            }
         }
     },
     extraReducers: (builder) => {
@@ -163,6 +180,6 @@ const authSlice = createSlice({
     },
 });
 
-export const { clearError } = authSlice.actions;
+export const { clearError, setPremiumStatus } = authSlice.actions;
 export default authSlice.reducer;
 

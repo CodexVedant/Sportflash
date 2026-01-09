@@ -56,7 +56,7 @@ export default function ProfileScreen() {
                 navigation.navigate('Preferences');
                 break;
             case 'Notifications':
-                navigation.navigate('Notifications');
+                navigation.navigate('NotificationSettings'); // Changed from Notifications to NotificationSettings
                 break;
             case 'Settings':
                 navigation.navigate('Settings');

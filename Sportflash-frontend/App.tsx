@@ -1,12 +1,18 @@
 import { useEffect } from 'react';
 import { Platform } from 'react-native';
 import { Provider } from 'react-redux';
-import { store } from '@store/store';
+import { store, persistor } from '@store/store';
 import AppNavigator from '@navigation/AppNavigator';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { ToastProvider } from '@context/ToastContext';
 import { theme } from '@utils/theme';
 import { useGetLiveMatchesQuery, useGetUpcomingMatchesQuery } from '@store/api/matchesApi';
+import Toast from 'react-native-toast-message';
+import { PersistGate } from 'redux-persist/integration/react';
+import { savePushToken } from './src/store/slices/authSlice';
+import { registerForPushNotificationsAsync } from './src/services/NotificationService';
+import * as Notifications from 'expo-notifications';
+import { useAppDispatch, useAppSelector } from './src/hooks/redux';
 
 // Prefetch component to load data on app start
 function DataPrefetcher() {
@@ -18,7 +24,47 @@ function DataPrefetcher() {
     useGetUpcomingMatchesQuery({ sport: 'football' });
     useGetUpcomingMatchesQuery({ sport: 'basketball' });
 
-    return null; // This component doesn't render anything
+    return null;
+}
+
+function AppContent() {
+    const dispatch = useAppDispatch();
+    const { user } = useAppSelector(state => state.auth);
+
+    useEffect(() => {
+        // Register for Push Notifications
+        registerForPushNotificationsAsync().then(token => {
+            if (token && user) {
+                dispatch(savePushToken(token));
+            }
+        });
+
+        // Listen for incoming notifications (foreground)
+        const subscription = Notifications.addNotificationReceivedListener(notification => {
+            // console.log('Notification Received:', notification);
+        });
+
+        // Listen for user interacting with notification
+        const responseSubscription = Notifications.addNotificationResponseReceivedListener(response => {
+            // console.log('Notification Response:', response);
+            // Navigate based on data if needed
+        });
+
+        return () => {
+            subscription.remove();
+            responseSubscription.remove();
+        };
+    }, [dispatch, user]);
+
+    return (
+        <SafeAreaProvider>
+            <ToastProvider>
+                <DataPrefetcher />
+                <AppNavigator />
+            </ToastProvider>
+            <Toast />
+        </SafeAreaProvider>
+    );
 }
 
 export default function App() {
@@ -31,12 +77,9 @@ export default function App() {
 
     return (
         <Provider store={store}>
-            <SafeAreaProvider>
-                <ToastProvider>
-                    <DataPrefetcher />
-                    <AppNavigator />
-                </ToastProvider>
-            </SafeAreaProvider>
+            <PersistGate loading={null} persistor={persistor}>
+                <AppContent />
+            </PersistGate>
         </Provider>
     );
 }
