@@ -24,3 +24,40 @@
 [2026-01-08T13:48:59.848Z]    -> ⚠️ Player found but no image.
 [2026-01-08T13:48:59.849Z] 🔍 Enriching image for [Afif Hossain] via Wikipedia...
 [2026-01-08T13:49:00.497Z]    -> Wiki Error: Request failed with status code 403
+[2026-01-09T06:15:31.930Z] 📢 getPlayer called for ID: H Amarasinghe, Sport: football
+[2026-01-09T06:20:42.759Z] 📢 getPlayer called for ID: T Harshana, Sport: football
+[2026-01-09T06:20:55.852Z] 📢 getPlayer called for ID: A Wanninayake, Sport: football
+[2026-01-09T06:22:37.459Z] 📢 getPlayer called for ID: A Wanninayake, Sport: football
+[2026-01-09T06:23:37.384Z] 📢 getPlayer called for ID: A Wanninayake, Sport: football
+[2026-01-09T06:24:43.784Z] 📢 getPlayer called for ID: A Wanninayake, Sport: football
+[2026-01-09T06:27:54.815Z] 📢 getPlayer called for ID: name_H Amarasinghe, Sport: football
+[2026-01-09T06:27:54.816Z] ⚠️ ID missing. Performing fallback search for name: H Amarasinghe
+[2026-01-09T06:28:14.735Z] 📢 getPlayer called for ID: H Amarasinghe, Sport: football
+[2026-01-09T06:28:41.851Z] 📢 getPlayer called for ID: A Wanninayake, Sport: football
+[2026-01-09T06:29:39.462Z] 📢 getPlayer called for ID: A Wanninayake, Sport: football
+[2026-01-09T06:30:13.632Z] 📢 getPlayer called for ID: H Amarasinghe, Sport: football
+[2026-01-09T06:30:18.286Z] 📢 getPlayer called for ID: A Wanninayake, Sport: football
+[2026-01-09T06:31:31.462Z] 📢 getPlayer called for ID: name_A Wanninayake, Sport: football
+[2026-01-09T06:31:31.463Z] ⚠️ ID missing. Performing fallback search for name: A Wanninayake
+[2026-01-09T06:32:06.920Z] 📢 getPlayer called for ID: name_H Amarasinghe, Sport: football
+[2026-01-09T06:32:06.921Z] ⚠️ ID missing. Performing fallback search for name: H Amarasinghe
+[2026-01-09T06:32:27.458Z] 📢 getPlayer called for ID: name_T Harshana, Sport: football
+[2026-01-09T06:32:27.459Z] ⚠️ ID missing. Performing fallback search for name: T Harshana
+[2026-01-09T06:33:30.456Z] 📢 getPlayer called for ID: name_T Harshana, Sport: football
+[2026-01-09T06:33:30.456Z] ⚠️ ID missing. Performing fallback search for name: T Harshana
+[2026-01-09T06:34:02.562Z] 📢 getPlayer called for ID: name_H Amarasinghe, Sport: football
+[2026-01-09T06:34:02.562Z] ⚠️ ID missing. Performing fallback search for name: H Amarasinghe
+[2026-01-09T06:34:21.741Z] 📢 getPlayer called for ID: name_A Wanninayake, Sport: football
+[2026-01-09T06:34:21.742Z] ⚠️ ID missing. Performing fallback search for name: A Wanninayake
+[2026-01-09T06:35:02.456Z] 📢 getPlayer called for ID: name_A Wanninayake, Sport: football
+[2026-01-09T06:35:02.456Z] ⚠️ ID missing. Performing fallback search for name: A Wanninayake
+[2026-01-09T06:35:33.034Z] 📢 getPlayer called for ID: name_A Wanninayake, Sport: football
+[2026-01-09T06:35:33.034Z] ⚠️ ID missing. Performing fallback search for name: A Wanninayake
+[2026-01-09T06:37:27.806Z] 📢 getPlayer called for ID: name_A Wanninayake, Sport: football
+[2026-01-09T06:37:27.807Z] ⚠️ ID missing. Performing fallback search for name: A Wanninayake
+[2026-01-09T06:37:31.289Z] 📢 getPlayer called for ID: name_T Harshana, Sport: football
+[2026-01-09T06:37:31.291Z] ⚠️ ID missing. Performing fallback search for name: T Harshana
+[2026-01-09T06:37:34.527Z] 📢 getPlayer called for ID: name_H Amarasinghe, Sport: football
+[2026-01-09T06:37:34.527Z] ⚠️ ID missing. Performing fallback search for name: H Amarasinghe
+[2026-01-09T06:39:04.450Z] 📢 getPlayer called for ID: name_A Wanninayake, Sport: football
+[2026-01-09T06:39:04.450Z] ⚠️ ID missing. Performing fallback search for name: A Wanninayake

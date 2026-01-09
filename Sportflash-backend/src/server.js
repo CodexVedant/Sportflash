@@ -27,11 +27,85 @@ const { mapFootballMatch,
 
 // ==================== LIVE SCORE FETCHING ====================
 
+const { sendPushNotification } = require('./services/expoPushService');
+
+// State Cache for Diffing
+let previousLiveMatches = {
+    football: {},
+    basketball: {},
+    cricket: {}
+};
+
+/**
+ * Helper to detecting events and sending push
+ */
+const checkAndNotify = async (sport, newMatches) => {
+    const oldMatches = previousLiveMatches[sport] || {};
+    const updatedCache = { ...oldMatches };
+
+    for (const match of newMatches) {
+        const matchId = match.id.toString();
+        const oldMatch = oldMatches[matchId];
+
+        // Update Cache
+        updatedCache[matchId] = match;
+
+        if (!oldMatch) continue; // First load, no notify
+
+        let title = '';
+        let body = '';
+        let shouldNotify = false;
+
+        // 1. Status Change (e.g. NS -> Live, Live -> FT)
+        if (oldMatch.status !== match.status && match.status !== 'NS') {
+            shouldNotify = true;
+            title = `${match.homeTeam.name} vs ${match.awayTeam.name}`;
+            body = `Match Status: ${match.status}`;
+        }
+
+        // 2. Score Change / Goal (Football)
+        if (sport === 'football') {
+            const oldScore = (oldMatch.homeTeam?.score || 0) + (oldMatch.awayTeam?.score || 0);
+            const newScore = (match.homeTeam?.score || 0) + (match.awayTeam?.score || 0);
+            if (newScore > oldScore) {
+                shouldNotify = true;
+                title = 'Goal!';
+                body = `${match.homeTeam.name} ${match.homeTeam.score} - ${match.awayTeam.score} ${match.awayTeam.name}`;
+            }
+        }
+
+        // 3. Wicket (Cricket)
+        if (sport === 'cricket') {
+            // simplified logic, need detailed comparison if scores string is complex
+            // Assuming score string changes in a major way or 'wickets' count increases if available
+            // For now, rely on status or just Major score updates (e.g. every 5 overs? Hard to track without specialized parser)
+            if (oldMatch.status !== match.status) {
+                // Covered above
+            }
+        }
+
+        if (shouldNotify) {
+            console.log(`🔔 Triggering Push: ${title}`);
+            // Send to Users who follow these teams
+            await sendPushNotification(title, body, { matchId: match.id, type: 'match_update' }, (user) => {
+                const prefs = user.preferences || {};
+                const favTeams = (prefs.favoriteTeams || []).map(t => typeof t === 'string' ? t : t.id);
+                // Check if user follows Home or Away team
+                return favTeams.includes(match.homeTeam.id.toString()) ||
+                    favTeams.includes(match.awayTeam.id.toString());
+            });
+        }
+    }
+
+    // Save minimal cache to save memory
+    previousLiveMatches[sport] = updatedCache;
+};
+
 /**
  * Fetch All Live Scores from AllSportsAPI
  */
 const fetchAllLiveScores = async () => {
-    console.log('\n🔄 ========== Fetching All Live Scores ==========');
+    // console.log('\n🔄 ========== Fetching All Live Scores ==========');
 
     try {
         const allScores = await allSportsApi.getAllLiveScores();
@@ -42,18 +116,10 @@ const fetchAllLiveScores = async () => {
             cricket: (allScores.cricket || []).map(mapCricketMatch).filter(m => m !== null),
         };
 
-        if (mappedScores.football.length > 0) {
-            io.emit('football_update', mappedScores.football);
-            console.log(`✅ Broadcasted ${mappedScores.football.length} Football matches`);
-        }
-        if (mappedScores.basketball.length > 0) {
-            io.emit('basketball_update', mappedScores.basketball);
-            console.log(`✅ Broadcasted ${mappedScores.basketball.length} Basketball matches`);
-        }
-        if (mappedScores.cricket.length > 0) {
-            io.emit('cricket_update', mappedScores.cricket);
-            console.log(`✅ Broadcasted ${mappedScores.cricket.length} Cricket matches`);
-        }
+        // Broadcast to Socket
+        if (mappedScores.football.length > 0) io.emit('football_update', mappedScores.football);
+        if (mappedScores.basketball.length > 0) io.emit('basketball_update', mappedScores.basketball);
+        if (mappedScores.cricket.length > 0) io.emit('cricket_update', mappedScores.cricket);
 
         // Unified broadcast
         io.emit('all_scores_update', {
@@ -63,11 +129,14 @@ const fetchAllLiveScores = async () => {
             timestamp: new Date().toISOString()
         });
 
-        const total = mappedScores.football.length + mappedScores.basketball.length + mappedScores.cricket.length;
-        if (total === 0) console.log('ℹ️  No live matches at the moment');
+        // CHECK TRIGGERS & SEND PUSH
+        await checkAndNotify('football', mappedScores.football);
+        await checkAndNotify('basketball', mappedScores.basketball);
+        await checkAndNotify('cricket', mappedScores.cricket);
 
-        console.log(`📊 Stats: ⚽ ${mappedScores.football.length} | 🏀 ${mappedScores.basketball.length} | 🏏 ${mappedScores.cricket.length}`);
-        console.log('='.repeat(50) + '\n');
+        const total = mappedScores.football.length + mappedScores.basketball.length + mappedScores.cricket.length;
+        // if (total === 0) console.log('ℹ️  No live matches');
+        // console.log(`📊 Stats: ⚽ ${mappedScores.football.length} | 🏀 ${mappedScores.basketball.length} | 🏏 ${mappedScores.cricket.length}`);
 
     } catch (error) {
         console.error('❌ Error in fetchAllLiveScores:', error.message);

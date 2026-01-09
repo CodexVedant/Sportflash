@@ -29,6 +29,10 @@ const userSchema = new mongoose.Schema({
         type: String,
         default: null
     },
+    pushToken: {
+        type: String,
+        default: null
+    },
     preferences: {
         favoriteTeams: [{
             id: String,
@@ -44,7 +48,9 @@ const userSchema = new mongoose.Schema({
             id: String,
             name: String,
             sport: String,
+            sport: String,
             team: String,
+            teamId: String,
             image: String
         }],
         notifications: {

@@ -264,11 +264,11 @@ exports.getFollowedMatches = async (req, res) => {
 
         // Extract teams from followed players
         const playerTeams = players
-            .filter(p => p.team && p.team.id)
+            .filter(p => p.teamId) // Use the new reliable teamId field
             .map(p => ({
-                id: p.team.id,
-                name: p.team.name,
-                sport: p.sport || 'football' // Fallback or inferred
+                id: p.teamId,
+                name: p.team || 'Unknown Team',
+                sport: p.sport || 'football'
             }));
 
         // Combine unique teams

@@ -179,8 +179,16 @@ class AllSportsApiService {
      * Get football player details
      * @param {string} playerId - Player ID
      */
-    async getFootballPlayer(playerId) {
-        return await this.makeRequest('football', 'Players', { player_id: playerId });
+    async getFootballPlayer(playerIdOrName) {
+        const params = {};
+        // Check if input indicates a name search (API error suggested 'playerName' param support)
+        // Usually AllSportsAPI uses 'player_id' or 'player_name'
+        if (typeof playerIdOrName === 'string' && isNaN(playerIdOrName)) {
+            params.player_name = playerIdOrName;
+        } else {
+            params.player_id = playerIdOrName;
+        }
+        return await this.makeRequest('football', 'Players', params);
     }
 
     // === BASKETBALL METHODS ===
@@ -313,8 +321,14 @@ class AllSportsApiService {
      * Get cricket player details
      * @param {string} playerId - Player ID
      */
-    async getCricketPlayer(playerId) {
-        return await this.makeRequest('cricket', 'Players', { player_id: playerId });
+    async getCricketPlayer(playerIdOrName) {
+        const params = {};
+        if (typeof playerIdOrName === 'string' && isNaN(playerIdOrName)) {
+            params.player_name = playerIdOrName;
+        } else {
+            params.player_id = playerIdOrName;
+        }
+        return await this.makeRequest('cricket', 'Players', params);
     }
 
     /**

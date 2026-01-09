@@ -105,7 +105,26 @@ exports.getPlayer = async (req, res) => {
             const nameToSearch = id.replace('name_', '');
             logDebug(`⚠️ ID missing. Performing fallback search for name: ${nameToSearch}`);
 
-            // Only supported for Cricket right now via our enrichment
+            if (sport?.toLowerCase() === 'cricket') {
+                const cricketPlayers = await allSportsApi.getCricketPlayer(nameToSearch);
+                if (cricketPlayers && cricketPlayers.length > 0) {
+                    // Found it! Return the first match
+                    const found = cricketPlayers[0];
+                    // console.log('DEBUG: Found Cricket Player by Name:', found);
+                    let mapped = mapPlayer(found, 'cricket');
+                    mapped = await enrichCricketPlayerImage(mapped);
+                    return res.json({ success: true, data: mapped });
+                }
+            } else if (sport?.toLowerCase() === 'football' || sport?.toLowerCase() === 'soccer') {
+                const footballPlayers = await allSportsApi.getFootballPlayer(nameToSearch);
+                if (footballPlayers && footballPlayers.length > 0) {
+                    const found = footballPlayers[0];
+                    const mapped = mapPlayer(found, 'football');
+                    return res.json({ success: true, data: mapped });
+                }
+            }
+
+            // If API search fails, fall back to Dummy for Cricket (to at least show something)
             if (sport?.toLowerCase() === 'cricket') {
                 // Construct a dummy player object and enrich it
                 let dummyPlayer = {
@@ -115,9 +134,6 @@ exports.getPlayer = async (req, res) => {
                     photo: null
                 };
                 dummyPlayer = await enrichCricketPlayerImage(dummyPlayer);
-
-                // If we found an image, we likely found valid data. 
-                // We should ideally return more data, but for now return what we have.
                 return res.json({
                     success: true,
                     data: dummyPlayer

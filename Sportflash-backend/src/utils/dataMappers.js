@@ -104,6 +104,7 @@ const normalizeLineups = (lineups, sport = 'football') => {
  */
 const mapCricketLineupPlayer = (p) => {
     return {
+        id: p.player_key || p.player_id || null, // Capture ID
         name: p.player || p.lineup_player || p.player_name || p.name,
         number: p.number || p.lineup_number || p.player_number || '',
         position: p.position || p.lineup_position || p.player_position || p.player_type || '',
@@ -379,6 +380,7 @@ const normalizeCricketScorecard = (scorecard) => {
             batting = inning
                 .filter(p => p.type === 'Batsman')
                 .map(b => ({
+                    id: b.player_id || b.player_key || null, // Capture ID
                     player: b.player,
                     status: b.status || 'not out',
                     runs: b.R || '0',
@@ -391,6 +393,7 @@ const normalizeCricketScorecard = (scorecard) => {
             bowling = inning
                 .filter(p => p.type === 'Bowler')
                 .map(b => ({
+                    id: b.player_id || b.player_key || null, // Capture ID
                     player: b.player,
                     overs: b.O || '0',
                     maidens: b.M || '0',
@@ -401,6 +404,7 @@ const normalizeCricketScorecard = (scorecard) => {
         } else {
             // Handle Object structure (legacy/fallback)
             batting = (inning.batsman || inning.batsmen || inning.batting || []).map(b => ({
+                id: b.player_id || b.player_key || b.id || null, // Capture ID
                 player: b.name || b.player,
                 status: b.out_by || b.dismissal || b.status || 'not out',
                 runs: b.runs || b.R || '0',
@@ -411,6 +415,7 @@ const normalizeCricketScorecard = (scorecard) => {
             }));
 
             bowling = (inning.bowler || inning.bowlers || inning.bowling || []).map(b => ({
+                id: b.player_id || b.player_key || b.id || null, // Capture ID
                 player: b.name || b.player,
                 overs: b.O || b.overs || '0',
                 maidens: b.M || b.maidens || '0',

@@ -183,7 +183,24 @@ exports.updatePreferences = async (req, res) => {
             });
         }
         if (favoriteSports) user.preferences.favoriteSports = favoriteSports;
-        if (favoritePlayers) user.preferences.favoritePlayers = favoritePlayers;
+        if (favoritePlayers) {
+            user.preferences.favoritePlayers = favoritePlayers.map(p => {
+                if (typeof p === 'string') return { id: p, name: 'Unknown', sport: 'football' };
+
+                // Sanitization
+                if (p.image_path && !p.image) p.image = p.image_path;
+
+                // Handle Team Object and ID
+                if (p.team && typeof p.team === 'object') {
+                    p.teamId = p.team.id;
+                    p.team = p.team.name || 'Unknown';
+                }
+
+                return p;
+
+                return p;
+            });
+        }
         if (notifications !== undefined) user.preferences.notifications = notifications;
 
         await user.save();
@@ -198,5 +215,24 @@ exports.updatePreferences = async (req, res) => {
             success: false,
             message: error.message
         });
+    }
+};
+
+// @desc    Update push token
+// @route   PUT /api/auth/pushtoken
+// @access  Private
+exports.savePushToken = async (req, res) => {
+    try {
+        const { token } = req.body;
+        if (!token) {
+            return res.status(400).json({ success: false, message: 'Token is required' });
+        }
+
+        await User.findByIdAndUpdate(req.user.id, { pushToken: token });
+
+        res.status(200).json({ success: true, message: 'Push token updated' });
+    } catch (error) {
+        console.error('Error updating push token:', error);
+        res.status(500).json({ success: false, message: error.message });
     }
 };
