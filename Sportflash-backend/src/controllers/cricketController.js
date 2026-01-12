@@ -393,4 +393,166 @@ exports.getCricketPlayerDetails = async (req, res) => {
     }
 };
 
+// === ENHANCED ENDPOINTS ===
+
+/**
+ * @desc    Get enhanced match scorecard (v2)
+ * @route   GET /api/cricket/matches/:id/scorecard-v2
+ * @access  Public
+ */
+exports.getCricketMatchScorecardV2 = async (req, res) => {
+    try {
+        const { id } = req.params;
+        console.log(`🏏 Fetching enhanced scorecard for match ID: ${id}`);
+
+        const scorecard = await cricbuzzService.getMatchScorecardV2(id);
+
+        res.json({
+            success: true,
+            data: scorecard,
+            source: 'Cricbuzz API (Enhanced)'
+        });
+    } catch (error) {
+        console.error('Error in getCricketMatchScorecardV2:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error fetching enhanced scorecard',
+            error: error.message
+        });
+    }
+};
+
+/**
+ * @desc    Get enhanced match info
+ * @route   GET /api/cricket/matches/:id/info
+ * @access  Public
+ */
+exports.getCricketMatchInfo = async (req, res) => {
+    try {
+        const { id } = req.params;
+        console.log(`🏏 Fetching enhanced match info for ID: ${id}`);
+
+        const matchInfo = await cricbuzzService.getMatchInfo(id);
+
+        res.json({
+            success: true,
+            data: matchInfo,
+            source: 'Cricbuzz API (Enhanced)'
+        });
+    } catch (error) {
+        console.error('Error in getCricketMatchInfo:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error fetching match info',
+            error: error.message
+        });
+    }
+};
+
+/**
+ * @desc    Get player career stats (enhanced)
+ * @route   GET /api/cricket/players/:id/career
+ * @access  Public
+ */
+exports.getCricketPlayerCareer = async (req, res) => {
+    try {
+        const { id } = req.params;
+        console.log(`🏏 Fetching player career for ID: ${id}`);
+
+        const career = await cricbuzzService.getPlayerCareer(id);
+
+        res.json({
+            success: true,
+            data: career,
+            source: 'Cricbuzz API (Enhanced)'
+        });
+    } catch (error) {
+        console.error('Error in getCricketPlayerCareer:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error fetching player career',
+            error: error.message
+        });
+    }
+};
+
+/**
+ * @desc    Get series points table (CRITICAL)
+ * @route   GET /api/cricket/series/:id/points-table
+ * @access  Public
+ */
+exports.getSeriesPointsTable = async (req, res) => {
+    try {
+        const { id } = req.params;
+        console.log(`🏏 Fetching points table for series ID: ${id}`);
+
+        const pointsTable = await cricbuzzService.getSeriesPointsTable(id);
+
+        res.json({
+            success: true,
+            data: pointsTable,
+            source: 'Cricbuzz API (Enhanced)'
+        });
+    } catch (error) {
+        console.error('Error in getSeriesPointsTable:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error fetching series points table',
+            error: error.message
+        });
+    }
+};
+
+/**
+ * @desc    Get cricket schedules
+ * @route   GET /api/cricket/schedules
+ * @access  Public
+ */
+exports.getCricketSchedules = async (req, res) => {
+    try {
+        console.log('🏏 Fetching cricket schedules...');
+
+        const schedules = await cricbuzzService.getSchedules();
+
+        res.json({
+            success: true,
+            data: schedules,
+            source: 'Cricbuzz API (Enhanced)'
+        });
+    } catch (error) {
+        console.error('Error in getCricketSchedules:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error fetching cricket schedules',
+            error: error.message
+        });
+    }
+};
+
+/**
+ * @desc    Get trending players
+ * @route   GET /api/cricket/players/trending
+ * @access  Public
+ */
+exports.getTrendingPlayers = async (req, res) => {
+    try {
+        console.log('🏏 Fetching trending cricket players...');
+
+        const players = await cricbuzzService.getTrendingPlayers();
+
+        res.json({
+            success: true,
+            data: players,
+            source: 'Cricbuzz API (Enhanced)'
+        });
+    } catch (error) {
+        console.error('Error in getTrendingPlayers:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error fetching trending players',
+            error: error.message
+        });
+    }
+};
+
 module.exports = exports;

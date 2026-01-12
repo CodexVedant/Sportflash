@@ -100,6 +100,47 @@ class CricbuzzService {
         return await this.makeRequest(`/mcenter/v1/${matchId}/overs`);
     }
 
+    // === ENHANCED MATCH ENDPOINTS ===
+
+    /**
+     * Get enhanced match information
+     * @param {string} matchId - Match ID
+     */
+    async getMatchInfo(matchId) {
+        return await this.makeRequest(`/matches/get-info?matchId=${matchId}`);
+    }
+
+    /**
+     * Get enhanced match scorecard (v2)
+     * @param {string} matchId - Match ID
+     */
+    async getMatchScorecardV2(matchId) {
+        return await this.makeRequest(`/matches/get-scorecard-v2?matchId=${matchId}`);
+    }
+
+    /**
+     * Get enhanced match commentaries (v2)
+     * @param {string} matchId - Match ID
+     */
+    async getMatchCommentariesV2(matchId) {
+        return await this.makeRequest(`/matches/get-commentaries-v2?matchId=${matchId}`);
+    }
+
+    /**
+     * Get match list
+     */
+    async getMatchList() {
+        return await this.makeRequest('/matches/list');
+    }
+
+    /**
+     * Get match team details
+     * @param {string} matchId - Match ID
+     */
+    async getMatchTeam(matchId) {
+        return await this.makeRequest(`/matches/get-team?matchId=${matchId}`);
+    }
+
     // === TEAMS ===
 
     /**
@@ -179,6 +220,55 @@ class CricbuzzService {
      */
     async getPlayerBattingStats(playerId) {
         return await this.makeRequest(`/stats/v1/player/${playerId}/batting`);
+    }
+
+    // === ENHANCED PLAYER ENDPOINTS ===
+
+    /**
+     * Get player career (enhanced)
+     * @param {string} playerId - Player ID
+     */
+    async getPlayerCareer(playerId) {
+        return await this.makeRequest(`/players/get-career?playerId=${playerId}`);
+    }
+
+    /**
+     * Get player bowling (enhanced)
+     * @param {string} playerId - Player ID
+     */
+    async getPlayerBowling(playerId) {
+        return await this.makeRequest(`/players/get-bowling?playerId=${playerId}`);
+    }
+
+    /**
+     * Get player batting (enhanced)
+     * @param {string} playerId - Player ID
+     */
+    async getPlayerBatting(playerId) {
+        return await this.makeRequest(`/players/get-batting?playerId=${playerId}`);
+    }
+
+    /**
+     * Get player info (enhanced)
+     * @param {string} playerId - Player ID
+     */
+    async getPlayerInfo(playerId) {
+        return await this.makeRequest(`/players/get-info?playerId=${playerId}`);
+    }
+
+    /**
+     * Get trending players
+     */
+    async getTrendingPlayers() {
+        return await this.makeRequest('/players/list-trending');
+    }
+
+    /**
+     * Get player news
+     * @param {string} playerId - Player ID
+     */
+    async getPlayerNews(playerId) {
+        return await this.makeRequest(`/players/get-news?playerId=${playerId}`);
     }
 
     // === RANKINGS ===
@@ -284,6 +374,72 @@ class CricbuzzService {
      */
     async getSeriesStandings(seriesId) {
         return await this.makeRequest(`/series/v1/${seriesId}/standings`);
+    }
+
+    // === ENHANCED SERIES ENDPOINTS ===
+
+    /**
+     * Get series points table (CRITICAL - for tournament standings)
+     * @param {string} seriesId - Series ID
+     */
+    async getSeriesPointsTable(seriesId) {
+        return await this.makeRequest(`/series/get-points-table?seriesId=${seriesId}`);
+    }
+
+    /**
+     * Get series squads
+     * @param {string} seriesId - Series ID
+     */
+    async getSeriesSquads(seriesId) {
+        return await this.makeRequest(`/series/get-squads?seriesId=${seriesId}`);
+    }
+
+    /**
+     * Get series players
+     * @param {string} seriesId - Series ID
+     */
+    async getSeriesPlayers(seriesId) {
+        return await this.makeRequest(`/series/get-players?seriesId=${seriesId}`);
+    }
+
+    /**
+     * Get series venues
+     * @param {string} seriesId - Series ID
+     */
+    async getSeriesVenues(seriesId) {
+        return await this.makeRequest(`/series/get-venues?seriesId=${seriesId}`);
+    }
+
+    /**
+     * Get series news
+     * @param {string} seriesId - Series ID
+     */
+    async getSeriesNews(seriesId) {
+        return await this.makeRequest(`/series/get-news?seriesId=${seriesId}`);
+    }
+
+    /**
+     * Get series stats
+     * @param {string} seriesId - Series ID
+     */
+    async getSeriesStats(seriesId) {
+        return await this.makeRequest(`/series/get-stats?seriesId=${seriesId}`);
+    }
+
+    /**
+     * Get series archives
+     */
+    async getSeriesArchives() {
+        return await this.makeRequest('/series/list-archives');
+    }
+
+    // === SCHEDULES ===
+
+    /**
+     * Get cricket schedules
+     */
+    async getSchedules() {
+        return await this.makeRequest('/schedules/list');
     }
 }
 

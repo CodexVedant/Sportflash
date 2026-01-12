@@ -55,4 +55,24 @@ router.get('/news', cricketController.getCricketNews);
 // Get cricket series (international, domestic, league)
 router.get('/series', cricketController.getCricketSeries);
 
+// === ENHANCED ENDPOINTS ===
+
+// Get enhanced match scorecard (v2)
+router.get('/matches/:id/scorecard-v2', cricketController.getCricketMatchScorecardV2);
+
+// Get enhanced match info
+router.get('/matches/:id/info', cricketController.getCricketMatchInfo);
+
+// Get player career stats (enhanced)
+router.get('/players/:id/career', cricketController.getCricketPlayerCareer);
+
+// Get trending players
+router.get('/players/trending', cricketController.getTrendingPlayers);
+
+// Get series points table (CRITICAL)
+router.get('/series/:id/points-table', cricketController.getSeriesPointsTable);
+
+// Get cricket schedules
+router.get('/schedules', cricketController.getCricketSchedules);
+
 module.exports = router;
