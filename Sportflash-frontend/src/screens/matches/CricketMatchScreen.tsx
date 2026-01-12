@@ -1,8 +1,8 @@
-﻿import React, { useState, useEffect } from 'react';
+﻿import React from 'react';
 import { View, FlatList, ActivityIndicator } from 'react-native';
 import { theme } from '@utils/theme';
 import MatchCard from '@components/match/MatchCard';
-import { useGetLiveMatchesQuery } from '@store/api/matchesApi';
+import { useGetCricketLiveMatchesQuery } from '@store/api/cricbuzzApi';
 import { EmptyState } from '@components/common';
 import { styles } from '@utils/style/CricketMatchScreen.styles';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -11,14 +11,13 @@ import { RootStackParamList } from '@app-types/navigation';
 type Props = NativeStackScreenProps<RootStackParamList, 'CricketMatch'>;
 
 export default function CricketMatchScreen({ navigation }: Props) {
-    const { data: allMatches = [], isLoading } = useGetLiveMatchesQuery(undefined);
-    const [cricketMatches, setCricketMatches] = useState<any[]>([]);
-
-    useEffect(() => {
-        // Filter only cricket matches
-        const filtered = allMatches.filter(match => match.sport?.toLowerCase() === 'cricket');
-        setCricketMatches(filtered);
-    }, [allMatches]);
+    // Use Cricbuzz API for cricket matches with real-time polling
+    const { data: cricketMatches = [], isLoading } = useGetCricketLiveMatchesQuery(
+        undefined,
+        {
+            pollingInterval: 30000, // Poll every 30 seconds for live updates
+        }
+    );
 
     const renderMatchItem = ({ item }: { item: any }) => (
         <View style={{ marginBottom: 16 }}>
@@ -48,7 +47,7 @@ export default function CricketMatchScreen({ navigation }: Props) {
         <View style={styles.container}>
             <FlatList
                 data={cricketMatches}
-                keyExtractor={item => item._id}
+                keyExtractor={item => String(item.id)}
                 renderItem={renderMatchItem}
                 contentContainerStyle={styles.listContent}
                 ListEmptyComponent={

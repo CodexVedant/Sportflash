@@ -5,6 +5,7 @@ import { theme } from '@utils/theme';
 import { Ionicons } from '@expo/vector-icons';
 import SearchModal from '@components/common/SearchModal';
 import { useGetLiveMatchesQuery } from '@store/api/matchesApi';
+import { useGetCricketLiveMatchesQuery } from '@store/api/cricbuzzApi';
 import { useSelector, useDispatch } from 'react-redux';
 import { NotificationBell, NotificationPanel } from '@components/notifications';
 import { initSocketListeners } from '@store/thunks/socketThunks';
@@ -34,24 +35,31 @@ export default function HomeScreen({ navigation }: Props) {
     const [notificationVisible, setNotificationVisible] = useState(false);
     const [activeSport, setActiveSport] = useState('cricket');
 
-    // Redux State - Single Source of Truth
+    // Fetch cricket from Cricbuzz API
+    const { data: cricketMatches = [] } = useGetCricketLiveMatchesQuery();
+
+    // Redux State - Socket-based live matches (football, basketball)
     const allLiveMatches = useAppSelector(selectAllLiveMatches);
-    // Explicitly type the result of the query hook if needed, but standard usage usually infers correctly
     const { isLoading: isMatchesLoading } = useGetLiveMatchesQuery(undefined);
+
+    // Combine Cricbuzz cricket with socket-based matches
+    const combinedMatches = React.useMemo(() => {
+        const liveMatchesArray = Array.isArray(allLiveMatches) ? allLiveMatches : [];
+        // Filter out cricket from socket data (we use Cricbuzz for cricket)
+        const nonCricketMatches = liveMatchesArray.filter(m => m.sport?.toLowerCase() !== 'cricket');
+        return [...cricketMatches, ...nonCricketMatches];
+    }, [cricketMatches, allLiveMatches]);
 
     // Derived State (Filtering)
     const matches = React.useMemo(() => {
-        // Ensure allLiveMatches is an array
-        const liveMatchesArray = Array.isArray(allLiveMatches) ? allLiveMatches : [];
-
-        const live = liveMatchesArray
+        const live = combinedMatches
             .map(mapMatchToUI)
             .filter(m => m.status === 'live');
 
         return activeSport === 'all'
             ? live
             : live.filter(m => m.sport?.toLowerCase() === activeSport);
-    }, [allLiveMatches, activeSport]);
+    }, [combinedMatches, activeSport]);
 
     const loading = isMatchesLoading && matches.length === 0;
 

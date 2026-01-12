@@ -12,6 +12,7 @@ import { NotificationBell, NotificationPanel } from '@components/notifications';
 import { useSelector } from 'react-redux';
 import TopBar from '@components/navigation/TopBar';
 import { useGetLiveMatchesQuery, useGetUpcomingMatchesQuery } from '@store/api/matchesApi';
+import { useGetCricketLiveMatchesQuery, useGetCricketUpcomingMatchesQuery } from '@store/api/cricbuzzApi';
 import { styles } from '@utils/style/MatchesScreen.styles';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '@app-types/navigation';
@@ -33,15 +34,22 @@ export default function MatchesScreen({ navigation }: Props) {
         dateRange: { start: null, end: null },
     });
 
-    // Fetch both live and upcoming matches on mount for instant tab switching
-    // Note: Live matches API returns both live AND finished matches
-    const { data: liveMatches = [], isLoading: isLoadingLive, error: liveError, refetch: refetchLive } = useGetLiveMatchesQuery(
+    // Fetch cricket matches from Cricbuzz API
+    const { data: cricketLiveMatches = [] } = useGetCricketLiveMatchesQuery();
+
+    // Fetch other sports from general API (filters cricket out)
+    const { data: allLiveMatches = [], isLoading: isLoadingLive, error: liveError, refetch: refetchLive } = useGetLiveMatchesQuery(
         undefined
-        // No skip - always fetch live matches
     );
 
-    // Prefetch upcoming matches for ALL sports for instant tab switching
-    const { data: upcomingCricket = [] } = useGetUpcomingMatchesQuery({ sport: 'cricket' });
+    // Combine cricket (from Cricbuzz) with other sports (from AllSportsAPI)
+    const liveMatches = React.useMemo(() => {
+        const nonCricketMatches = allLiveMatches.filter(m => m.sport?.toLowerCase() !== 'cricket');
+        return [...cricketLiveMatches, ...nonCricketMatches];
+    }, [cricketLiveMatches, allLiveMatches]);
+
+    // Prefetch upcoming matches - use Cricbuzz for cricket
+    const { data: upcomingCricket = [] } = useGetCricketUpcomingMatchesQuery();
     const { data: upcomingFootball = [] } = useGetUpcomingMatchesQuery({ sport: 'football' });
     const { data: upcomingBasketball = [] } = useGetUpcomingMatchesQuery({ sport: 'basketball' });
 
