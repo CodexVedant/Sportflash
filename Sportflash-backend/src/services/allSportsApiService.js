@@ -85,82 +85,28 @@ class AllSportsApiService {
 
     /**
      * Get football fixtures
-     * @param {string} date - Date in YYYY-MM-DD format
+     * @param {string} date - Date in YYYY-MM-DD format (single day)
+     * @param {string} from - Start date YYYY-MM-DD
+     * @param {string} to - End date YYYY-MM-DD
      * @param {string} leagueId - Optional league ID filter
      * @param {string} teamId - Optional team ID filter
      */
-    async getFootballFixtures({ date = null, leagueId = null, teamId = null } = {}) {
+    async getFootballFixtures({ date = null, from = null, to = null, leagueId = null, teamId = null } = {}) {
         const params = {};
-        if (date) params.from = date;
-        if (date) params.to = date;
+        if (from && to) {
+            params.from = from;
+            params.to = to;
+        } else if (date) {
+            params.from = date;
+            params.to = date;
+        }
+
         if (leagueId) params.league_id = leagueId;
         if (teamId) params.team_id = teamId;
 
         return await this.makeRequest('football', 'Fixtures', params);
     }
-
-    /**
-     * Get football standings
-     * @param {string} leagueId - League ID
-     */
-    async getFootballStandings(leagueId) {
-        return await this.makeRequest('football', 'Standings', { leagueId: leagueId });
-    }
-
-    /**
-     * Get football team details
-     * @param {string} teamId - Team ID
-     */
-    async getFootballTeam(teamId) {
-        return await this.makeRequest('football', 'Teams', { teamId: teamId });
-    }
-
-    /**
-     * Get football H2H (Head to Head)
-     * @param {string} firstTeamId - First team ID
-     * @param {string} secondTeamId - Second team ID
-     */
-    async getFootballH2H(firstTeamId, secondTeamId) {
-        return await this.makeRequest('football', 'H2H', {
-            firstTeamId,
-            secondTeamId
-        });
-    }
-
-    /**
-     * Get football top scorers
-     * @param {string} leagueId - League ID
-     */
-    async getFootballTopScorers(leagueId) {
-        return await this.makeRequest('football', 'Topscorers', { leagueId: leagueId });
-    }
-
-    /**
-     * Get football player details
-     * @param {string} playerId - Player ID
-     */
-    async getFootballPlayer(playerId) {
-        return await this.makeRequest('football', 'Players', { player_id: playerId });
-    }
-
-    // === BASKETBALL METHODS ===
-
-    /**
-     * Get basketball countries
-     */
-    async getBasketballCountries() {
-        return await this.makeRequest('basketball', 'Countries');
-    }
-
-    /**
-     * Get basketball leagues
-     * @param {string} countryId - Optional country ID filter
-     */
-    async getBasketballLeagues(countryId = null) {
-        const params = countryId ? { countryId: countryId } : {};
-        return await this.makeRequest('basketball', 'Leagues', params);
-    }
-
+    // ...
     /**
      * Get basketball live scores
      */
@@ -170,57 +116,28 @@ class AllSportsApiService {
 
     /**
      * Get basketball fixtures
-     * @param {string} date - Date in YYYY-MM-DD format
+     * @param {string} date - Date in YYYY-MM-DD format (single day)
+     * @param {string} from - Start date YYYY-MM-DD
+     * @param {string} to - End date YYYY-MM-DD
      * @param {string} leagueId - Optional league ID filter
      * @param {string} teamId - Optional team ID filter
      */
-    async getBasketballFixtures({ date = null, leagueId = null, teamId = null } = {}) {
+    async getBasketballFixtures({ date = null, from = null, to = null, leagueId = null, teamId = null } = {}) {
         const params = {};
-        if (date) params.from = date;
-        if (date) params.to = date;
+        if (from && to) {
+            params.from = from;
+            params.to = to;
+        } else if (date) {
+            params.from = date;
+            params.to = date;
+        }
+
         if (leagueId) params.leagueId = leagueId;
         if (teamId) params.teamId = teamId;
 
         return await this.makeRequest('basketball', 'Fixtures', params);
     }
-
-    /**
-     * Get basketball standings
-     * @param {string} leagueId - League ID
-     */
-    async getBasketballStandings(leagueId) {
-        return await this.makeRequest('basketball', 'Standings', { leagueId: leagueId });
-    }
-
-    /**
-     * Get basketball team details
-     * @param {string} teamId - Team ID
-     */
-    async getBasketballTeam(teamId) {
-        return await this.makeRequest('basketball', 'Teams', { teamId: teamId });
-    }
-
-    /**
-     * Get basketball H2H (Head to Head)
-     * @param {string} firstTeamId - First team ID
-     * @param {string} secondTeamId - Second team ID
-     */
-    async getBasketballH2H(firstTeamId, secondTeamId) {
-        return await this.makeRequest('basketball', 'H2H', {
-            firstTeamId,
-            secondTeamId
-        });
-    }
-
-    // === CRICKET METHODS ===
-
-    /**
-     * Get cricket leagues
-     */
-    async getCricketLeagues() {
-        return await this.makeRequest('cricket', 'Leagues');
-    }
-
+    // ...
     /**
      * Get cricket live scores
      */
@@ -230,14 +147,22 @@ class AllSportsApiService {
 
     /**
      * Get cricket fixtures
-     * @param {string} date - Date in YYYY-MM-DD format
+     * @param {string} date - Date in YYYY-MM-DD format (single day)
+     * @param {string} from - Start date YYYY-MM-DD
+     * @param {string} to - End date YYYY-MM-DD
      * @param {string} leagueId - Optional league ID filter
      * @param {string} teamId - Optional team ID filter
      */
-    async getCricketFixtures({ date = null, leagueId = null, teamId = null } = {}) {
+    async getCricketFixtures({ date = null, from = null, to = null, leagueId = null, teamId = null } = {}) {
         const params = {};
-        if (date) params.from = date;
-        if (date) params.to = date;
+        if (from && to) {
+            params.from = from;
+            params.to = to;
+        } else if (date) {
+            params.from = date;
+            params.to = date;
+        }
+
         if (leagueId) params.league_id = leagueId;
         if (teamId) params.team_id = teamId;
 
@@ -309,21 +234,35 @@ class AllSportsApiService {
     }
 
     /**
-     * Get fixtures for a specific sport and date
+     * Get fixtures for a specific sport and date/range
      * @param {string} sport - Sport type (football, basketball, cricket)
-     * @param {string} date - Date in YYYY-MM-DD format
+     * @param {string} date - Date in YYYY-MM-DD format (optional)
+     * @param {string} from - Start date in YYYY-MM-DD format (optional)
+     * @param {string} to - End date in YYYY-MM-DD format (optional)
      */
-    async getFixturesBySport(sport, date = null) {
-        const today = date || new Date().toISOString().split('T')[0];
+    async getFixturesBySport(sport, date = null, from = null, to = null) {
+        // Only default to today if NO date parameters are provided
+        const useDefaultDate = !date && !from && !to;
+        const today = useDefaultDate ? new Date().toISOString().split('T')[0] : null;
+
+        const options = {};
+        if (from && to) {
+            options.from = from;
+            options.to = to;
+        } else if (date) {
+            options.date = date;
+        } else if (today) {
+            options.date = today;
+        }
 
         switch (sport.toLowerCase()) {
             case 'football':
             case 'soccer':
-                return await this.getFootballFixtures({ date: today });
+                return await this.getFootballFixtures(options);
             case 'basketball':
-                return await this.getBasketballFixtures({ date: today });
+                return await this.getBasketballFixtures(options);
             case 'cricket':
-                return await this.getCricketFixtures({ date: today });
+                return await this.getCricketFixtures(options);
             default:
                 throw new Error(`Unsupported sport: ${sport}`);
         }

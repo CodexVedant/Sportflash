@@ -72,11 +72,25 @@ exports.getUpcomingMatches = async (req, res) => {
         const { sport, date, days = 7 } = req.query;
 
         let upcomingMatches = [];
-        const targetDate = date || new Date().toISOString().split('T')[0];
+
+        let fromDate = null;
+        let toDateStr = null;
+        let singleDate = null;
+
+        if (date) {
+            singleDate = date;
+        } else {
+            const today = new Date();
+            fromDate = today.toISOString().split('T')[0];
+
+            const endDate = new Date(today);
+            endDate.setDate(today.getDate() + parseInt(days));
+            toDateStr = endDate.toISOString().split('T')[0];
+        }
 
         if (sport) {
             // Get upcoming matches for specific sport
-            const rawMatches = await allSportsApi.getFixturesBySport(sport, targetDate);
+            const rawMatches = await allSportsApi.getFixturesBySport(sport, singleDate, fromDate, toDateStr);
 
             if (rawMatches) {
                 switch (sport.toLowerCase()) {
@@ -100,10 +114,14 @@ exports.getUpcomingMatches = async (req, res) => {
             }
         } else {
             // Get upcoming matches for all sports
+            const options = singleDate
+                ? { date: singleDate }
+                : { from: fromDate, to: toDateStr };
+
             const [footballFixtures, basketballFixtures, cricketFixtures] = await Promise.allSettled([
-                allSportsApi.getFootballFixtures({ date: targetDate }),
-                allSportsApi.getBasketballFixtures({ date: targetDate }),
-                allSportsApi.getCricketFixtures({ date: targetDate })
+                allSportsApi.getFootballFixtures(options),
+                allSportsApi.getBasketballFixtures(options),
+                allSportsApi.getCricketFixtures(options)
             ]);
 
             upcomingMatches = [
