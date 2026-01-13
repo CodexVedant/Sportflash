@@ -2,6 +2,8 @@ export type RootStackParamList = {
     Main: undefined;
     Login: undefined;
     Register: undefined;
+    ForgotPassword: undefined;
+    ResetPassword: { resetToken: string };
     MatchDetail: { match?: any; id?: string; sport?: string };
     Series: { id: string; sport: string };
     Following: undefined;

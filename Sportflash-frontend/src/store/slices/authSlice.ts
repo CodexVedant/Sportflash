@@ -105,6 +105,14 @@ const authSlice = createSlice({
     reducers: {
         clearError: (state) => {
             state.error = null;
+        },
+        setCredentials: (state, action: PayloadAction<AuthResponseData>) => {
+            state.user = action.payload.user;
+            state.token = action.payload.token;
+            // Store in AsyncStorage
+            AsyncStorage.setItem('token', action.payload.token);
+            AsyncStorage.setItem('user', JSON.stringify(action.payload.user));
+            api.defaults.headers.common['Authorization'] = `Bearer ${action.payload.token}`;
         }
     },
     extraReducers: (builder) => {
@@ -163,6 +171,6 @@ const authSlice = createSlice({
     },
 });
 
-export const { clearError } = authSlice.actions;
+export const { clearError, setCredentials } = authSlice.actions;
 export default authSlice.reducer;
 

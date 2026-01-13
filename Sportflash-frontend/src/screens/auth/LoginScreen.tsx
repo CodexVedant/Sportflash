@@ -113,7 +113,10 @@ export default function LoginScreen({ navigation, route }: Props) {
                                     autoComplete="off"
                                 />
 
-                                <TouchableOpacity style={styles.forgotBtn}>
+                                <TouchableOpacity
+                                    style={styles.forgotBtn}
+                                    onPress={() => navigation.navigate('ForgotPassword')}
+                                >
                                     <Text style={styles.forgotText}>Forgot Password?</Text>
                                 </TouchableOpacity>
 

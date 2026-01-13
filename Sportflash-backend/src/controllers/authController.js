@@ -192,3 +192,145 @@ exports.updatePreferences = async (req, res) => {
         });
     }
 };
+
+// @desc    Forgot password
+// @route   POST /api/auth/forgot-password
+// @access  Public
+exports.forgotPassword = async (req, res) => {
+    try {
+        const { email } = req.body;
+
+        console.log('🔑 Forgot password request for:', email);
+
+        // Normalize email
+        const normalizedEmail = email?.trim().toLowerCase();
+
+        // Find user
+        const user = await User.findOne({ email: normalizedEmail });
+
+        if (!user) {
+            // Don't reveal if user exists or not (security best practice)
+            return res.status(200).json({
+                success: true,
+                message: 'If an account with that email exists, a password reset link has been sent.'
+            });
+        }
+
+        // Generate reset token
+        const resetToken = user.getResetPasswordToken();
+
+        // Save user with reset token
+        await user.save({ validateBeforeSave: false });
+
+        // Create reset URL
+        const resetUrl = `${process.env.CLIENT_URL || 'http://localhost:8081'}/reset-password/${resetToken}`;
+
+        console.log('✅ Reset token generated for:', email);
+        console.log('🔗 Reset URL:', resetUrl);
+
+        // In production, you would send an email here
+        // For development, we'll return the token in the response
+        if (process.env.NODE_ENV === 'development') {
+            return res.status(200).json({
+                success: true,
+                message: 'Password reset token generated',
+                resetToken, // Only in development!
+                resetUrl    // Only in development!
+            });
+        }
+
+        // TODO: Send email with reset link
+        // await sendEmail({
+        //     to: user.email,
+        //     subject: 'Password Reset Request',
+        //     text: `You requested a password reset. Click this link: ${resetUrl}`
+        // });
+
+        res.status(200).json({
+            success: true,
+            message: 'If an account with that email exists, a password reset link has been sent.'
+        });
+
+    } catch (error) {
+        console.error('🔴 Forgot password error:', error);
+
+        // Clear reset token if error
+        if (user) {
+            user.resetPasswordToken = undefined;
+            user.resetPasswordExpire = undefined;
+            await user.save({ validateBeforeSave: false });
+        }
+
+        res.status(500).json({
+            success: false,
+            message: 'Error processing password reset request'
+        });
+    }
+};
+
+// @desc    Reset password
+// @route   PUT /api/auth/reset-password/:resetToken
+// @access  Public
+exports.resetPassword = async (req, res) => {
+    try {
+        const { password } = req.body;
+        const crypto = require('crypto');
+
+        console.log('🔑 Reset password attempt with token');
+
+        // Hash the token from URL
+        const resetPasswordToken = crypto
+            .createHash('sha256')
+            .update(req.params.resetToken)
+            .digest('hex');
+
+        // Find user with valid token
+        const user = await User.findOne({
+            resetPasswordToken,
+            resetPasswordExpire: { $gt: Date.now() }
+        }).select('+resetPasswordToken +resetPasswordExpire');
+
+        if (!user) {
+            console.log('❌ Invalid or expired reset token');
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid or expired reset token'
+            });
+        }
+
+        console.log('✅ Valid reset token for:', user.email);
+
+        // Set new password
+        user.password = password;
+        user.resetPasswordToken = undefined;
+        user.resetPasswordExpire = undefined;
+
+        await user.save();
+
+        console.log('✅ Password reset successful for:', user.email);
+
+        // Generate new JWT token
+        const token = generateToken(user._id);
+
+        res.status(200).json({
+            success: true,
+            message: 'Password reset successful',
+            data: {
+                user: {
+                    id: user._id,
+                    name: user.name,
+                    email: user.email,
+                    role: user.role
+                },
+                token
+            }
+        });
+
+    } catch (error) {
+        console.error('🔴 Reset password error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error resetting password'
+        });
+    }
+};
