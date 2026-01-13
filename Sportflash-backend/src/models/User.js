@@ -55,6 +55,19 @@ const userSchema = new mongoose.Schema({
         notifications: {
             type: Boolean,
             default: true
+        },
+        globalSettings: {
+            cricket: {
+                wickets: { type: Boolean, default: true },
+                fours: { type: Boolean, default: true },
+                sixes: { type: Boolean, default: true }
+            },
+            football: {
+                goals: { type: Boolean, default: true }
+            },
+            basketball: {
+                points: { type: Boolean, default: true }
+            }
         }
     },
     bookmarks: [{
