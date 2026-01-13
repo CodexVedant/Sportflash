@@ -1,5 +1,6 @@
 const User = require('../models/User');
 const jwt = require('jsonwebtoken');
+const sendEmail = require('../utils/sendEmail');
 
 // Generate JWT Token
 const generateToken = (id) => {
@@ -228,28 +229,29 @@ exports.forgotPassword = async (req, res) => {
         console.log('✅ Reset token generated for:', email);
         console.log('🔗 Reset URL:', resetUrl);
 
-        // In production, you would send an email here
-        // For development, we'll return the token in the response
-        if (process.env.NODE_ENV === 'development') {
-            return res.status(200).json({
+        try {
+            await sendEmail({
+                email: user.email,
+                subject: 'Password Reset Request',
+                message: `You requested a password reset. Please make a PUT request to: \n\n ${resetUrl}`
+            });
+
+            res.status(200).json({
                 success: true,
-                message: 'Password reset token generated',
-                resetToken, // Only in development!
-                resetUrl    // Only in development!
+                message: 'Email sent'
+            });
+        } catch (err) {
+            console.error(err);
+            user.resetPasswordToken = undefined;
+            user.resetPasswordExpire = undefined;
+
+            await user.save({ validateBeforeSave: false });
+
+            return res.status(500).json({
+                success: false,
+                message: 'Email could not be sent'
             });
         }
-
-        // TODO: Send email with reset link
-        // await sendEmail({
-        //     to: user.email,
-        //     subject: 'Password Reset Request',
-        //     text: `You requested a password reset. Click this link: ${resetUrl}`
-        // });
-
-        res.status(200).json({
-            success: true,
-            message: 'If an account with that email exists, a password reset link has been sent.'
-        });
 
     } catch (error) {
         console.error('🔴 Forgot password error:', error);

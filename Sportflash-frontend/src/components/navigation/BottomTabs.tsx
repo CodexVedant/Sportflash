@@ -8,7 +8,6 @@ import { StyleSheet } from 'react-native';
 import HomeScreen from '@screens/home/HomeScreen';
 import MatchesScreen from '@screens/matches/MatchesScreen';
 import NewsScreen from '@screens/news/NewsScreen';
-import StandingsScreen from '@screens/standings/StandingsScreen';
 import ProfileScreen from '@screens/profile/ProfileScreen';
 
 // Theme
@@ -34,8 +33,6 @@ export default function BottomTabs() {
                         iconName = focused ? 'calendar' : 'calendar-outline';
                     } else if (route.name === 'News') {
                         iconName = focused ? 'newspaper' : 'newspaper-outline';
-                    } else if (route.name === 'Standings') {
-                        iconName = focused ? 'trophy' : 'trophy-outline';
                     } else if (route.name === 'Profile') {
                         iconName = focused ? 'person' : 'person-outline';
                     }
@@ -50,7 +47,6 @@ export default function BottomTabs() {
             <Tab.Screen name="Home" component={HomeScreen as any} />
             <Tab.Screen name="Matches" component={MatchesScreen as any} />
             <Tab.Screen name="News" component={NewsScreen as any} />
-            <Tab.Screen name="Standings" component={StandingsScreen as any} />
             <Tab.Screen name="Profile" component={ProfileScreen as any} />
         </Tab.Navigator>
     );
