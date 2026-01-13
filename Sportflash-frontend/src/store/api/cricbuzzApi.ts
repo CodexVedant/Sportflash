@@ -155,6 +155,45 @@ export const cricbuzzApi = createApi({
             query: ({ type = 'international' }) => `/series?type=${type}`,
             transformResponse: (response: CricbuzzApiResponse<any[]>) => response.data,
         }),
+
+        // === ENHANCED ENDPOINTS ===
+
+        // Enhanced match scorecard (v2)
+        getCricketMatchScorecardV2: builder.query<any, string>({
+            query: (matchId) => `/matches/${matchId}/scorecard-v2`,
+            transformResponse: (response: CricbuzzApiResponse<any>) => response.data,
+        }),
+
+        // Enhanced match info
+        getCricketMatchInfo: builder.query<any, string>({
+            query: (matchId) => `/matches/${matchId}/info`,
+            transformResponse: (response: CricbuzzApiResponse<any>) => response.data,
+            providesTags: (result, error, matchId) => [{ type: 'CricketMatch', id: matchId }],
+        }),
+
+        // Player career stats (enhanced)
+        getCricketPlayerCareer: builder.query<any, string>({
+            query: (playerId) => `/players/${playerId}/career`,
+            transformResponse: (response: CricbuzzApiResponse<any>) => response.data,
+        }),
+
+        // Trending players
+        getTrendingCricketPlayers: builder.query<Player[], void>({
+            query: () => '/players/trending',
+            transformResponse: (response: CricbuzzApiResponse<Player[]>) => response.data,
+        }),
+
+        // Series points table (CRITICAL)
+        getSeriesPointsTable: builder.query<any, string>({
+            query: (seriesId) => `/series/${seriesId}/points-table`,
+            transformResponse: (response: CricbuzzApiResponse<any>) => response.data,
+        }),
+
+        // Cricket schedules
+        getCricketSchedules: builder.query<any[], void>({
+            query: () => '/schedules',
+            transformResponse: (response: CricbuzzApiResponse<any[]>) => response.data,
+        }),
     }),
 });
 
@@ -171,4 +210,11 @@ export const {
     useGetICCRankingsQuery,
     useGetCricketNewsQuery,
     useGetCricketSeriesQuery,
+    // Enhanced endpoints
+    useGetCricketMatchScorecardV2Query,
+    useGetCricketMatchInfoQuery,
+    useGetCricketPlayerCareerQuery,
+    useGetTrendingCricketPlayersQuery,
+    useGetSeriesPointsTableQuery,
+    useGetCricketSchedulesQuery,
 } = cricbuzzApi;

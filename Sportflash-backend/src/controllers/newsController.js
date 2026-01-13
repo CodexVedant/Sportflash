@@ -75,16 +75,45 @@ exports.getNewsBySport = async (req, res) => {
 
         console.log(`📰 Fetching ${sport} news - Limit: ${limit}`);
 
-        const articles = await newsDataService.getNewsBySport(sport, parseInt(limit));
+        let articles;
+        let source;
 
-        // Map articles to our format
-        const mappedArticles = articles.map(article => newsDataService.mapArticle(article));
+        // Use Cricbuzz for cricket news (PRIMARY)
+        if (sport.toLowerCase() === 'cricket') {
+            const cricbuzzService = require('../services/cricbuzzService');
+            const cricketNews = await cricbuzzService.getCricketNews();
+
+            // Map Cricbuzz news to our format
+            articles = cricketNews?.storyList?.slice(0, parseInt(limit)).map(story => ({
+                id: story.story?.id || Math.random().toString(),
+                title: story.story?.hline || 'Cricket News',
+                description: story.story?.intro || '',
+                content: story.story?.intro || '',
+                url: story.story?.coverImage || '',
+                image: story.story?.coverImage || null,
+                publishedAt: new Date(story.story?.pubTime || Date.now()).toISOString(),
+                source: {
+                    name: 'Cricbuzz',
+                    url: 'https://www.cricbuzz.com'
+                },
+                category: 'cricket',
+                sport: 'cricket'
+            })) || [];
+
+            source = 'Cricbuzz';
+        } else {
+            // Use NewsData.io for football and basketball
+            articles = await newsDataService.getNewsBySport(sport, parseInt(limit));
+            articles = articles.map(article => newsDataService.mapArticle(article));
+            source = 'NewsData.io';
+        }
 
         res.json({
             success: true,
-            count: mappedArticles.length,
+            count: articles.length,
             sport,
-            data: mappedArticles
+            source,
+            data: articles
         });
     } catch (error) {
         console.error('Error in getNewsBySport:', error);

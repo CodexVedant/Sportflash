@@ -143,6 +143,97 @@ GET /series/v1/{seriesId}/matches
 GET /series/v1/{seriesId}/standings
 ```
 
+#### **G. ENHANCED ENDPOINTS** ✨ **NEW - IMPLEMENTED**
+
+```javascript
+// === Enhanced Match Endpoints ===
+
+// Enhanced match info
+GET /matches/get-info?matchId={matchId}
+
+// Enhanced scorecard (v2) - Better format
+GET /matches/get-scorecard-v2?matchId={matchId}
+
+// Enhanced commentaries (v2) - More detailed
+GET /matches/get-commentaries-v2?matchId={matchId}
+
+// Match list
+GET /matches/list
+
+// Match team details
+GET /matches/get-team?matchId={matchId}
+
+// === Enhanced Player Endpoints ===
+
+// Player career (enhanced) - Complete stats
+GET /players/get-career?playerId={playerId}
+
+// Player bowling (enhanced)
+GET /players/get-bowling?playerId={playerId}
+
+// Player batting (enhanced)
+GET /players/get-batting?playerId={playerId}
+
+// Player info (enhanced)
+GET /players/get-info?playerId={playerId}
+
+// Trending players
+GET /players/list-trending
+
+// Player news
+GET /players/get-news?playerId={playerId}
+
+// === Enhanced Series Endpoints ===
+
+// Series points table (CRITICAL) - Tournament standings
+GET /series/get-points-table?seriesId={seriesId}
+
+// Series squads
+GET /series/get-squads?seriesId={seriesId}
+
+// Series players
+GET /series/get-players?seriesId={seriesId}
+
+// Series venues
+GET /series/get-venues?seriesId={seriesId}
+
+// Series news
+GET /series/get-news?seriesId={seriesId}
+
+// Series stats
+GET /series/get-stats?seriesId={seriesId}
+
+// Series archives
+GET /series/list-archives
+
+// === Schedules ===
+
+// Cricket schedules
+GET /schedules/list
+```
+
+---
+
+## 🆕 **IMPLEMENTATION STATUS** - January 12, 2026
+
+### **✅ COMPLETED ENHANCEMENTS**
+
+**Backend**:
+- ✅ Added 20+ enhanced endpoints to `cricbuzzService.js`
+- ✅ Created new controller methods in `cricketController.js`
+- ✅ Updated routes in `cricketRoutes.js`
+- ✅ All endpoints tested and working
+
+**New Endpoints Available**:
+```
+✅ GET /api/cricket/matches/:id/scorecard-v2
+✅ GET /api/cricket/matches/:id/info
+✅ GET /api/cricket/players/:id/career
+✅ GET /api/cricket/players/trending
+✅ GET /api/cricket/series/:id/points-table
+✅ GET /api/cricket/schedules
+```
+
 ---
 
 ## 3️⃣ Data Structure Comparison

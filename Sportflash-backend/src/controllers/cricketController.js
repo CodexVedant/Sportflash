@@ -555,4 +555,224 @@ exports.getTrendingPlayers = async (req, res) => {
     }
 };
 
+// === TEAM ENDPOINTS (HIGH VALUE) ===
+
+/**
+ * @desc    Get team schedules
+ * @route   GET /api/cricket/teams/:id/schedules
+ * @access  Public
+ */
+exports.getTeamSchedules = async (req, res) => {
+    try {
+        const { id } = req.params;
+        console.log(`🏏 Fetching schedules for team ID: ${id}`);
+
+        const schedules = await cricbuzzService.getTeamSchedules(id);
+
+        res.json({
+            success: true,
+            data: schedules,
+            source: 'Cricbuzz API'
+        });
+    } catch (error) {
+        console.error('Error in getTeamSchedules:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error fetching team schedules',
+            error: error.message
+        });
+    }
+};
+
+/**
+ * @desc    Get team results
+ * @route   GET /api/cricket/teams/:id/results
+ * @access  Public
+ */
+exports.getTeamResults = async (req, res) => {
+    try {
+        const { id } = req.params;
+        console.log(`🏏 Fetching results for team ID: ${id}`);
+
+        const results = await cricbuzzService.getTeamResults(id);
+
+        res.json({
+            success: true,
+            data: results,
+            source: 'Cricbuzz API'
+        });
+    } catch (error) {
+        console.error('Error in getTeamResults:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error fetching team results',
+            error: error.message
+        });
+    }
+};
+
+/**
+ * @desc    Get team players (detailed squad)
+ * @route   GET /api/cricket/teams/:id/players
+ * @access  Public
+ */
+exports.getTeamPlayersDetailed = async (req, res) => {
+    try {
+        const { id } = req.params;
+        console.log(`🏏 Fetching players for team ID: ${id}`);
+
+        const players = await cricbuzzService.getTeamPlayersDetailed(id);
+
+        res.json({
+            success: true,
+            data: players,
+            source: 'Cricbuzz API'
+        });
+    } catch (error) {
+        console.error('Error in getTeamPlayersDetailed:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error fetching team players',
+            error: error.message
+        });
+    }
+};
+
+/**
+ * @desc    Get team stats
+ * @route   GET /api/cricket/teams/:id/stats
+ * @access  Public
+ */
+exports.getTeamStats = async (req, res) => {
+    try {
+        const { id } = req.params;
+        console.log(`🏏 Fetching stats for team ID: ${id}`);
+
+        const stats = await cricbuzzService.getTeamStats(id);
+
+        res.json({
+            success: true,
+            data: stats,
+            source: 'Cricbuzz API'
+        });
+    } catch (error) {
+        console.error('Error in getTeamStats:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error fetching team stats',
+            error: error.message
+        });
+    }
+};
+
+// === NEWS ENDPOINTS (HIGH VALUE) ===
+
+/**
+ * @desc    Get news detail
+ * @route   GET /api/cricket/news/:id
+ * @access  Public
+ */
+exports.getCricketNewsDetail = async (req, res) => {
+    try {
+        const { id } = req.params;
+        console.log(`🏏 Fetching news detail for ID: ${id}`);
+
+        const newsDetail = await cricbuzzService.getNewsDetail(id);
+
+        res.json({
+            success: true,
+            data: newsDetail,
+            source: 'Cricbuzz API'
+        });
+    } catch (error) {
+        console.error('Error in getCricketNewsDetail:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error fetching news detail',
+            error: error.message
+        });
+    }
+};
+
+/**
+ * @desc    Get news categories
+ * @route   GET /api/cricket/news/categories
+ * @access  Public
+ */
+exports.getNewsCategories = async (req, res) => {
+    try {
+        console.log('🏏 Fetching news categories...');
+
+        const categories = await cricbuzzService.getNewsCategories();
+
+        res.json({
+            success: true,
+            data: categories,
+            source: 'Cricbuzz API'
+        });
+    } catch (error) {
+        console.error('Error in getNewsCategories:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error fetching news categories',
+            error: error.message
+        });
+    }
+};
+
+// === STATS/RECORDS ENDPOINTS (HIGH VALUE) ===
+
+/**
+ * @desc    Get ICC standings
+ * @route   GET /api/cricket/stats/standings
+ * @access  Public
+ */
+exports.getICCStandings = async (req, res) => {
+    try {
+        const { format = 'test' } = req.query;
+        console.log(`🏏 Fetching ICC standings for ${format}...`);
+
+        const standings = await cricbuzzService.getICCStandings(format);
+
+        res.json({
+            success: true,
+            data: standings,
+            source: 'Cricbuzz API'
+        });
+    } catch (error) {
+        console.error('Error in getICCStandings:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error fetching ICC standings',
+            error: error.message
+        });
+    }
+};
+
+/**
+ * @desc    Get cricket records
+ * @route   GET /api/cricket/stats/records
+ * @access  Public
+ */
+exports.getCricketRecords = async (req, res) => {
+    try {
+        console.log('🏏 Fetching cricket records...');
+
+        const records = await cricbuzzService.getRecords(req.query);
+
+        res.json({
+            success: true,
+            data: records,
+            source: 'Cricbuzz API'
+        });
+    } catch (error) {
+        console.error('Error in getCricketRecords:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error fetching cricket records',
+            error: error.message
+        });
+    }
+};
+
 module.exports = exports;

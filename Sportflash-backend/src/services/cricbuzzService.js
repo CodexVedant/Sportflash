@@ -441,6 +441,106 @@ class CricbuzzService {
     async getSchedules() {
         return await this.makeRequest('/schedules/list');
     }
+
+    // === TEAM ENDPOINTS (HIGH VALUE) ===
+
+    /**
+     * Get team schedules
+     * @param {string} teamId - Team ID
+     */
+    async getTeamSchedules(teamId) {
+        return await this.makeRequest(`/teams/get-schedules?teamId=${teamId}`);
+    }
+
+    /**
+     * Get team results
+     * @param {string} teamId - Team ID
+     */
+    async getTeamResults(teamId) {
+        return await this.makeRequest(`/teams/get-results?teamId=${teamId}`);
+    }
+
+    /**
+     * Get team players (full squad)
+     * @param {string} teamId - Team ID
+     */
+    async getTeamPlayersDetailed(teamId) {
+        return await this.makeRequest(`/teams/get-players?teamId=${teamId}`);
+    }
+
+    /**
+     * Get team stats
+     * @param {string} teamId - Team ID
+     */
+    async getTeamStats(teamId) {
+        return await this.makeRequest(`/teams/get-stats?teamId=${teamId}`);
+    }
+
+    // === NEWS ENDPOINTS (HIGH VALUE) ===
+
+    /**
+     * Get news detail
+     * @param {string} newsId - News ID
+     */
+    async getNewsDetail(newsId) {
+        return await this.makeRequest(`/news/detail/${newsId}`);
+    }
+
+    /**
+     * Get news categories
+     */
+    async getNewsCategories() {
+        return await this.makeRequest('/news/get-categories');
+    }
+
+    /**
+     * Get news by category
+     * @param {string} category - Category name
+     */
+    async getNewsByCategory(category) {
+        return await this.makeRequest(`/news/list-by-category?category=${category}`);
+    }
+
+    /**
+     * Get news topics
+     */
+    async getNewsTopics() {
+        return await this.makeRequest('/news/get-topics');
+    }
+
+    /**
+     * Get news by topic
+     * @param {string} topic - Topic name
+     */
+    async getNewsByTopic(topic) {
+        return await this.makeRequest(`/news/list-by-topic?topic=${topic}`);
+    }
+
+    // === STATS/RECORDS ENDPOINTS (HIGH VALUE) ===
+
+    /**
+     * Get ICC standings
+     * @param {string} formatType - test, odi, or t20
+     */
+    async getICCStandings(formatType = 'test') {
+        return await this.makeRequest(`/stats/get-icc-standings?formatType=${formatType}`);
+    }
+
+    /**
+     * Get record filters
+     */
+    async getRecordFilters() {
+        return await this.makeRequest('/stats/get-record-filters');
+    }
+
+    /**
+     * Get cricket records
+     * @param {object} filters - Record filters
+     */
+    async getRecords(filters = {}) {
+        const queryParams = new URLSearchParams(filters).toString();
+        return await this.makeRequest(`/stats/get-records?${queryParams}`);
+    }
 }
 
 // Export singleton instance
