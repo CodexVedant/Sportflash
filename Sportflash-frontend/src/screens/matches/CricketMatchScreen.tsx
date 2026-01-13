@@ -2,7 +2,7 @@
 import { View, FlatList, ActivityIndicator } from 'react-native';
 import { theme } from '@utils/theme';
 import MatchCard from '@components/match/MatchCard';
-import { useGetCricketLiveMatchesQuery } from '@store/api/cricbuzzApi';
+import { useGetLiveMatchesQuery } from '@store/api/matchesApi'; // Changed from cricbuzzApi
 import { EmptyState } from '@components/common';
 import { styles } from '@utils/style/CricketMatchScreen.styles';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -11,13 +11,18 @@ import { RootStackParamList } from '@app-types/navigation';
 type Props = NativeStackScreenProps<RootStackParamList, 'CricketMatch'>;
 
 export default function CricketMatchScreen({ navigation }: Props) {
-    // Use Cricbuzz API for cricket matches with real-time polling
-    const { data: cricketMatches = [], isLoading } = useGetCricketLiveMatchesQuery(
+    // Use matchesApi for all sports including cricket with real-time polling
+    const { data: allMatches = [], isLoading } = useGetLiveMatchesQuery(
         undefined,
         {
             pollingInterval: 30000, // Poll every 30 seconds for live updates
         }
     );
+
+    // Filter for cricket matches only
+    const cricketMatches = React.useMemo(() => {
+        return allMatches.filter(match => match.sport?.toLowerCase() === 'cricket');
+    }, [allMatches]);
 
     const renderMatchItem = ({ item }: { item: any }) => (
         <View style={{ marginBottom: 16 }}>

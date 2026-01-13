@@ -243,7 +243,7 @@ app.get('/api/health', (req, res) => {
 const authRoutes = require('./routes/authRoutes');
 const matchRoutes = require('./routes/matchRoutes');
 const newsRoutes = require('./routes/newsRoutes');
-const cricketRoutes = require('./routes/cricketRoutes');
+// const cricketRoutes = require('./routes/cricketRoutes'); // Disabled - Cricbuzz API not available
 
 // Mount Routes
 app.use('/api/auth', authRoutes);
@@ -251,7 +251,8 @@ app.use('/api/matches', matchRoutes);
 app.use('/api/teams', require('./routes/teamRoutes'));
 app.use('/api/players', require('./routes/playerRoutes'));
 app.use('/api/news', newsRoutes);
-app.use('/api/cricket', cricketRoutes); // Cricbuzz API routes
+// app.use('/api/cricket', cricketRoutes); // Disabled - Use /api/matches?sport=cricket instead
+
 
 
 // Socket.IO Connection Handler

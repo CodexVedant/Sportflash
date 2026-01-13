@@ -15,7 +15,7 @@ import { searchApi } from './api/searchApi';
 import { usersApi } from './api/usersApi';
 import { authApi } from './api/authApi';
 import { playersApi } from './api/playersApi';
-import { cricbuzzApi } from './api/cricbuzzApi';
+// import { cricbuzzApi } from './api/cricbuzzApi'; // REMOVED - Cricbuzz API not available
 
 export const store = configureStore({
     reducer: {
@@ -37,7 +37,7 @@ export const store = configureStore({
         [usersApi.reducerPath]: usersApi.reducer,
         [authApi.reducerPath]: authApi.reducer,
         [playersApi.reducerPath]: playersApi.reducer,
-        [cricbuzzApi.reducerPath]: cricbuzzApi.reducer,
+        // [cricbuzzApi.reducerPath]: cricbuzzApi.reducer, // REMOVED
     },
     middleware: (getDefaultMiddleware) =>
         getDefaultMiddleware({
@@ -50,8 +50,8 @@ export const store = configureStore({
             searchApi.middleware,
             usersApi.middleware,
             authApi.middleware,
-            playersApi.middleware,
-            cricbuzzApi.middleware
+            playersApi.middleware
+            // cricbuzzApi.middleware // REMOVED
         ),
 });
 
