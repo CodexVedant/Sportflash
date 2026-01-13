@@ -14,22 +14,26 @@ const expo = new Expo();
 const sendPushNotification = async (title, body, data = {}, filterFn = null) => {
     try {
         // 1. Fetch Users with Push Tokens
-        // Efficiency: In prod, you'd filter by subscription here.
         const users = await User.find({
             pushToken: { $exists: true, $ne: null },
-            'preferences.notifications': true
-        }).select('pushToken preferences');
+            // Removed strict preference check for debugging to ensure we find the user first
+            // 'preferences.notifications': true 
+        }).select('pushToken preferences email');
+
+        console.log(`🔍 Push: Found ${users.length} potential users`);
 
         let messages = [];
 
         for (const user of users) {
             // 2. Apply Custom Filter (e.g. is subscribed to match?)
-            if (filterFn && !filterFn(user)) {
-                continue;
+            if (filterFn) {
+                const shouldSend = filterFn(user);
+                console.log(`   - User ${user.email}: Filter says ${shouldSend}`);
+                if (!shouldSend) continue;
             }
 
             if (!Expo.isExpoPushToken(user.pushToken)) {
-                console.error(`Push token ${user.pushToken} is not a valid Expo push token`);
+                console.error(`   - Invalid Token for ${user.email}: ${user.pushToken}`);
                 continue;
             }
 
@@ -39,10 +43,15 @@ const sendPushNotification = async (title, body, data = {}, filterFn = null) => 
                 title: title,
                 body: body,
                 data: data,
+                priority: 'high',
+                channelId: 'sportflash-notifications',
             });
         }
 
-        // 3. Chuuk Requests
+        // ... sending logic ...
+        console.log(`🚀 Sending ${messages.length} messages...`);
+
+        // ... (rest of sending logic)
         let chunks = expo.chunkPushNotifications(messages);
         let tickets = [];
 
@@ -55,11 +64,32 @@ const sendPushNotification = async (title, body, data = {}, filterFn = null) => 
             }
         }
 
-        console.log(`🚀 Sent ${messages.length} push notifications: "${title}"`);
+        console.log(`✅ Sent ${tickets.length} tickets for "${title}"`);
 
     } catch (error) {
         console.error('Error sending push notifications:', error);
     }
 };
 
-module.exports = { sendPushNotification };
+const sendRawPushNotification = async (token, title, body, data = {}) => {
+    if (!Expo.isExpoPushToken(token)) return;
+
+    const message = {
+        to: token,
+        sound: 'default',
+        title,
+        body,
+        data,
+        priority: 'high',
+        channelId: 'sportflash-notifications',
+    };
+
+    try {
+        await expo.sendPushNotificationsAsync([message]);
+        console.log(`🚀 Sent RAW push to ${token}`);
+    } catch (error) {
+        console.error('Error sending raw push:', error);
+    }
+};
+
+module.exports = { sendPushNotification, sendRawPushNotification };

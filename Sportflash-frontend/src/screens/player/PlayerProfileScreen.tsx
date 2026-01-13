@@ -5,6 +5,7 @@ import { theme } from '@utils/theme';
 import { Ionicons } from '@expo/vector-icons';
 import PlayerHeader from '@components/player/PlayerHeader';
 import PlayerStats from '@components/player/PlayerStats';
+import PlayerFixtures from '@components/player/PlayerFixtures';
 import { useGetPlayerDetailsQuery } from '@store/api/playersApi';
 import { styles } from '@utils/style/PlayerProfileScreen.styles';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -48,41 +49,64 @@ export default function PlayerProfileScreen({ route, navigation }: Props) {
     const { showToast } = useToast();
 
     // Map API stats to UI format
-    const stats = playerData ? [
-        { label: 'Goals', value: playerData.statistics?.goals || '0', icon: 'football-outline' },
-        { label: 'Assists', value: playerData.statistics?.assists || '0', icon: 'flash-outline' },
-        { label: 'Red Cards', value: playerData.statistics?.redCards || '0', icon: 'alert-circle-outline' },
-        { label: 'Yellow Cards', value: playerData.statistics?.yellowCards || '0', icon: 'warning-outline' },
-    ] : [];
+    const stats = React.useMemo(() => {
+        if (!playerData) return [];
+
+        if (sport === 'cricket') {
+            return [
+                { label: 'Runs', value: playerData.statistics?.runs || '0', icon: 'baseball-outline' },
+                { label: 'Wickets', value: playerData.statistics?.wickets || '0', icon: 'hand-left-outline' }, // closest to bowling
+                { label: 'SR', value: playerData.statistics?.strikeRate || '0.00', icon: 'speedometer-outline' },
+                { label: 'Matches', value: playerData.statistics?.matches || '-', icon: 'calendar-outline' },
+            ];
+        }
+
+        // Default: Football
+        return [
+            { label: 'Goals', value: playerData.statistics?.goals || '0', icon: 'football-outline' },
+            { label: 'Assists', value: playerData.statistics?.assists || '0', icon: 'flash-outline' },
+            { label: 'Red Cards', value: playerData.statistics?.redCards || '0', icon: 'alert-circle-outline' },
+            { label: 'Yellow Cards', value: playerData.statistics?.yellowCards || '0', icon: 'warning-outline' },
+        ];
+    }, [playerData, sport]);
 
     // Temporary placeholder for achievements/form until API supports it
     const form = ['?', '?', '?', '?', '?'];
     const achievements: any[] = [];
 
-    // Merge API data into player object passed to Header (Needed for isActuallyFollowing)
+    // Merge API data into player object passed to Header
     const displayPlayer = {
         ...player,
-        id: player?.id || id, // Ensure ID is present
+        id: player?.id || id,
         image: player?.photo || player?.image || 'https://api.dicebear.com/7.x/avataaars/png?seed=Player',
         team: player?.team?.name || player?.team,
-        name: player?.name || 'Unknown Player'
+        teamId: player?.team?.id || player?.teamId || initialPlayer?.teamId,
+        name: player?.name || 'Unknown Player',
+        // Fallback for bio fields from params/initial
+        nationality: player?.nationality || initialPlayer?.nationality || player?.country || initialPlayer?.country,
+        position: player?.position || initialPlayer?.position || player?.role || initialPlayer?.role
     };
 
-    // Check if following (Robust check)
+    // Check if following
     const isActuallyFollowing = React.useMemo(() => {
         return user?.preferences?.favoritePlayers?.some((p: any) => {
             const pId = typeof p === 'string' ? p : p.id;
             const targetId = displayPlayer.id;
-            // Match by ID if available, else Name
             return (targetId && String(pId) === String(targetId)) ||
                 (typeof p === 'string' && p === displayPlayer.name) ||
                 (typeof p !== 'string' && p?.name === displayPlayer.name);
         });
     }, [user?.preferences?.favoritePlayers, displayPlayer]);
 
-    // Derived property for UI
     displayPlayer.isFollowing = !!isActuallyFollowing;
 
+    // Check if stats are empty
+    const hasStats = React.useMemo(() => {
+        if (!stats.length) return false;
+        return stats.some(s => s.value !== '0' && s.value !== '0.00' && s.value !== '-');
+    }, [stats]);
+
+    const hasForm = false;
 
     const toggleFollow = async () => {
         if (!user) {
@@ -103,14 +127,17 @@ export default function PlayerProfileScreen({ route, navigation }: Props) {
                 });
                 showToast(`Unfollowed ${displayPlayer.name}`, 'success');
             } else {
-                // Follow - Save Full Object (Schema Compliant)
+                // Follow - Save Enhanced Object
                 const playerToSave = {
                     id: displayPlayer.id || displayPlayer.name,
                     name: displayPlayer.name,
                     team: typeof displayPlayer.team === 'object' ? (displayPlayer.team?.name || 'Unknown') : (displayPlayer.team || 'Unknown'),
-                    teamId: typeof displayPlayer.team === 'object' ? displayPlayer.team?.id : displayPlayer.teamId, // Send ID explicitly
+                    teamId: typeof displayPlayer.team === 'object' ? displayPlayer.team?.id : displayPlayer.teamId,
                     sport: sport,
-                    image: displayPlayer.image
+                    image: displayPlayer.image,
+                    // Save Bio Info
+                    nationality: displayPlayer.nationality,
+                    position: displayPlayer.position
                 };
                 console.log('DEBUG: Saving Player:', JSON.stringify(playerToSave, null, 2));
 
@@ -118,22 +145,17 @@ export default function PlayerProfileScreen({ route, navigation }: Props) {
                 showToast(`Following ${displayPlayer.name}`, 'success');
             }
 
-            // Dispatch update
             await dispatch(updateUserPreferences({ favoritePlayers: newPlayers })).unwrap();
-        } catch (error) {
+        } catch (error: any) {
             console.error('Follow Error:', error);
-            showToast('Failed to update favorites', 'error');
+            const msg = error?.message || error || 'Failed to update favorites';
+            showToast(msg.toString(), 'error');
         }
     };
 
     if (isLoading && !player) {
         return (
             <SafeAreaView style={styles.container}>
-                <View style={styles.header}>
-                    <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-                        <Ionicons name="arrow-back" size={24} color={theme.colors.text} />
-                    </TouchableOpacity>
-                </View>
                 <View style={[styles.container, styles.center]}>
                     <ActivityIndicator size="large" color={theme.colors.primary} />
                 </View>
@@ -171,11 +193,60 @@ export default function PlayerProfileScreen({ route, navigation }: Props) {
                 />
 
                 <View style={styles.content}>
-                    <PlayerStats
-                        stats={stats}
-                        form={form}
-                        achievements={achievements}
-                    />
+
+                    {/* 1. Show Stats ONLY if available */}
+                    {hasStats ? (
+                        <>
+                            <PlayerStats
+                                stats={stats}
+                                form={hasForm ? form : []}
+                                achievements={achievements}
+                            />
+                            {/* Hide Recent Form if empty/placeholder */}
+                            <View style={{ marginBottom: 20 }} />
+                        </>
+                    ) : (
+                        /* 2. Alternative: Player Info Card */
+                        <View style={{
+                            backgroundColor: 'rgba(255,255,255,0.05)',
+                            borderRadius: 16,
+                            padding: 20,
+                            marginBottom: 24,
+                            borderWidth: 1,
+                            borderColor: 'rgba(255,255,255,0.1)'
+                        }}>
+                            <Text style={{ color: '#fff', fontSize: 18, fontWeight: 'bold', marginBottom: 16 }}>Player Details</Text>
+
+                            <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 12 }}>
+                                <Text style={{ color: theme.colors.textMuted }}>Nationality</Text>
+                                <Text style={{ color: '#fff', fontWeight: '500' }}>{displayPlayer.nationality || displayPlayer.country || 'Unknown'}</Text>
+                            </View>
+
+                            <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 12 }}>
+                                <Text style={{ color: theme.colors.textMuted }}>Role</Text>
+                                <Text style={{ color: '#fff', fontWeight: '500' }}>{displayPlayer.position || displayPlayer.role || 'Player'}</Text>
+                            </View>
+
+                            <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                                <Text style={{ color: theme.colors.textMuted }}>Team</Text>
+                                <Text style={{ color: theme.colors.primary, fontWeight: 'bold' }}>{displayPlayer.team || 'Free Agent'}</Text>
+                            </View>
+                        </View>
+                    )}
+
+                    {/* Upcoming Matches Section */}
+                    <View style={{ paddingHorizontal: 4 }}>
+                        <Text style={{
+                            fontSize: 18,
+                            fontWeight: 'bold',
+                            color: theme.colors.text,
+                            marginBottom: 12,
+                            fontFamily: theme.fonts.bold
+                        }}>
+                            Upcoming Matches
+                        </Text>
+                        <PlayerFixtures teamId={displayPlayer.teamId} sport={sport} />
+                    </View>
                 </View>
             </ScrollView>
         </SafeAreaView>

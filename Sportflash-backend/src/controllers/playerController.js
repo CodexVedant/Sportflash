@@ -14,6 +14,17 @@ const logDebug = (msg) => {
     }
 };
 
+// ---------------------------------------------------------
+// MANUAL FALLBACK DATA (For API Gaps/Errors)
+// ---------------------------------------------------------
+const knownPlayers = {
+    "A Raghuvanshi": { nationality: "India", position: "Batsman", team: "Kolkata Knight Riders" },
+    "Angkrish Raghuvanshi": { nationality: "India", position: "Batsman", team: "Kolkata Knight Riders" },
+    "TL Seifert": { nationality: "New Zealand", position: "Wicket Keeper / Batsman", team: "Melbourne Stars" },
+    "H Amarasinghe": { nationality: "Sri Lanka", position: "All Rounder", team: "Noakhali Express" }
+};
+// ---------------------------------------------------------
+
 // Helper to fetch image from Wikipedia
 const enrichWikiPlayerImage = async (player) => {
     if (player.photo) return player;
@@ -68,14 +79,18 @@ const enrichCricketPlayerImage = async (player) => {
             if (response.data && response.data.status === 'success' && response.data.data?.length > 0) {
                 const found = response.data.data[0];
                 logDebug(`   -> Match found: ${found.name}, Keys: ${Object.keys(found).join(', ')}`);
-                // logDebug(`   -> Full Object: ${JSON.stringify(found)}`); // enable if desperate
 
                 if (found.playerImg) {
                     logDebug(`   -> ✅ Applied image: ${found.playerImg}`);
-                    return { ...player, photo: found.playerImg };
-                } else {
-                    logDebug(`   -> ⚠️ Player found but no image.`);
                 }
+
+                // Enhanced Enrichment: Get Role and Country too if missing
+                const enriched = { ...player };
+                if (!enriched.photo && found.playerImg) enriched.photo = found.playerImg;
+                if ((!enriched.position || enriched.position === 'Player') && found.role) enriched.position = found.role;
+                if ((!enriched.nationality || enriched.nationality === 'Unknown') && found.country) enriched.nationality = found.country;
+
+                return enriched;
             } else {
                 logDebug(`   -> ❌ No match found for: ${cleanName}`);
             }
@@ -105,23 +120,40 @@ exports.getPlayer = async (req, res) => {
             const nameToSearch = id.replace('name_', '');
             logDebug(`⚠️ ID missing. Performing fallback search for name: ${nameToSearch}`);
 
-            if (sport?.toLowerCase() === 'cricket') {
-                const cricketPlayers = await allSportsApi.getCricketPlayer(nameToSearch);
-                if (cricketPlayers && cricketPlayers.length > 0) {
-                    // Found it! Return the first match
-                    const found = cricketPlayers[0];
-                    // console.log('DEBUG: Found Cricket Player by Name:', found);
-                    let mapped = mapPlayer(found, 'cricket');
-                    mapped = await enrichCricketPlayerImage(mapped);
-                    return res.json({ success: true, data: mapped });
+            // INTERNAL HELPER: Try Finding Player in a specific sport
+            const tryFind = async (s) => {
+                if (s === 'cricket') {
+                    const res = await allSportsApi.getCricketPlayer(nameToSearch);
+                    if (res && res.length > 0) return { data: res[0], type: 'cricket' };
                 }
-            } else if (sport?.toLowerCase() === 'football' || sport?.toLowerCase() === 'soccer') {
-                const footballPlayers = await allSportsApi.getFootballPlayer(nameToSearch);
-                if (footballPlayers && footballPlayers.length > 0) {
-                    const found = footballPlayers[0];
-                    const mapped = mapPlayer(found, 'football');
-                    return res.json({ success: true, data: mapped });
+                if (s === 'football' || s === 'soccer') {
+                    const res = await allSportsApi.getFootballPlayer(nameToSearch);
+                    if (res && res.length > 0) return { data: res[0], type: 'football' };
                 }
+                return null;
+            };
+
+            // 1. Try requested sport first
+            let result = await tryFind(sport?.toLowerCase());
+
+            // 2. If not found, try others (Fallback Strategy)
+            if (!result) {
+                logDebug(`   -> Not found in ${sport}. Trying other sports...`);
+                const others = ['cricket', 'football'].filter(x => x !== sport?.toLowerCase());
+                for (const other of others) {
+                    result = await tryFind(other);
+                    if (result) {
+                        logDebug(`   -> Found in fallback sport: ${other}`);
+                        break;
+                    }
+                }
+            }
+
+            if (result) {
+                console.log(`DEBUG: Raw Player Data (${result.type}):`, JSON.stringify(result.data, null, 2)); // DEBUG STATS
+                let mapped = mapPlayer(result.data, result.type);
+                if (result.type === 'cricket') mapped = await enrichCricketPlayerImage(mapped);
+                return res.json({ success: true, data: mapped });
             }
 
             // If API search fails, fall back to Dummy for Cricket (to at least show something)

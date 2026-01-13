@@ -11,7 +11,8 @@ export const styles = StyleSheet.create({
         backgroundColor: '#1E293B',
         borderTopLeftRadius: 24,
         borderTopRightRadius: 24,
-        maxHeight: '85%',
+        height: '80%', // Explicit height for flex: 1 children to work
+        maxHeight: '90%',
         borderWidth: 1,
         borderColor: 'rgba(255, 255, 255, 0.1)',
     },

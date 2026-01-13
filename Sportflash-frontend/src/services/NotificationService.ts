@@ -5,8 +5,9 @@ import Constants, { ExecutionEnvironment } from 'expo-constants'; // Added impor
 
 // 1. Configure how notifications behave when the app is in Foreground
 // 1. Configure how notifications behave when the app is in Foreground
-// Skip this in Expo Go on Android to avoid "Remote Notifications removed" error
-const isExpoGo = Constants.executionEnvironment === ExecutionEnvironment.StoreClient;
+// Skip this in STANDARD Expo Go on Android to avoid "Remote Notifications removed" error
+// Development Builds (Custom Expo Go) have appOwnership 'guest' or null, so they will pass this check.
+const isExpoGo = Constants.appOwnership === 'expo';
 
 if (!isExpoGo || Platform.OS !== 'android') {
     Notifications.setNotificationHandler({
@@ -39,14 +40,8 @@ export async function registerForPushNotificationsAsync(): Promise<string | unde
         return undefined;
     }
 
-    if (Platform.OS === 'android') {
-        await Notifications.setNotificationChannelAsync('default', {
-            name: 'default',
-            importance: Notifications.AndroidImportance.MAX,
-            vibrationPattern: [0, 250, 250, 250],
-            lightColor: '#FF231F7C',
-        });
-    }
+    // Ensure channel is set up before getting token
+    await setupNotificationChannel();
 
     if (Device.isDevice) {
         const { status: existingStatus } = await Notifications.getPermissionsAsync();
@@ -56,15 +51,16 @@ export async function registerForPushNotificationsAsync(): Promise<string | unde
             finalStatus = status;
         }
         if (finalStatus !== 'granted') {
-            // alert('Failed to get push token for push notification!');
             console.log('Failed to get push token for push notification!');
             return;
         }
 
         // Get the token
         try {
-            // Check project ID if needed, but usually defaults work in Expo Go/Dev Client unless configured in app.json
-            const tokenData = await Notifications.getExpoPushTokenAsync();
+            // Explicitly pass projectId from app.json to avoid auto-detection failure
+            const tokenData = await Notifications.getExpoPushTokenAsync({
+                projectId: '7e213f86-8d39-4bba-af75-70e6e1ff2b39'
+            });
             if (tokenData) {
                 token = tokenData.data;
                 console.log('Push Token:', token);
@@ -75,7 +71,6 @@ export async function registerForPushNotificationsAsync(): Promise<string | unde
                 console.log('⚠️ Push Notifications: Missing EAS Project ID in app.json. Run "eas init" to configure.');
             } else if (errorMessage.includes('removed from Expo Go') || errorMessage.includes('development build')) {
                 console.log('⚠️ Push Notifications: Remote Push is NOT supported in Expo Go (SDK 53+). Please use a Development Build.');
-                // Optional: Set a dummy token if you want to bypass backend checks, or handle graceful degradation
             } else {
                 console.error('Error getting push token:', error);
             }
@@ -85,6 +80,20 @@ export async function registerForPushNotificationsAsync(): Promise<string | unde
     }
 
     return token;
+}
+
+// Separate function to ensure Channel is always created
+export async function setupNotificationChannel() {
+    if (Platform.OS === 'android') {
+        await Notifications.setNotificationChannelAsync('sportflash-notifications', {
+            name: 'SportFlash Alerts',
+            importance: Notifications.AndroidImportance.MAX,
+            vibrationPattern: [0, 250, 250, 250],
+            lightColor: '#FF231F7C',
+            sound: 'default', // explicit sound
+            enableVibrate: true,
+        });
+    }
 }
 
 // 3. Helper to Schedule Local Notification (Fallback)

@@ -103,9 +103,11 @@ export const savePushToken = createAsyncThunk<void, string>(
     'auth/savePushToken',
     async (token, { rejectWithValue }) => {
         try {
+            console.log('📌 Sending Push Token to Backend:', token);
             await api.put('/auth/pushtoken', { token });
+            console.log('✅ Push Token Saved Successfully to Backend');
         } catch (error: any) {
-            console.error('Failed to save push token:', error);
+            console.error('❌ Failed to save push token to Backend:', error.response?.data?.message || error.message);
             // Optionally reject, but we mostly fire-and-forget
         }
     }

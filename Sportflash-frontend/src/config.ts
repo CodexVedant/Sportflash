@@ -9,9 +9,10 @@ const getBaseUrl = (): string => {
         return `http://127.0.0.1:${PORT}`;
     }
 
-    // Try to get the host from Expo config (works for LAN IP on physical devices)
-    const hostUri = Constants.expoConfig?.hostUri || Constants.manifest2?.debuggerHost || Constants.manifest?.debuggerHost;
-    let host = '10.0.2.2'; // Default Android Emulator
+    // Try to get the host from Expo config
+    const hostUri = Constants.expoConfig?.hostUri;
+    // Default to User's Local IP (Hardcoded for physical device debugging)
+    let host = '10.36.177.131';
 
     if (hostUri) {
         host = hostUri.split(':')[0];

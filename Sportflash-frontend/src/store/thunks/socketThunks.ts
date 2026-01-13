@@ -41,32 +41,92 @@ export const initSocketListeners = () => (dispatch: AppDispatch, getState: () =>
             message = `${newMatch.homeTeam?.name} vs ${newMatch.awayTeam?.name}: ${newMatch.status} (${newScore})`;
         }
         // Score Change (if not basketball to reduce spam)
-        else if (oldMatch && newScore !== oldScore && newMatch.sport !== 'basketball') {
+        else if (oldMatch && newScore !== oldScore && newMatch.sport !== 'basketball' && newMatch.sport !== 'cricket') {
             shouldNotify = true;
             title = 'Score Update';
             message = `${newMatch.homeTeam?.name} vs ${newMatch.awayTeam?.name}: ${newScore}`;
         }
 
-        if (shouldNotify) {
-            // Dispatch to Notification History
-            dispatch(addNotification({
-                id: Date.now(), // Generate ID
-                title,
-                message,
-                type: 'match_start', // Generic type for now
-                timestamp: new Date().toISOString(),
-                read: false,
-                createdAt: new Date().toISOString() // BaseEntity
-            }));
+        // --- CRICKET SMART NOTIFICATIONS ---
+        if (newMatch.sport === 'cricket' && oldMatch) {
+            // 1. WICKET DETECTION
+            const getWickets = (s: string) => {
+                if (!s) return 0;
+                const matchW = s.match(/\/(\d+)/);
+                return matchW ? parseInt(matchW[1]) : 0;
+            };
 
-            // Show Toast (Immediate Feedback)
+            const oldW = getWickets(oldMatch.homeTeam?.score as string) + getWickets(oldMatch.awayTeam?.score as string);
+            const newW = getWickets(newMatch.homeTeam?.score as string) + getWickets(newMatch.awayTeam?.score as string);
+
+            if (newW > oldW) {
+                shouldNotify = true;
+                title = 'WICKET! ☝️';
+                message = `${newMatch.homeTeam?.name} vs ${newMatch.awayTeam?.name}: ${newScore}`;
+            }
+
+            // 2. MILESTONE DETECTION (50s / 100s)
+            if (newMatch.scorecard && oldMatch.scorecard) {
+                try {
+                    Object.keys(newMatch.scorecard).forEach((inningKey) => {
+                        const newInning = (newMatch.scorecard as any)[inningKey];
+                        const oldInning = (oldMatch.scorecard as any)[inningKey];
+                        if (!newInning?.batting || !oldInning?.batting) return;
+
+                        newInning.batting.forEach((batter: any) => {
+                            const runs = parseInt(batter.runs) || 0;
+                            const oldBatter = oldInning.batting.find((b: any) => b.player === batter.player);
+                            const oldRuns = oldBatter ? (parseInt(oldBatter.runs) || 0) : 0;
+
+                            if (runs >= 50 && oldRuns < 50) {
+                                shouldNotify = true;
+                                title = 'HALF CENTURY! 👏';
+                                message = `${batter.player} has scored 50 runs!`;
+                            }
+                            if (runs >= 100 && oldRuns < 100) {
+                                shouldNotify = true;
+                                title = 'CENTURY! 💯';
+                                message = `${batter.player} has scored a brilliant 100!`;
+                            }
+                        });
+                    });
+                } catch (e) {
+                    console.warn('Error processing milestones', e);
+                }
+            }
+
+            // 3. STATUS EVENTS
+            const statusEvents = ['Innings Break', 'Tea Break', 'Lunch', 'Stumps', 'Rain Delay'];
+            if (oldMatch.status !== newMatch.status && statusEvents.includes(newMatch.status)) {
+                shouldNotify = true;
+                title = 'Match Update';
+                message = `${newMatch.status}: ${newMatch.homeTeam?.name} vs ${newMatch.awayTeam?.name}`;
+            }
+        }
+
+        if (shouldNotify) {
+            // 1. Show In-App Toast (Foreground)
             Toast.show({
-                type: 'info',
+                type: 'info', // Customize based on event type if needed
                 text1: title,
                 text2: message,
                 position: 'top',
                 visibilityTime: 4000,
+                onPress: () => {
+                    // Navigate to match detail?
+                }
             });
+
+            // 2. Add to Notification History (Redux)
+            dispatch(addNotification({
+                id: Date.now().toString(), // Simple ID generation
+                type: 'match_update',
+                title: title,
+                message: message,
+                timestamp: new Date().toISOString(),
+                read: false,
+                link: `/match/${newMatch.id}`
+            }));
         }
     };
 
@@ -120,4 +180,9 @@ export const stopSocketListeners = () => () => {
     socket.off('basketball_update');
     socket.off('all_scores_update');
     isListening = false;
+};
+
+export const forceRefreshScores = () => (dispatch: AppDispatch) => {
+    // console.log('🔄 Forcing Score Refresh via Socket...');
+    socket.emit('request_scores', 'all');
 };

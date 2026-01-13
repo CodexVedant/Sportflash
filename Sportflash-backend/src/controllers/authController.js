@@ -197,12 +197,11 @@ exports.updatePreferences = async (req, res) => {
                 }
 
                 return p;
-
-                return p;
             });
         }
         if (notifications !== undefined) user.preferences.notifications = notifications;
 
+        console.log('✅ Saving updated preferences for user:', user._id);
         await user.save();
 
         res.status(200).json({

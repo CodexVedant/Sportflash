@@ -61,3 +61,107 @@
 [2026-01-09T06:37:34.527Z] ⚠️ ID missing. Performing fallback search for name: H Amarasinghe
 [2026-01-09T06:39:04.450Z] 📢 getPlayer called for ID: name_A Wanninayake, Sport: football
 [2026-01-09T06:39:04.450Z] ⚠️ ID missing. Performing fallback search for name: A Wanninayake
+[2026-01-09T09:28:23.004Z] 📢 getPlayer called for ID: name_A Wanninayake, Sport: football
+[2026-01-09T09:28:23.005Z] ⚠️ ID missing. Performing fallback search for name: A Wanninayake
+[2026-01-12T04:23:28.434Z] 📢 getPlayer called for ID: name_JT Todd, Sport: cricket
+[2026-01-12T04:23:28.435Z] ⚠️ ID missing. Performing fallback search for name: JT Todd
+[2026-01-12T04:26:15.318Z] 📢 getPlayer called for ID: name_JM Cumming, Sport: cricket
+[2026-01-12T04:26:15.320Z] ⚠️ ID missing. Performing fallback search for name: JM Cumming
+[2026-01-12T04:27:01.000Z] 📢 getPlayer called for ID: name_JM Cumming, Sport: cricket
+[2026-01-12T04:27:01.000Z] ⚠️ ID missing. Performing fallback search for name: JM Cumming
+[2026-01-12T04:27:45.241Z] 📢 getPlayer called for ID: name_JM Cumming, Sport: cricket
+[2026-01-12T04:27:45.241Z] ⚠️ ID missing. Performing fallback search for name: JM Cumming
+[2026-01-12T04:28:14.813Z] 📢 getPlayer called for ID: name_T Harshana, Sport: football
+[2026-01-12T04:28:14.814Z] ⚠️ ID missing. Performing fallback search for name: T Harshana
+[2026-01-12T04:45:47.917Z] 📢 getPlayer called for ID: name_A Raghuvanshi, Sport: cricket
+[2026-01-12T04:45:47.917Z] ⚠️ ID missing. Performing fallback search for name: A Raghuvanshi
+[2026-01-12T04:46:05.030Z] 📢 getPlayer called for ID: name_A Raghuvanshi, Sport: cricket
+[2026-01-12T04:46:05.031Z] ⚠️ ID missing. Performing fallback search for name: A Raghuvanshi
+[2026-01-12T09:17:48.071Z] 📢 getPlayer called for ID: name_TL Seifert, Sport: cricket
+[2026-01-12T09:17:48.074Z] ⚠️ ID missing. Performing fallback search for name: TL Seifert
+[2026-01-12T12:08:19.291Z] 📢 getPlayer called for ID: name_A Wanninayake, Sport: football
+[2026-01-12T12:08:19.294Z] ⚠️ ID missing. Performing fallback search for name: A Wanninayake
+[2026-01-12T12:13:29.156Z] 📢 getPlayer called for ID: name_A Wanninayake, Sport: football
+[2026-01-12T12:13:29.159Z] ⚠️ ID missing. Performing fallback search for name: A Wanninayake
+[2026-01-12T12:14:39.518Z] 📢 getPlayer called for ID: name_A Raghuvanshi, Sport: cricket
+[2026-01-12T12:14:39.519Z] ⚠️ ID missing. Performing fallback search for name: A Raghuvanshi
+[2026-01-12T12:14:50.648Z] 📢 getPlayer called for ID: name_TL Seifert, Sport: cricket
+[2026-01-12T12:14:50.649Z] ⚠️ ID missing. Performing fallback search for name: TL Seifert
+[2026-01-12T12:17:48.233Z] 📢 getPlayer called for ID: name_A Raghuvanshi, Sport: cricket
+[2026-01-12T12:17:48.234Z] ⚠️ ID missing. Performing fallback search for name: A Raghuvanshi
+[2026-01-12T12:17:49.395Z] 🔍 Enriching image for [A Raghuvanshi] via CricketData API...
+[2026-01-12T12:17:50.398Z]    -> CricAPI Status: success, Found: 0
+[2026-01-12T12:17:50.400Z]    -> ❌ No match found for: A Raghuvanshi
+[2026-01-12T12:17:50.401Z] 🔍 Enriching image for [A Raghuvanshi] via Wikipedia...
+[2026-01-12T12:17:50.941Z]    -> Wiki Error: Request failed with status code 403
+[2026-01-12T12:18:01.607Z] 📢 getPlayer called for ID: name_H Amarasinghe, Sport: football
+[2026-01-12T12:18:01.610Z] ⚠️ ID missing. Performing fallback search for name: H Amarasinghe
+[2026-01-12T12:18:05.746Z] 📢 getPlayer called for ID: name_TL Seifert, Sport: cricket
+[2026-01-12T12:18:05.747Z] ⚠️ ID missing. Performing fallback search for name: TL Seifert
+[2026-01-12T12:18:06.074Z] 🔍 Enriching image for [TL Seifert] via CricketData API...
+[2026-01-12T12:18:07.092Z]    -> CricAPI Status: success, Found: 0
+[2026-01-12T12:18:07.093Z]    -> ❌ No match found for: TL Seifert
+[2026-01-12T12:18:07.093Z] 🔍 Enriching image for [TL Seifert] via Wikipedia...
+[2026-01-12T12:18:07.554Z]    -> Wiki Error: Request failed with status code 403
+[2026-01-13T05:26:15.916Z] 📢 getPlayer called for ID: name_H Amarasinghe, Sport: football
+[2026-01-13T05:26:15.918Z] ⚠️ ID missing. Performing fallback search for name: H Amarasinghe
+[2026-01-13T05:26:21.453Z] 📢 getPlayer called for ID: name_A Raghuvanshi, Sport: cricket
+[2026-01-13T05:26:21.455Z] ⚠️ ID missing. Performing fallback search for name: A Raghuvanshi
+[2026-01-13T05:26:22.082Z] 🔍 Enriching image for [A Raghuvanshi] via CricketData API...
+[2026-01-13T05:26:23.033Z]    -> CricAPI Status: success, Found: 0
+[2026-01-13T05:26:23.035Z]    -> ❌ No match found for: A Raghuvanshi
+[2026-01-13T05:26:23.039Z] 🔍 Enriching image for [A Raghuvanshi] via Wikipedia...
+[2026-01-13T05:26:23.535Z]    -> Wiki Error: Request failed with status code 403
+[2026-01-13T05:26:28.895Z] 📢 getPlayer called for ID: name_A Wanninayake, Sport: football
+[2026-01-13T05:26:28.896Z] ⚠️ ID missing. Performing fallback search for name: A Wanninayake
+[2026-01-13T05:28:30.420Z] 📢 getPlayer called for ID: name_H Amarasinghe, Sport: football
+[2026-01-13T05:28:30.421Z] ⚠️ ID missing. Performing fallback search for name: H Amarasinghe
+[2026-01-13T05:28:35.808Z] 📢 getPlayer called for ID: name_A Wanninayake, Sport: football
+[2026-01-13T05:28:35.809Z] ⚠️ ID missing. Performing fallback search for name: A Wanninayake
+[2026-01-13T05:28:40.273Z] 📢 getPlayer called for ID: name_A Raghuvanshi, Sport: cricket
+[2026-01-13T05:28:40.274Z] ⚠️ ID missing. Performing fallback search for name: A Raghuvanshi
+[2026-01-13T05:28:40.978Z] 🔍 Enriching image for [A Raghuvanshi] via CricketData API...
+[2026-01-13T05:28:43.344Z]    -> CricAPI Status: success, Found: 0
+[2026-01-13T05:28:43.347Z]    -> ❌ No match found for: A Raghuvanshi
+[2026-01-13T05:28:43.348Z] 🔍 Enriching image for [A Raghuvanshi] via Wikipedia...
+[2026-01-13T05:28:43.908Z]    -> Wiki Error: Request failed with status code 403
+[2026-01-13T05:30:21.579Z] 📢 getPlayer called for ID: name_A Raghuvanshi, Sport: cricket
+[2026-01-13T05:30:21.581Z] ⚠️ ID missing. Performing fallback search for name: A Raghuvanshi
+[2026-01-13T05:30:21.795Z]    -> Not found in cricket. Trying other sports...
+[2026-01-13T05:30:22.468Z] 🔍 Enriching image for [A Raghuvanshi] via CricketData API...
+[2026-01-13T05:30:23.399Z]    -> CricAPI Status: success, Found: 0
+[2026-01-13T05:30:23.400Z]    -> ❌ No match found for: A Raghuvanshi
+[2026-01-13T05:30:23.401Z] 🔍 Enriching image for [A Raghuvanshi] via Wikipedia...
+[2026-01-13T05:30:23.864Z]    -> Wiki Error: Request failed with status code 403
+[2026-01-13T05:41:09.316Z] 📢 getPlayer called for ID: name_A Raghuvanshi, Sport: cricket
+[2026-01-13T05:41:09.319Z] ⚠️ ID missing. Performing fallback search for name: A Raghuvanshi
+[2026-01-13T05:41:12.061Z]    -> Not found in cricket. Trying other sports...
+[2026-01-13T05:41:12.301Z] 🔍 Enriching image for [A Raghuvanshi] via CricketData API...
+[2026-01-13T05:41:13.266Z]    -> CricAPI Status: success, Found: 0
+[2026-01-13T05:41:13.267Z]    -> ❌ No match found for: A Raghuvanshi
+[2026-01-13T05:41:13.269Z] 🔍 Enriching image for [A Raghuvanshi] via Wikipedia...
+[2026-01-13T05:41:13.784Z]    -> Wiki Error: Request failed with status code 403
+[2026-01-13T05:44:34.155Z] 📢 getPlayer called for ID: name_A Raghuvanshi, Sport: cricket
+[2026-01-13T05:44:34.156Z] ⚠️ ID missing. Performing fallback search for name: A Raghuvanshi
+[2026-01-13T05:44:34.354Z]    -> Not found in cricket. Trying other sports...
+[2026-01-13T05:44:34.559Z] 🔍 Enriching image for [A Raghuvanshi] via CricketData API...
+[2026-01-13T05:44:35.262Z]    -> CricAPI Status: success, Found: 0
+[2026-01-13T05:44:35.263Z]    -> ❌ No match found for: A Raghuvanshi
+[2026-01-13T05:44:35.264Z] 🔍 Enriching image for [A Raghuvanshi] via Wikipedia...
+[2026-01-13T05:44:35.686Z]    -> Wiki Error: Request failed with status code 403
+[2026-01-13T05:47:29.544Z] 📢 getPlayer called for ID: name_A Raghuvanshi, Sport: cricket
+[2026-01-13T05:47:29.545Z] ⚠️ ID missing. Performing fallback search for name: A Raghuvanshi
+[2026-01-13T05:47:29.770Z]    -> Not found in cricket. Trying other sports...
+[2026-01-13T05:47:29.986Z] 🔍 Enriching image for [A Raghuvanshi] via CricketData API...
+[2026-01-13T05:47:30.943Z]    -> CricAPI Status: success, Found: 0
+[2026-01-13T05:47:30.944Z]    -> ❌ No match found for: A Raghuvanshi
+[2026-01-13T05:47:30.946Z] 🔍 Enriching image for [A Raghuvanshi] via Wikipedia...
+[2026-01-13T05:47:31.376Z]    -> Wiki Error: Request failed with status code 403
+[2026-01-13T05:50:03.691Z] 📢 getPlayer called for ID: name_A Raghuvanshi, Sport: cricket
+[2026-01-13T05:50:03.693Z] ⚠️ ID missing. Performing fallback search for name: A Raghuvanshi
+[2026-01-13T05:50:03.913Z]    -> Not found in cricket. Trying other sports...
+[2026-01-13T05:50:04.130Z] 🔍 Enriching image for [A Raghuvanshi] via CricketData API...
+[2026-01-13T05:50:05.058Z]    -> CricAPI Status: success, Found: 0
+[2026-01-13T05:50:05.060Z]    -> ❌ No match found for: A Raghuvanshi
+[2026-01-13T05:50:05.062Z] 🔍 Enriching image for [A Raghuvanshi] via Wikipedia...
+[2026-01-13T05:50:05.501Z]    -> Wiki Error: Request failed with status code 403

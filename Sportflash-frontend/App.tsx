@@ -33,9 +33,14 @@ function AppContent() {
 
     useEffect(() => {
         // Register for Push Notifications
+        // Register for Push Notifications
         registerForPushNotificationsAsync().then(token => {
+            console.log('📌 Push Registration Result:', token ? 'Success' : 'Failed', 'User:', user ? 'Logged In' : 'Logged Out');
             if (token && user) {
+                console.log('📌 Dispatching savePushToken to Backend...');
                 dispatch(savePushToken(token));
+            } else if (!user) {
+                console.log('📌 User not logged in, skipping token save.');
             }
         });
 

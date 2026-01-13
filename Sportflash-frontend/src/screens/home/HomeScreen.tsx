@@ -1,5 +1,5 @@
 ﻿import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, useWindowDimensions, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, useWindowDimensions, StyleSheet, AppState } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { theme } from '@utils/theme';
 import { Ionicons } from '@expo/vector-icons';
@@ -10,7 +10,7 @@ import { NotificationBell, NotificationPanel, NotificationOptionsModal } from '@
 import { updatePreference } from '@store/slices/notificationsSlice';
 import { useToast } from '@context/ToastContext';
 import { Match } from '@app-types/models/match';
-import { initSocketListeners } from '@store/thunks/socketThunks';
+import { initSocketListeners, forceRefreshScores } from '@store/thunks/socketThunks';
 import { selectAllLiveMatches } from '@store/slices/liveMatchesSlice';
 import { mapMatchToUI } from '@utils/matchMappers';
 import LiveMatchesWidget from '@screens/home/LiveMatchesWidget';
@@ -87,11 +87,26 @@ export default function HomeScreen({ navigation }: Props) {
 
     const loading = isMatchesLoading && matches.length === 0;
 
-    // Initialize Socket Listeners
+    // Initialize Socket Listeners & AppState handling
+
+    // Initialize Socket Listeners & AppState handling
     useEffect(() => {
-        // Dispatch returns a Promise from thunks, but useEffect cleanup expects void or a cleanup function
         dispatch(initSocketListeners());
-        // Optional: return () => dispatch(stopSocketListeners());
+
+        // Refresh scores immediately on mount (in case socket was already connected)
+        dispatch(forceRefreshScores());
+
+        const subscription = AppState.addEventListener('change', nextAppState => {
+            if (nextAppState === 'active') {
+                console.log('📱 App has come to the foreground! Refreshing scores...');
+                dispatch(forceRefreshScores());
+            }
+        });
+
+        return () => {
+            subscription.remove();
+            // dispatch(stopSocketListeners()); // Optional
+        };
     }, [dispatch]);
 
     // Notifications from Redux

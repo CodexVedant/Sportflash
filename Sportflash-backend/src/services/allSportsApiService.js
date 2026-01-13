@@ -44,17 +44,18 @@ class AllSportsApiService {
             });
 
             if (response.data && response.data.success === 1) {
-                return response.data.result;
+                return response.data.result || [];
             } else {
                 console.error(`❌ AllSportsAPI Error: ${sport} - ${method}`, response.data);
-                return null;
+                return [];
             }
         } catch (error) {
             console.error(`❌ AllSportsAPI Request Failed: ${sport} - ${method}`, error.message);
             if (error.response) {
                 console.error('Response data:', error.response.data);
             }
-            throw error;
+            // Return empty array/object to prevent crash
+            return [];
         }
     }
 

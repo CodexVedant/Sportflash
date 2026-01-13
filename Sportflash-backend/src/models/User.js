@@ -48,7 +48,6 @@ const userSchema = new mongoose.Schema({
             id: String,
             name: String,
             sport: String,
-            sport: String,
             team: String,
             teamId: String,
             image: String
