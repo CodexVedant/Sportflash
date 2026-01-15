@@ -37,8 +37,10 @@ export const matchesApi = createApi({
                 if (date) params.append('date', date);
                 return `/matches/upcoming?${params.toString()}`;
             },
-            transformResponse: (response: ApiResponse<Match[]>) => response.data,
-            keepUnusedDataFor: 300, // Cache for 5 minutes for fast tab switching
+            transformResponse: (response: any) => {
+                return response.data || response || [];
+            },
+            keepUnusedDataFor: 60, // Reduce cache time to 1 minute
         }),
     }),
 });

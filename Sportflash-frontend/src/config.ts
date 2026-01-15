@@ -24,7 +24,7 @@ const getBaseUrl = (): string => {
 
     // For web platform, always use localhost
     if (Platform.OS === 'web') {
-        return `http://127.0.0.1:${PORT}`;
+        return `http://localhost:${PORT}`;
     }
 
     // Try to get the host from Expo config (works for LAN IP on physical devices)

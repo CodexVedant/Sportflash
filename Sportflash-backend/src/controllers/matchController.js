@@ -110,11 +110,18 @@ exports.getUpcomingMatches = async (req, res) => {
             }
         } else {
             // Get upcoming matches for all sports
+            console.log('[getUpcomingMatches] Fetching all sports for date:', targetDate);
             const [footballFixtures, basketballFixtures, cricketFixtures] = await Promise.allSettled([
                 allSportsApi.getFootballFixtures({ date: targetDate }),
                 allSportsApi.getBasketballFixtures({ date: targetDate }),
                 allSportsApi.getCricketFixtures({ date: targetDate })
             ]);
+
+            console.log('[getUpcomingMatches] Results:', {
+                football: { status: footballFixtures.status, count: footballFixtures.value?.length || 0 },
+                basketball: { status: basketballFixtures.status, count: basketballFixtures.value?.length || 0 },
+                cricket: { status: cricketFixtures.status, count: cricketFixtures.value?.length || 0 }
+            });
 
             upcomingMatches = [
                 ...(footballFixtures.status === 'fulfilled' && footballFixtures.value
@@ -360,66 +367,7 @@ exports.getMatch = async (req, res) => {
     }
 };
 
-/**
- * @desc    Get upcoming matches
- * @route   GET /api/matches/upcoming
- * @access  Public
- */
-exports.getUpcomingMatches = async (req, res) => {
-    try {
-        const { sport, days = 7 } = req.query;
 
-        // Get fixtures for the next N days
-        const today = new Date();
-        const matches = [];
-
-        for (let i = 0; i < parseInt(days); i++) {
-            const date = new Date(today);
-            date.setDate(date.getDate() + i);
-            const dateStr = date.toISOString().split('T')[0];
-
-            if (sport) {
-                const dayMatches = await allSportsApi.getFixturesBySport(sport, dateStr);
-                if (dayMatches) {
-                    matches.push(...dayMatches);
-                }
-            }
-        }
-
-        // Map matches based on sport
-        let mappedMatches = [];
-        if (sport) {
-            switch (sport.toLowerCase()) {
-                case 'football':
-                case 'soccer':
-                    mappedMatches = matches.map(mapFootballMatch).filter(m => m !== null);
-                    break;
-                case 'basketball':
-                    mappedMatches = matches.map(mapBasketballMatch).filter(m => m !== null);
-                    break;
-                case 'cricket':
-                    mappedMatches = matches.map(mapCricketMatch).filter(m => m !== null);
-                    break;
-            }
-        }
-
-        // Filter only upcoming matches
-        const upcomingMatches = mappedMatches.filter(m => m.status === 'upcoming');
-
-        res.json({
-            success: true,
-            count: upcomingMatches.length,
-            data: upcomingMatches
-        });
-    } catch (error) {
-        console.error('Error in getUpcomingMatches:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Error fetching upcoming matches',
-            error: error.message
-        });
-    }
-};
 
 /**
  * @desc    Get leagues
