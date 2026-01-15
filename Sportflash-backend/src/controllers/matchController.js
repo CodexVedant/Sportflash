@@ -1,4 +1,5 @@
 const allSportsApi = require('../services/allSportsApiService');
+const cacheService = require('../services/CacheService');
 const {
     mapFootballMatch,
     mapBasketballMatch,
@@ -70,9 +71,18 @@ exports.getMatches = async (req, res) => {
 exports.getUpcomingMatches = async (req, res) => {
     try {
         const { sport, date, days = 7 } = req.query;
+        const targetDate = date || new Date().toISOString().split('T')[0];
+
+        // Generate cache key
+        const cacheKey = cacheService.generateKey('upcoming', { sport: sport || 'all', date: targetDate, days });
+
+        // Check cache first
+        const cachedData = cacheService.get(cacheKey);
+        if (cachedData) {
+            return res.json(cachedData);
+        }
 
         let upcomingMatches = [];
-        const targetDate = date || new Date().toISOString().split('T')[0];
 
         if (sport) {
             // Get upcoming matches for specific sport
@@ -126,12 +136,18 @@ exports.getUpcomingMatches = async (req, res) => {
             return dateA - dateB;
         });
 
-        res.json({
+        const response = {
             success: true,
             count: upcomingMatches.length,
             date: targetDate,
             data: upcomingMatches
-        });
+        };
+
+        // Cache the response
+        const ttl = parseInt(process.env.CACHE_TTL_UPCOMING) || 3600;
+        cacheService.set(cacheKey, response, ttl);
+
+        res.json(response);
     } catch (error) {
         console.error('Error in getUpcomingMatches:', error);
         res.status(500).json({
@@ -468,6 +484,15 @@ exports.getStandings = async (req, res) => {
             });
         }
 
+        // Generate cache key
+        const cacheKey = cacheService.generateKey('standings', { sport, league });
+
+        // Check cache first
+        const cachedData = cacheService.get(cacheKey);
+        if (cachedData) {
+            return res.json(cachedData);
+        }
+
         let standings = null;
         let rawStandings = null;
 
@@ -496,10 +521,16 @@ exports.getStandings = async (req, res) => {
             // Quietly handle empty standings without logging to console/terminal
         }
 
-        res.json({
+        const response = {
             success: true,
             data: standings || []
-        });
+        };
+
+        // Cache the response
+        const ttl = parseInt(process.env.CACHE_TTL_STANDINGS) || 1800;
+        cacheService.set(cacheKey, response, ttl);
+
+        res.json(response);
     } catch (error) {
         console.error('Error in getStandings:', error);
         res.status(500).json({
