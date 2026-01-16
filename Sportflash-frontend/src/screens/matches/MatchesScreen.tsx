@@ -111,6 +111,25 @@ export default function MatchesScreen({ navigation }: Props) {
 
     const STATUS_TABS = ['Live', 'Upcoming', 'Results'];
 
+    // Extract unique leagues from current matches for filter
+    const availableLeagues = React.useMemo(() => {
+        let sourceMatches = Array.isArray(allMatches) ? allMatches : [];
+        if (activeSport !== 'all') {
+            sourceMatches = sourceMatches.filter(m => m.sport?.toLowerCase() === activeSport);
+        }
+
+        const leaguesMap = new Map();
+        sourceMatches.forEach(match => {
+            const id = match.league?.id || match.league || 'unknown';
+            const name = match.league?.name || match.league || 'Unknown League';
+            if (!leaguesMap.has(name)) {
+                leaguesMap.set(name, { id: name, name }); // Use name as ID for easier string comparison
+            }
+        });
+
+        return Array.from(leaguesMap.values()).sort((a, b) => a.name.localeCompare(b.name));
+    }, [allMatches, activeSport]);
+
     const handleApplyFilters = (newFilters: any) => {
         setFilters(newFilters);
         setFilterVisible(false);
@@ -268,6 +287,7 @@ export default function MatchesScreen({ navigation }: Props) {
                 onClose={() => setFilterVisible(false)}
                 onApply={handleApplyFilters}
                 initialFilters={filters}
+                availableLeagues={availableLeagues}
             />
 
             {/* Notification Panel */}

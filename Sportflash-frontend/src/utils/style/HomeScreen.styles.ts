@@ -107,5 +107,27 @@ export const styles = StyleSheet.create({
         color: '#fff',
         fontFamily: theme.fonts.bold,
         fontSize: 14,
+    },
+    // League Chips Styles
+    leagueChip: {
+        paddingHorizontal: 16,
+        paddingVertical: 8,
+        borderRadius: 20,
+        backgroundColor: theme.colors.surface,
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.1)',
+        marginRight: 8,
+    },
+    leagueChipActive: {
+        backgroundColor: theme.colors.primary,
+        borderColor: theme.colors.primary,
+    },
+    leagueChipText: {
+        color: theme.colors.textMuted,
+        fontSize: 13,
+        fontWeight: '600',
+    },
+    leagueChipTextActive: {
+        color: '#fff',
     }
 });
