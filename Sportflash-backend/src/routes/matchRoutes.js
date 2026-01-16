@@ -7,6 +7,7 @@ const {
     getMatch,
     getUpcomingMatches,
     getLeagues,
+    getLeagueMatches,
     getStandings,
     getHeadToHead,
     getMatchCommentary,
@@ -20,6 +21,7 @@ router.get('/', getMatches);
 router.get('/live', getLiveMatches);
 router.get('/upcoming', getUpcomingMatches);
 router.get('/leagues', getLeagues);
+router.get('/league/:leagueId', getLeagueMatches);
 router.get('/standings', getStandings);
 router.get('/h2h', getHeadToHead);
 router.get('/sport/:sport', getMatchesBySport);

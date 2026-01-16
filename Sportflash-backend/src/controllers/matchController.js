@@ -378,6 +378,15 @@ exports.getLeagues = async (req, res) => {
     try {
         const { sport, country } = req.query;
 
+        // Generate cache key
+        const cacheKey = cacheService.generateKey('leagues', { sport: sport || 'all', country: country || 'all' });
+
+        // Check cache first
+        const cachedData = cacheService.get(cacheKey);
+        if (cachedData) {
+            return res.json(cachedData);
+        }
+
         let leagues = [];
 
         switch (sport?.toLowerCase()) {
@@ -401,11 +410,18 @@ exports.getLeagues = async (req, res) => {
                 });
         }
 
-        res.json({
+        const response = {
             success: true,
             count: leagues.length,
+            sport,
             data: leagues
-        });
+        };
+
+        // Cache the response (6 hours for leagues)
+        const ttl = parseInt(process.env.CACHE_TTL_LEAGUES) || 21600;
+        cacheService.set(cacheKey, response, ttl);
+
+        res.json(response);
     } catch (error) {
         console.error('Error in getLeagues:', error);
         res.status(500).json({
@@ -631,4 +647,103 @@ exports.updateMatch = async (req, res) => {
         success: false,
         message: 'Match update not implemented - using live API data'
     });
+};
+
+/**
+ * @desc    Get matches for a specific league
+ * @route   GET /api/matches/league/:leagueId
+ * @access  Public
+ */
+exports.getLeagueMatches = async (req, res) => {
+    try {
+        const { leagueId } = req.params;
+        const { sport, status } = req.query;
+
+        if (!sport) {
+            return res.status(400).json({
+                success: false,
+                message: 'Sport parameter is required'
+            });
+        }
+
+        // Generate cache key
+        const cacheKey = cacheService.generateKey('league_matches', { leagueId, sport, status: status || 'all' });
+
+        // Check cache first
+        const cachedData = cacheService.get(cacheKey);
+        if (cachedData) {
+            return res.json(cachedData);
+        }
+
+        let allMatches = [];
+        const today = new Date().toISOString().split('T')[0];
+
+        // Fetch matches based on status
+        if (status === 'live') {
+            // Get live matches
+            const liveMatches = await allSportsApi.getLiveScoresBySport(sport);
+            allMatches = liveMatches || [];
+        } else if (status === 'finished') {
+            // Get finished matches (last 7 days)
+            const finishedMatches = await allSportsApi.getFixturesBySport(sport, today, -7);
+            allMatches = finishedMatches || [];
+        } else {
+            // Get upcoming matches (default or status='upcoming')
+            const upcomingMatches = await allSportsApi.getFixturesBySport(sport, today);
+            allMatches = upcomingMatches || [];
+        }
+
+        // Map matches based on sport
+        let mappedMatches = [];
+        switch (sport.toLowerCase()) {
+            case 'football':
+            case 'soccer':
+                mappedMatches = allMatches.map(mapFootballMatch).filter(m => m !== null);
+                break;
+            case 'basketball':
+                mappedMatches = allMatches.map(mapBasketballMatch).filter(m => m !== null);
+                break;
+            case 'cricket':
+                mappedMatches = allMatches.map(mapCricketMatch).filter(m => m !== null);
+                break;
+        }
+
+        // Filter by league ID
+        const leagueMatches = mappedMatches.filter(match => {
+            const matchLeagueId = match.leagueInfo?.id || match.league?.id;
+            return matchLeagueId && matchLeagueId.toString() === leagueId.toString();
+        });
+
+        // Sort by date
+        leagueMatches.sort((a, b) => {
+            const dateA = new Date(a.date || a.startTime || 0);
+            const dateB = new Date(b.date || b.startTime || 0);
+            return dateA - dateB;
+        });
+
+        const response = {
+            success: true,
+            count: leagueMatches.length,
+            leagueId,
+            sport,
+            status: status || 'upcoming',
+            data: leagueMatches
+        };
+
+        // Cache the response
+        // Use shorter TTL for live matches, longer for upcoming/finished
+        const ttl = status === 'live'
+            ? 300  // 5 minutes for live
+            : parseInt(process.env.CACHE_TTL_LEAGUE_MATCHES) || 3600; // 1 hour for others
+        cacheService.set(cacheKey, response, ttl);
+
+        res.json(response);
+    } catch (error) {
+        console.error('Error in getLeagueMatches:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error fetching league matches',
+            error: error.message
+        });
+    }
 };
