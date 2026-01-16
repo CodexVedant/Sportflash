@@ -26,6 +26,7 @@ import NotificationsScreen from '@screens/profile/NotificationsScreen';
 import PreferencesScreen from '@screens/profile/PreferencesScreen';
 import NewsDetailScreen from '@screens/news/NewsDetailScreen';
 import LeagueDetailsScreen from '@screens/league/LeagueDetailsScreen';
+import LeagueDetailScreen from '@screens/series/LeagueDetailScreen';
 import TeamProfileScreen from '@screens/team/TeamProfileScreen';
 import UpcomingMatchesScreen from '@screens/matches/UpcomingMatchesScreen';
 
@@ -87,6 +88,7 @@ export default function AppNavigator() {
                 <Stack.Screen name="Bookmarks" component={BookmarksScreen} />
                 <Stack.Screen name="Settings" component={SettingsScreen} />
                 <Stack.Screen name="LeagueDetails" component={LeagueDetailsScreen} />
+                <Stack.Screen name="LeagueDetail" component={LeagueDetailScreen} />
                 <Stack.Screen name="TeamProfile" component={TeamProfileScreen} />
                 <Stack.Screen name="PlayerProfile" component={PlayerProfileScreen} />
                 <Stack.Screen name="Notifications" component={NotificationsScreen} />

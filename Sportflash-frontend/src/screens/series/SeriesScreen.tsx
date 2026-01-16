@@ -1,6 +1,9 @@
 import React, { useState, useMemo } from 'react';
 import { View, Text, TouchableOpacity, FlatList, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { RootStackParamList } from '@app-types/navigation';
 import { theme } from '@utils/theme';
 import Sidebar from '@components/navigation/Sidebar';
 import { Ionicons } from '@expo/vector-icons';
@@ -12,6 +15,7 @@ import { EmptyState, NetworkError } from '@components/common';
 export default function SeriesScreen() {
     const [sidebarVisible, setSidebarVisible] = useState(false);
     const [activeSport, setActiveSport] = useState('cricket');
+    const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
     // Fetch leagues for the active sport
     const { data: leagues = [], isLoading, error, refetch } = useGetLeaguesQuery({
@@ -28,8 +32,16 @@ export default function SeriesScreen() {
         <TouchableOpacity
             style={styles.leagueCard}
             onPress={() => {
-                // TODO: Navigate to league details
-                console.log('Navigate to league:', item.id);
+                navigation.navigate('LeagueDetail', {
+                    league: {
+                        id: item.id,
+                        name: item.name,
+                        sport: activeSport,
+                        country: item.country,
+                        logo: item.logo,
+                        season: item.season
+                    }
+                });
             }}
         >
             <View style={styles.leagueCardHeader}>

@@ -10,6 +10,7 @@ export type RootStackParamList = {
     Bookmarks: undefined;
     Settings: undefined;
     LeagueDetails: { leagueId: string; sport?: string; name?: string; round?: string };
+    LeagueDetail: { league: { id: string; name: string; sport: string; country?: { name: string }; logo?: string; season?: string } };
     TeamProfile: { teamId?: string; teamName?: string; sport?: string; team?: any };
     PlayerProfile: { playerId?: string; player?: any; sport?: string };
     Notifications: undefined;
