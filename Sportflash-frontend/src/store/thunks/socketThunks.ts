@@ -3,6 +3,7 @@ import { upsertMatches } from '../slices/liveMatchesSlice';
 import { addNotification } from '../slices/notificationsSlice';
 import { AppDispatch, RootState } from '../store';
 import { Match } from '@app-types/models/match';
+import { navigate } from '@services/NavigationService';
 import Toast from 'react-native-toast-message';
 
 let isListening = false;
@@ -113,7 +114,21 @@ export const initSocketListeners = () => (dispatch: AppDispatch, getState: () =>
                 position: 'top',
                 visibilityTime: 4000,
                 onPress: () => {
-                    // Navigate to match detail?
+                    console.log('🍞 Toast Clicked! Navigating to:', newMatch.id);
+                    Toast.hide(); // Hide the notification toast
+
+                    // Show feedback toast
+                    Toast.show({
+                        type: 'success',
+                        text1: 'Redirecting...',
+                        text2: `Opening Match ${newMatch.id}`,
+                        visibilityTime: 1500
+                    });
+
+                    navigate('MatchDetail', {
+                        matchId: newMatch.id.toString(),
+                        sport: newMatch.sport || 'football'
+                    });
                 }
             });
 
@@ -125,7 +140,9 @@ export const initSocketListeners = () => (dispatch: AppDispatch, getState: () =>
                 message: message,
                 timestamp: new Date().toISOString(),
                 read: false,
-                link: `/match/${newMatch.id}`
+                link: `/match/${newMatch.id}`,
+                matchId: newMatch.id.toString(),
+                sport: newMatch.sport
             }));
         }
     };

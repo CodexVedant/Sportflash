@@ -2,7 +2,7 @@ export type RootStackParamList = {
     Main: undefined;
     Login: undefined;
     Register: undefined;
-    MatchDetail: { match?: any; id?: string; sport?: string };
+    MatchDetail: { match?: any; id?: string; matchId?: string; sport?: string };
     Series: { id: string; sport: string };
     Following: undefined;
     Bookmarks: undefined;

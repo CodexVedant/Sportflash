@@ -149,7 +149,7 @@ const checkAndNotify = async (sport, newMatches) => {
 
             if (shouldNotify) {
                 console.log(`🔔 PUSH FIRED: ${title}`);
-                await sendPushNotification(title, body, { matchId: match.id, type: 'match_update' }, (user) => {
+                await sendPushNotification(title, body, { matchId: match.id, sport: sport, type: 'match_update' }, (user) => {
                     return true; // 🟢 FORCE ALLOW for verification
                 });
 

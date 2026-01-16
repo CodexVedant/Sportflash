@@ -6,8 +6,10 @@ import { useAppDispatch, useAppSelector } from '@hooks/redux';
 import { loadUser } from '@store/slices/authSlice';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
+import * as Notifications from 'expo-notifications';
 import { RootStackParamList } from '@app-types/navigation';
 import { theme } from '@utils/theme';
+import { navigationRef } from '@services/NavigationService';
 
 // Navigators
 import MainNavigator from '@navigation/MainNavigator';
@@ -59,6 +61,50 @@ export default function AppNavigator() {
         prepare();
     }, [dispatch]);
 
+    // 🔔 NOTIFICATION LISTENER SETUP
+    useEffect(() => {
+        // 1. Handle Cold Start (App Closed -> Notification Tap -> Open)
+        const checkInitialNotification = async () => {
+            const response = await Notifications.getLastNotificationResponseAsync();
+            if (response) {
+                const data = response.notification.request.content.data;
+                console.log('🔔 Cold Start Notification:', data);
+                if (data?.matchId) {
+                    // Wait for navigation mount
+                    setTimeout(() => {
+                        if (navigationRef.isReady()) {
+                            // @ts-ignore
+                            navigationRef.navigate('MatchDetail', {
+                                matchId: data.matchId,
+                                sport: data.sport || 'football'
+                            });
+                        }
+                    }, 500);
+                }
+            }
+        };
+
+        checkInitialNotification();
+
+        // 2. Handle Foreground/Background Tap
+        const subscription = Notifications.addNotificationResponseReceivedListener(response => {
+            const data = response.notification.request.content.data;
+            console.log('🔔 Notification Tapped (Foreground/Background):', data);
+
+            if (data?.matchId) {
+                if (navigationRef.isReady()) {
+                    // @ts-ignore
+                    navigationRef.navigate('MatchDetail', {
+                        matchId: data.matchId,
+                        sport: data.sport || 'football'
+                    });
+                }
+            }
+        });
+
+        return () => subscription.remove();
+    }, []);
+
     if (loading) {
         return (
             <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: theme.colors.background }}>
@@ -68,7 +114,7 @@ export default function AppNavigator() {
     }
 
     return (
-        <NavigationContainer theme={NavigationTheme}>
+        <NavigationContainer theme={NavigationTheme} ref={navigationRef}>
             <StatusBar style="light" />
             <Stack.Navigator
                 screenOptions={{
@@ -97,4 +143,3 @@ export default function AppNavigator() {
         </NavigationContainer>
     );
 }
-

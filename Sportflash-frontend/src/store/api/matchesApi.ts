@@ -15,8 +15,8 @@ export const matchesApi = createApi({
             },
             keepUnusedDataFor: 300, // Cache for 5 minutes
         }),
-        getMatchDetails: builder.query<Match, string>({
-            query: (id) => `/matches/${id}`,
+        getMatchDetails: builder.query<Match, { id: string; sport: string }>({
+            query: ({ id, sport }) => `/matches/${id}?sport=${sport}`,
             transformResponse: (response: ApiResponse<Match>) => {
                 return response.data;
             }

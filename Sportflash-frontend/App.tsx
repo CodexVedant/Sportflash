@@ -1,8 +1,9 @@
-import { useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { Platform } from 'react-native';
 import { Provider } from 'react-redux';
 import { store, persistor } from '@store/store';
 import AppNavigator from '@navigation/AppNavigator';
+import { navigate, navigationRef } from '@services/NavigationService';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { ToastProvider } from '@context/ToastContext';
 import { theme } from '@utils/theme';
@@ -33,7 +34,6 @@ function AppContent() {
 
     useEffect(() => {
         // Register for Push Notifications
-        // Register for Push Notifications
         registerForPushNotificationsAsync().then(token => {
             console.log('📌 Push Registration Result:', token ? 'Success' : 'Failed', 'User:', user ? 'Logged In' : 'Logged Out');
             if (token && user) {
@@ -51,8 +51,29 @@ function AppContent() {
 
         // Listen for user interacting with notification
         const responseSubscription = Notifications.addNotificationResponseReceivedListener(response => {
-            // console.log('Notification Response:', response);
-            // Navigate based on data if needed
+            const data = response.notification.request.content.data;
+            console.log('📌 Notification Tapped:', data);
+
+            // DEBUG TOAST
+            Toast.show({
+                type: 'info',
+                text1: '🔔 Notification Tapped',
+                text2: `ID: ${data?.matchId} | Sport: ${data?.sport}`
+            });
+
+            if (data?.matchId) {
+                // Wait for navigation ref to be ready (small delay if app just opened)
+                setTimeout(() => {
+                    if (navigationRef.isReady()) {
+                        navigationRef.navigate('MatchDetail', {
+                            match: { id: data.matchId },
+                            sport: (data.sport as string) || 'football'
+                        });
+                    } else {
+                        console.error('❌ Navigation Ref NOT ready');
+                    }
+                }, 1000); // Increased delay to 1s to be safe
+            }
         });
 
         return () => {

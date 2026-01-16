@@ -500,17 +500,63 @@ exports.getMatch = async (req, res) => {
                 });
         }
 
-        const match = matches?.find(m => m.event_key === id);
+        let match = matches?.find(m => m.event_key === id);
+
+        // FALLBACK: If not in Live, check Fixtures (Unified Search)
+        // If still not found, try OTHER sports (in case sport param was wrong/defaulted)
+        if (!match) {
+            console.log(`⚠️ Match ${id} not found in ${sport}, starting deep search...`);
+
+            const sportsToTry = [sport.toLowerCase(), 'football', 'basketball', 'cricket'];
+            // Deduplicate
+            const uniqueSports = [...new Set(sportsToTry)];
+
+            for (const currentSport of uniqueSports) {
+                console.log(`   - Checking ${currentSport}...`);
+                try {
+                    // 1. Try Fixtures (matchId)
+                    let fixtures = await allSportsApi.makeRequest(currentSport, 'Fixtures', { matchId: id });
+                    if (!fixtures || fixtures.length === 0) {
+                        fixtures = await allSportsApi.makeRequest(currentSport, 'Fixtures', { match_id: id });
+                    }
+
+                    // 2. Try Livescore specific
+                    if ((!fixtures || fixtures.length === 0)) {
+                        const liveSpecific = await allSportsApi.makeRequest(currentSport, 'Livescore', { matchId: id });
+                        if (liveSpecific && liveSpecific.length > 0) fixtures = liveSpecific;
+                    }
+
+                    if (fixtures && fixtures.length > 0) {
+                        const found = fixtures.find(m => m.event_key === id);
+                        if (found) {
+                            match = found;
+                            // Update sport to the correct one
+                            if (currentSport !== sport.toLowerCase()) {
+                                console.log(`   ✅ Found match ${id} in ${currentSport} (requested: ${sport})`);
+                                // We need to update the mapper logic below to use the correct sport
+                                req.query.sport = currentSport; // Hacky but effective for the switch below
+                            }
+                            break; // Stop searching
+                        }
+                    }
+                } catch (err) {
+                    console.log(`   - Failed checking ${currentSport}: ${err.message}`);
+                }
+            }
+        }
 
         if (!match) {
             return res.status(404).json({
                 success: false,
-                message: 'Match not found'
+                message: 'Match not found in any sport'
             });
         }
 
         let mappedMatch;
-        switch (sport.toLowerCase()) {
+        // Use the sport we found it in (req.query.sport might have been updated above)
+        const finalSport = req.query.sport || sport;
+
+        switch (finalSport.toLowerCase()) {
             case 'football':
             case 'soccer':
                 mappedMatch = mapFootballMatch(match);

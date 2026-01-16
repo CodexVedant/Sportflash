@@ -17,7 +17,15 @@ export default function NotificationsScreen() {
         if (!item.read) {
             dispatch(markAsRead(item.id));
         }
-        // Navigate if needed
+
+        // Deep Link Navigation
+        if (item.matchId) {
+            // @ts-ignore - Navigation typing is complex here, suppressing for expediency
+            navigation.navigate('MatchDetail', {
+                matchId: item.matchId,
+                sport: item.sport || 'football'
+            });
+        }
     };
 
     const renderItem = ({ item }: { item: any }) => (

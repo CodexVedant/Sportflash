@@ -16,14 +16,31 @@ import { showToast } from '@store/actions/toastActions';
 import { useDispatch, useSelector } from 'react-redux';
 import { updateUserPreferences } from '@store/slices/authSlice';
 import socket from '@services/socket';
-import { useGetMatchH2HQuery, useGetMatchStandingsQuery, useGetLiveMatchesQuery } from '@store/api/matchesApi';
+import { useGetMatchH2HQuery, useGetMatchStandingsQuery, useGetLiveMatchesQuery, useGetMatchDetailsQuery } from '@store/api/matchesApi';
 import { selectMatchById } from '@store/slices/liveMatchesSlice';
 import { initSocketListeners } from '@store/thunks/socketThunks';
 import { mapMatchToUI } from '@utils/matchMappers';
 import { styles } from '@utils/style/MatchDetailScreen.styles';
 
 export default function MatchDetailScreen({ navigation, route }) {
-    const { match } = route.params || {};
+    const { match, matchId: paramMatchId, sport: paramSport } = route.params || {};
+
+    // Debug Log
+    useEffect(() => {
+        console.log('📌 MatchDetail MOUNTED');
+        console.log('   - Params:', JSON.stringify(route.params));
+        console.log('   - Computed matchId:', matchId);
+        console.log('   - Computed sport:', derivedSport);
+
+        if (!matchId) {
+            Toast.show({
+                type: 'error',
+                text1: 'Error',
+                text2: 'Missing Match ID',
+            });
+        }
+    }, [matchId, derivedSport, route.params]);
+
     const [activeTab, setActiveTab] = useState('Scorecard');
     // const { showToast } = useToast(); // Removed in favor of Redux
     const dispatch = useDispatch();
@@ -31,11 +48,27 @@ export default function MatchDetailScreen({ navigation, route }) {
     const { width } = useWindowDimensions();
     const isDesktop = width > 768;
 
-    const matchId = match?._id || match?.id || '1';
+    const matchId = match?._id || match?.id || paramMatchId || '1';
+
+    // Ensure sport is available for queries
+    // Ensure sport is available for queries
+    const derivedSport = match?.sport || paramSport || 'football';
+
+    // 1. Try Redux (Live)
     const reduxMatch = useSelector(state => selectMatchById(state, matchId));
-    const displayMatch = reduxMatch ? mapMatchToUI(reduxMatch) : (match || {});
+
+    // 2. Try Fetch (Direct) - Create robustness by fetching fresh data
+    const { data: fetchedMatch, isLoading: isFetchingMatch, isError, error } = useGetMatchDetailsQuery(
+        { id: matchId, sport: derivedSport },
+        { skip: !matchId } // Always fetch to ensure full details (Lineups, etc.)
+    );
+
+    const matchSource = fetchedMatch || reduxMatch || match || {};
+    const displayMatch = mapMatchToUI(matchSource); // Map whatever we found
+
     const matchData = {
         ...displayMatch,
+        sport: displayMatch.sport || derivedSport, // Ensure sport is set
         homeTeam: displayMatch.homeTeam || { name: 'Home' },
         awayTeam: displayMatch.awayTeam || { name: 'Away' },
         venue: displayMatch.venue || {},
@@ -60,10 +93,47 @@ export default function MatchDetailScreen({ navigation, route }) {
     // Initial Fetch (if needed, though HomeScreen likely fetched it)
     const { refetch } = useGetLiveMatchesQuery();
 
-    // Ensure socket listeners are active when on this screen
+    // Ensure socket listeners are active
     useEffect(() => {
         dispatch(initSocketListeners());
     }, [dispatch]);
+
+    // Error View
+    if (isError) {
+        return (
+            <SafeAreaView style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+                <Ionicons name="alert-circle-outline" size={64} color={theme.colors.error} />
+                <Text style={{ color: '#fff', fontSize: 18, marginTop: 16, fontWeight: 'bold' }}>
+                    Failed to load match
+                </Text>
+                <Text style={{ color: '#aaa', marginTop: 8, textAlign: 'center', paddingHorizontal: 20 }}>
+                    {error?.error || JSON.stringify(error)}
+                </Text>
+                <Text style={{ color: '#aaa', marginTop: 4, fontSize: 12 }}>
+                    ID: {matchId} | Sport: {derivedSport}
+                </Text>
+                <TouchableOpacity
+                    onPress={refetch}
+                    style={{ marginTop: 20, backgroundColor: theme.colors.primary, paddingHorizontal: 20, paddingVertical: 10, borderRadius: 8 }}
+                >
+                    <Text style={{ color: '#fff', fontWeight: 'bold' }}>Retry Connection</Text>
+                </TouchableOpacity>
+                <TouchableOpacity onPress={() => navigation.goBack()} style={{ marginTop: 16 }}>
+                    <Text style={{ color: '#aaa' }}>Go Back</Text>
+                </TouchableOpacity>
+            </SafeAreaView>
+        );
+    }
+
+    // Loading View
+    if (isFetchingMatch && !matchSource.homeTeam) {
+        return (
+            <SafeAreaView style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+                <ActivityIndicator size="large" color={theme.colors.primary} />
+                <Text style={{ color: '#fff', marginTop: 10 }}>Loading Match Details...</Text>
+            </SafeAreaView>
+        );
+    }
 
     const [liveCommentary, setLiveCommentary] = useState([]);
 
@@ -385,7 +455,20 @@ export default function MatchDetailScreen({ navigation, route }) {
 
                 </View>
 
-            </SafeAreaView>
-        </View>
+                {/* DEBUG STATUS */}
+                <View style={{ position: 'absolute', top: 100, left: 0, right: 0, padding: 8, backgroundColor: 'red', zIndex: 999 }}>
+                    <Text style={{ color: '#fff', fontSize: 10, fontWeight: 'bold' }}>
+                        ERR: {isError ? 'NETWORK_ERROR' : error ? JSON.stringify(error) : 'None'}
+                    </Text>
+                    <Text style={{ color: '#fff', fontSize: 10, fontWeight: 'bold' }}>
+                        DATA: {fetchedMatch ? JSON.stringify(fetchedMatch).slice(0, 100) : 'NULL'}
+                    </Text>
+                    <Text style={{ color: '#fff', fontSize: 10 }}>
+                        Src: {matchSource === reduxMatch ? 'Redux' : matchSource === fetchedMatch ? 'API' : 'Params'} | Load: {isFetchingMatch ? 'YES' : 'NO'}
+                    </Text>
+                </View>
+
+            </SafeAreaView >
+        </View >
     );
 }

@@ -101,7 +101,7 @@ export default function TeamProfileScreen({ navigation, route }: Props) {
                                 awayTeam={match.awayTeam}
                                 score={match.score} // ensure this is the string score
                                 timer={match.timer || match.startTime}
-                                onPress={() => navigation.navigate('MatchDetails', { matchId: match.id, sport: sport })}
+                                onPress={() => navigation.navigate('MatchDetail', { matchId: match.id, sport: sport })}
                             />
                         ))}
                     </View>

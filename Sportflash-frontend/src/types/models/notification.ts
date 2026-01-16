@@ -8,5 +8,7 @@ export interface NotificationItem extends BaseEntity {
     read: boolean;
     type: string; // broadened from NotificationType for compatibility or update NotificationType union
     link?: string;
+    matchId?: string;
+    sport?: string;
     timestamp: string;
 }
