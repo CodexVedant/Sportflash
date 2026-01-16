@@ -100,45 +100,17 @@ exports.getNewsBySport = async (req, res) => {
 
         console.log(`📰 Fetching ${sport} news - Limit: ${limit}`);
 
-        let articles;
-        let source;
-
-        // Use Cricbuzz for cricket news (PRIMARY)
-        if (sport.toLowerCase() === 'cricket') {
-            const cricbuzzService = require('../services/cricbuzzService');
-            const cricketNews = await cricbuzzService.getCricketNews();
-
-            // Map Cricbuzz news to our format
-            articles = cricketNews?.storyList?.slice(0, parseInt(limit)).map(story => ({
-                id: story.story?.id || Math.random().toString(),
-                title: story.story?.hline || 'Cricket News',
-                description: story.story?.intro || '',
-                content: story.story?.intro || '',
-                url: story.story?.coverImage || '',
-                image: story.story?.coverImage || null,
-                publishedAt: new Date(story.story?.pubTime || Date.now()).toISOString(),
-                source: {
-                    name: 'Cricbuzz',
-                    url: 'https://www.cricbuzz.com'
-                },
-                category: 'cricket',
-                sport: 'cricket'
-            })) || [];
-
-            source = 'Cricbuzz';
-        } else {
-            // Use NewsData.io for football and basketball
-            articles = await newsDataService.getNewsBySport(sport, parseInt(limit));
-            articles = articles.map(article => newsDataService.mapArticle(article));
-            source = 'NewsData.io';
-        }
+        // Use NewsData.io for all sports (cricket, football, basketball)
+        const articles = await newsDataService.getNewsBySport(sport, parseInt(limit));
+        const mappedArticles = articles.map(article => newsDataService.mapArticle(article));
+        const source = 'NewsData.io';
 
         const response = {
             success: true,
-            count: articles.length,
+            count: mappedArticles.length,
             sport,
             source,
-            data: articles
+            data: mappedArticles
         };
 
         // Cache the response (15 minutes for news)

@@ -5,7 +5,6 @@ import { theme } from '@utils/theme';
 import { Ionicons } from '@expo/vector-icons';
 import SearchModal from '@components/common/SearchModal';
 import { useGetLiveMatchesQuery } from '@store/api/matchesApi';
-// import { useGetCricketLiveMatchesQuery } from '@store/api/cricbuzzApi'; // REMOVED - Use matchesApi
 import { useSelector, useDispatch } from 'react-redux';
 import { NotificationBell, NotificationPanel } from '@components/notifications';
 import { initSocketListeners } from '@store/thunks/socketThunks';

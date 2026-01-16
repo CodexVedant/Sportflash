@@ -12,7 +12,6 @@ import { NotificationBell, NotificationPanel } from '@components/notifications';
 import { useSelector } from 'react-redux';
 import TopBar from '@components/navigation/TopBar';
 import { useGetLiveMatchesQuery, useGetUpcomingMatchesQuery } from '@store/api/matchesApi';
-// import { useGetCricketLiveMatchesQuery, useGetCricketUpcomingMatchesQuery } from '@store/api/cricbuzzApi'; // REMOVED
 import { styles } from '@utils/style/MatchesScreen.styles';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '@app-types/navigation';

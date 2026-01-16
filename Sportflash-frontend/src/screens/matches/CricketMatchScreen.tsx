@@ -2,7 +2,7 @@
 import { View, FlatList, ActivityIndicator } from 'react-native';
 import { theme } from '@utils/theme';
 import MatchCard from '@components/match/MatchCard';
-import { useGetLiveMatchesQuery } from '@store/api/matchesApi'; // Changed from cricbuzzApi
+import { useGetLiveMatchesQuery } from '@store/api/matchesApi';
 import { EmptyState } from '@components/common';
 import { styles } from '@utils/style/CricketMatchScreen.styles';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
