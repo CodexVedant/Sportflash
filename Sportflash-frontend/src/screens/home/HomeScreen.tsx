@@ -135,6 +135,37 @@ export default function HomeScreen({ navigation }: Props) {
                 onNotificationPress={(notification) => {
                     console.log('Notification pressed:', notification);
                     setNotificationVisible(false);
+
+                    // Strategy:
+                    // 1. Try Snapshot (Best for closed matches)
+                    // 2. Try Live Store (Best for currently live matches if snapshot missing)
+                    // 3. Fallback to ID-based fetch (might fail if network issue)
+
+                    let targetMatch = notification.matchSnapshot;
+
+                    if (!targetMatch && notification.matchId) {
+                        const liveMatch = (allLiveMatches as Match[]).find(m =>
+                            m.id.toString() === notification.matchId?.toString()
+                        );
+                        if (liveMatch) {
+                            console.log('✅ Found match in Live Store during nav:', liveMatch.id);
+                            targetMatch = liveMatch;
+                        }
+                    }
+
+                    if (targetMatch) {
+                        // Ensure mapped to UI format if needed (MatchDetail expects full object)
+                        // But usually Live store data is raw? No, MatchDetail handles raw 'fetchedMatch' structure usually.
+                        // Wait, MatchDetail expects 'match' param. 
+                        // LiveMatchesWidget passes mapped data?
+                        // Let's pass what we have. MatchDetail handles it.
+                    }
+
+                    navigation.navigate('MatchDetail', {
+                        matchId: notification.matchId,
+                        sport: notification.sport || 'football',
+                        match: targetMatch // 🚀 Pass Data (Snapshot or Live Lookup)
+                    });
                 }}
             />
 

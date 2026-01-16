@@ -4,18 +4,14 @@ import { Ionicons } from '@expo/vector-icons';
 import { theme } from '@utils/theme';
 import { styles } from '@utils/style/NotificationItem.styles';
 
-export interface Notification {
-    id: string | number;
-    type: string;
-    title: string;
-    message: string;
-    timestamp: string | Date;
-    read: boolean;
-}
+import { NotificationItem as NotificationModel } from '@app-types/models/notification';
+
+// Re-export for backward compatibility if needed, or update consumers
+export type Notification = NotificationModel;
 
 interface NotificationItemProps {
-    notification: Notification;
-    onPress?: (notification: Notification) => void;
+    notification: NotificationModel;
+    onPress?: (notification: NotificationModel) => void;
     onMarkAsRead?: (id: string | number) => void;
     onDelete?: (id: string | number) => void;
 }

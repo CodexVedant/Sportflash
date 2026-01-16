@@ -1,7 +1,7 @@
 ﻿import React, { useEffect } from 'react';
 import { NavigationContainer, DefaultTheme, Theme as NavigationThemeType } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { ActivityIndicator, View } from 'react-native';
+import { ActivityIndicator, View, Platform } from 'react-native';
 import { useAppDispatch, useAppSelector } from '@hooks/redux';
 import { loadUser } from '@store/slices/authSlice';
 import * as SplashScreen from 'expo-splash-screen';
@@ -65,6 +65,9 @@ export default function AppNavigator() {
     useEffect(() => {
         // 1. Handle Cold Start (App Closed -> Notification Tap -> Open)
         const checkInitialNotification = async () => {
+            // Web doesn't support Cold Start via this API (handled by URL usually)
+            if (Platform.OS === 'web') return;
+
             const response = await Notifications.getLastNotificationResponseAsync();
             if (response) {
                 const data = response.notification.request.content.data;

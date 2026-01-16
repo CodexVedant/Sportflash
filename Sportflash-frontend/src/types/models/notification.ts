@@ -2,6 +2,8 @@ import { BaseEntity } from '../common';
 
 export type NotificationType = 'match_start' | 'goal' | 'result' | 'news' | 'system';
 
+import { Match } from '../models/match';
+
 export interface NotificationItem extends BaseEntity {
     title: string;
     message: string;
@@ -10,5 +12,6 @@ export interface NotificationItem extends BaseEntity {
     link?: string;
     matchId?: string;
     sport?: string;
+    matchSnapshot?: Match; // 📸 Snapshot of the match when notification occurred
     timestamp: string;
 }

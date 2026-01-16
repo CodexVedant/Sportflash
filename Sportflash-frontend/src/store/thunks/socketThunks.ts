@@ -143,7 +143,8 @@ export const initSocketListeners = () => (dispatch: AppDispatch, getState: () =>
                 read: false,
                 link: `/match/${newMatch.id}`,
                 matchId: newMatch.id.toString(),
-                sport: newMatch.sport
+                sport: newMatch.sport,
+                matchSnapshot: newMatch // 📸 Save Snapshot for History Navigation
             }));
         }
     };
