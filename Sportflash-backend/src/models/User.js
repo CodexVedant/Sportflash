@@ -40,7 +40,14 @@ const userSchema = new mongoose.Schema({
         notifications: {
             type: Boolean,
             default: true
-        }
+        },
+        favoriteLeagues: [{
+            id: String,
+            name: String,
+            sport: String,
+            country: String,
+            logo: String
+        }]
     },
     bookmarks: [{
         articleId: {

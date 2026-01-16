@@ -747,3 +747,54 @@ exports.getLeagueMatches = async (req, res) => {
         });
     }
 };
+
+/**
+ * @desc    Get top scorers for a league
+ * @route   GET /api/matches/league/:leagueId/topscorers
+ * @access  Public
+ */
+exports.getTopScorers = async (req, res) => {
+    try {
+        const { leagueId } = req.params;
+        const { sport } = req.query;
+
+        if (!sport) {
+            return res.status(400).json({
+                success: false,
+                message: 'Sport parameter is required'
+            });
+        }
+
+        if (sport.toLowerCase() !== 'football') {
+             return res.status(400).json({
+                success: false,
+                message: 'Top scorers only available for football currently'
+            });
+        }
+
+        // Check cache
+        const cacheKey = cacheService.generateKey('topscorers', { leagueId, sport });
+        const cachedData = cacheService.get(cacheKey);
+        if (cachedData) return res.json(cachedData);
+
+        const scorers = await allSportsApi.getFootballTopScorers(leagueId);
+
+        const response = {
+            success: true,
+            data: scorers || []
+        };
+
+        // Cache for 12 hours
+        cacheService.set(cacheKey, response, 43200);
+
+        res.json(response);
+    } catch (error) {
+        console.error('Error in getTopScorers:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error fetching top scorers',
+            error: error.message
+        });
+    }
+};
+

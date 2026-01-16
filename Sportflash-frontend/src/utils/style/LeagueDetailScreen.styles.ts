@@ -24,6 +24,17 @@ export const styles = StyleSheet.create({
         fontSize: 20,
         fontWeight: 'bold',
         color: theme.colors.text,
+        flex: 1,
+        marginRight: 8,
+    },
+    headerTitleRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        paddingRight: 8,
+    },
+    favoriteBtn: {
+        padding: 4,
     },
     leagueCountry: {
         fontSize: 14,
@@ -227,6 +238,45 @@ export const styles = StyleSheet.create({
     },
     tableCell: {
         fontSize: 13,
+        color: theme.colors.text,
+        textAlign: 'center',
+    },
+    teamsGrid: {
+        padding: 8,
+    },
+    teamCard: {
+        flex: 1,
+        backgroundColor: theme.colors.surface,
+        margin: 8,
+        padding: 16,
+        borderRadius: 12,
+        alignItems: 'center',
+        borderWidth: 1,
+        borderColor: theme.colors.border,
+        maxWidth: '48%',
+    },
+    teamLogo: {
+        width: 60,
+        height: 60,
+        borderRadius: 30,
+        backgroundColor: theme.colors.background,
+        marginBottom: 12,
+    },
+    teamLogoPlaceholder: {
+        width: 60,
+        height: 60,
+        borderRadius: 30,
+        backgroundColor: theme.colors.background,
+        marginBottom: 12,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    teamLogoText: {
+        fontSize: 24,
+    },
+    teamCardName: {
+        fontSize: 14,
+        fontWeight: '600',
         color: theme.colors.text,
         textAlign: 'center',
     },

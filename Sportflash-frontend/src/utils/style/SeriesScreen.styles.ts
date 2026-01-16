@@ -103,4 +103,38 @@ export const styles = StyleSheet.create({
         fontWeight: '500',
         textAlign: 'center',
     },
+    filterContainer: {
+        paddingHorizontal: 16,
+        paddingTop: 16,
+        paddingBottom: 8,
+        backgroundColor: theme.colors.background,
+    },
+    countryList: {
+        marginTop: 12,
+        maxHeight: 40,
+    },
+    countryListContent: {
+        paddingRight: 16,
+    },
+    countryChip: {
+        paddingHorizontal: 16,
+        paddingVertical: 8,
+        backgroundColor: theme.colors.surface,
+        borderRadius: 20,
+        marginRight: 8,
+        borderWidth: 1,
+        borderColor: theme.colors.border,
+    },
+    countryChipActive: {
+        backgroundColor: theme.colors.primary,
+        borderColor: theme.colors.primary,
+    },
+    countryChipText: {
+        fontSize: 13,
+        color: theme.colors.textMuted,
+        fontWeight: '500',
+    },
+    countryChipTextActive: {
+        color: '#FFFFFF',
+    },
 });

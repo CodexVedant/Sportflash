@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { View, Text, TouchableOpacity, FlatList, ActivityIndicator } from 'react-native';
+import { View, Text, TouchableOpacity, FlatList, ActivityIndicator, RefreshControl, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -10,17 +10,46 @@ import { Ionicons } from '@expo/vector-icons';
 import { styles } from '@utils/style/SeriesScreen.styles';
 import { useGetLeaguesQuery } from '@store/api/leaguesApi';
 import TopBar from '@components/navigation/TopBar';
-import { EmptyState, NetworkError } from '@components/common';
+import { EmptyState, NetworkError, Input } from '@components/common';
+import { useAppSelector } from '@hooks/redux';
 
 export default function SeriesScreen() {
     const [sidebarVisible, setSidebarVisible] = useState(false);
     const [activeSport, setActiveSport] = useState('cricket');
+    const [searchQuery, setSearchQuery] = useState('');
+    const [selectedCountry, setSelectedCountry] = useState<string | null>(null);
+    const [showFavorites, setShowFavorites] = useState(false);
     const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+    const { user } = useAppSelector(state => state.auth);
 
     // Fetch leagues for the active sport
-    const { data: leagues = [], isLoading, error, refetch } = useGetLeaguesQuery({
+    const { data: leagues = [], isLoading, error, refetch, isFetching } = useGetLeaguesQuery({
         sport: activeSport
     });
+
+    const onRefresh = React.useCallback(() => {
+        refetch();
+    }, [refetch]);
+
+    // Unique countries for filter
+    const countries = useMemo(() => {
+        const unique = new Set<string>();
+        leagues.forEach((l: any) => {
+            if (l.country?.name) unique.add(l.country.name);
+        });
+        return Array.from(unique).sort();
+    }, [leagues]);
+
+    // Filter leagues
+    const filteredLeagues = useMemo(() => {
+        return leagues.filter((league: any) => {
+            const matchesSearch = league.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                league.country?.name?.toLowerCase().includes(searchQuery.toLowerCase());
+            const matchesCountry = selectedCountry ? league.country?.name === selectedCountry : true;
+            const matchesFavorites = showFavorites ? user?.preferences?.favoriteLeagues?.some(fl => fl.id === league.id) : true;
+            return matchesSearch && matchesCountry && matchesFavorites;
+        });
+    }, [leagues, searchQuery, selectedCountry, showFavorites, user]);
 
     const SPORT_TABS = [
         { id: 'cricket', label: 'Cricket', icon: 'baseball-outline' },
@@ -90,9 +119,58 @@ export default function SeriesScreen() {
             {/* Sport Tabs */}
             <TopBar
                 activeTab={activeSport}
-                onTabChange={setActiveSport}
+                onTabChange={(sport) => {
+                    setActiveSport(sport);
+                    setSearchQuery('');
+                    setSelectedCountry(null);
+                }}
                 tabs={SPORT_TABS}
             />
+
+            {/* Filters */}
+            <View style={styles.filterContainer}>
+                <Input
+                    placeholder="Search leagues or countries..."
+                    value={searchQuery}
+                    onChangeText={setSearchQuery}
+                    icon="search"
+                />
+
+                <ScrollView
+                    horizontal
+                    showsHorizontalScrollIndicator={false}
+                    style={styles.countryList}
+                    contentContainerStyle={styles.countryListContent}
+                >
+                    <TouchableOpacity
+                        style={[styles.countryChip, showFavorites && styles.countryChipActive]}
+                        onPress={() => setShowFavorites(!showFavorites)}
+                    >
+                        <Text style={[styles.countryChipText, showFavorites && styles.countryChipTextActive]}>❤️ Favorites</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                        style={[styles.countryChip, !selectedCountry && !showFavorites && styles.countryChipActive]}
+                        onPress={() => {
+                            setSelectedCountry(null);
+                            setShowFavorites(false);
+                        }}
+                    >
+                        <Text style={[styles.countryChipText, !selectedCountry && !showFavorites && styles.countryChipTextActive]}>All</Text>
+                    </TouchableOpacity>
+                    {countries.map(country => (
+                        <TouchableOpacity
+                            key={country}
+                            style={[styles.countryChip, selectedCountry === country && styles.countryChipActive]}
+                            onPress={() => setSelectedCountry(country === selectedCountry ? null : country)}
+                        >
+                            <Text style={[styles.countryChipText, selectedCountry === country && styles.countryChipTextActive]}>
+                                {country}
+                            </Text>
+                        </TouchableOpacity>
+                    ))}
+                </ScrollView>
+            </View>
 
             {/* Content */}
             <View style={styles.content}>
@@ -103,18 +181,21 @@ export default function SeriesScreen() {
                     </View>
                 ) : error ? (
                     <NetworkError onRetry={refetch} />
-                ) : leagues.length === 0 ? (
+                ) : filteredLeagues.length === 0 ? (
                     <EmptyState
                         variant="noMatches"
-                        message={`No leagues found for ${activeSport}`}
+                        message={`No leagues found for ${searchQuery || activeSport}`}
                     />
                 ) : (
                     <FlatList
-                        data={leagues}
+                        data={filteredLeagues}
                         renderItem={renderLeagueCard}
                         keyExtractor={(item) => item.id}
                         contentContainerStyle={styles.listContent}
                         showsVerticalScrollIndicator={false}
+                        refreshControl={
+                            <RefreshControl refreshing={isFetching} onRefresh={onRefresh} tintColor={theme.colors.primary} />
+                        }
                         numColumns={2}
                         columnWrapperStyle={styles.row}
                     />

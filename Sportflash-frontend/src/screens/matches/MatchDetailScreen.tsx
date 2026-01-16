@@ -406,23 +406,29 @@ export default function MatchDetailScreen({ navigation, route }: Props) {
                             onFallback={() => {
                                 if (matchData.leagueInfo?.id) {
                                     navigation.navigate('LeagueDetails', {
-                                        leagueId: matchData.leagueInfo.id,
-                                        name: matchData.leagueInfo.name,
-                                        round: matchData.leagueInfo.round
+                                        league: {
+                                            id: matchData.leagueInfo.id,
+                                            name: matchData.leagueInfo.name,
+                                            sport: matchData.sport,
+                                            country: { name: matchData.leagueInfo.country },
+                                            season: matchData.leagueInfo.season
+                                        }
                                     });
                                 } else {
-                                    // Navigate to Main stack if Home is not in RootStack direct children
-                                    // Assuming Home is the initial route of Main or a direct route
-                                    // If 'Home' gave error, it might be nested in 'Main'
                                     navigation.navigate('Main');
                                 }
                             }}
                         />
 
                         <TouchableOpacity onPress={() => navigation.navigate('LeagueDetails', {
-                            leagueId: matchData.leagueInfo?.id,
-                            name: matchData.leagueInfo?.name,
-                            round: matchData.leagueInfo?.round
+                            league: {
+                                id: matchData.leagueInfo?.id,
+                                name: matchData.leagueInfo?.name || matchData.league || '',
+                                sport: matchData.sport,
+                                country: { name: matchData.leagueInfo?.country || '' },
+                                season: matchData.leagueInfo?.season,
+                                logo: matchData.leagueInfo?.logo || matchData.leagueLogo
+                            }
                         })}>
                             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
                                 <Text style={styles.headerTitle}>{matchData.league}</Text>

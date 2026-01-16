@@ -22,6 +22,7 @@ router.get('/live', getLiveMatches);
 router.get('/upcoming', getUpcomingMatches);
 router.get('/leagues', getLeagues);
 router.get('/league/:leagueId', getLeagueMatches);
+router.get('/league/:leagueId/topscorers', require('../controllers/matchController').getTopScorers);
 router.get('/standings', getStandings);
 router.get('/h2h', getHeadToHead);
 router.get('/sport/:sport', getMatchesBySport);

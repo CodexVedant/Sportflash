@@ -27,13 +27,6 @@ export default function NewsDetailScreen() {
 
     const { data: article, isLoading, error } = useGetNewsDetailQuery(String(newsId || ''));
 
-    // Debug logging
-    React.useEffect(() => {
-        console.log('NewsDetailScreen - newsId:', newsId);
-        console.log('NewsDetailScreen - bookmarks:', bookmarks);
-        console.log('NewsDetailScreen - isBookmarked:', isBookmarked);
-    }, [newsId, bookmarks, isBookmarked]);
-
     // Helper function to format time ago
     const getTimeAgo = (dateString: string) => {
         const date = new Date(dateString);

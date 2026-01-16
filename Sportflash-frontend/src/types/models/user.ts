@@ -12,7 +12,15 @@ export interface UserPreferences {
     notifications?: boolean;
     favoriteSports?: string[];
     favoriteTeams?: string[];
-    favoriteLeagues?: string[];
+    favoriteLeagues?: FavoriteLeague[];
+}
+
+export interface FavoriteLeague {
+    id: string;
+    name: string;
+    sport: string;
+    country?: string;
+    logo?: string;
 }
 
 export interface AuthResponse {

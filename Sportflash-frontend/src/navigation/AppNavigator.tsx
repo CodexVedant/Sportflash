@@ -87,7 +87,7 @@ export default function AppNavigator() {
                 <Stack.Screen name="Following" component={FollowingScreen} />
                 <Stack.Screen name="Bookmarks" component={BookmarksScreen} />
                 <Stack.Screen name="Settings" component={SettingsScreen} />
-                <Stack.Screen name="LeagueDetails" component={LeagueDetailsScreen} />
+                <Stack.Screen name="LeagueDetails" component={LeagueDetailScreen} />
                 <Stack.Screen name="LeagueDetail" component={LeagueDetailScreen} />
                 <Stack.Screen name="TeamProfile" component={TeamProfileScreen} />
                 <Stack.Screen name="PlayerProfile" component={PlayerProfileScreen} />

@@ -40,10 +40,20 @@ export const leaguesApi = createApi({
             transformResponse: (response: ApiResponse<any[]>) => response.data,
             keepUnusedDataFor: 3600, // 1 hour
         }),
+
+        getLeagueTopScorers: builder.query<any[], { leagueId: string; sport: string }>({
+            query: ({ leagueId, sport }) => ({
+                url: `/matches/league/${leagueId}/topscorers`,
+                params: { sport }
+            }),
+            transformResponse: (response: ApiResponse<any[]>) => response.data,
+            keepUnusedDataFor: 43200, // 12 hours
+        }),
     }),
 });
 
 export const {
     useGetLeaguesQuery,
     useGetLeagueMatchesQuery,
+    useGetLeagueTopScorersQuery,
 } = leaguesApi;

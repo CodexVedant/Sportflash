@@ -171,12 +171,13 @@ exports.getMe = async (req, res) => {
 // @access  Private
 exports.updatePreferences = async (req, res) => {
     try {
-        const { favoriteTeams, favoriteSports, notifications } = req.body;
+        const { favoriteTeams, favoriteSports, notifications, favoriteLeagues } = req.body;
 
         const user = await User.findById(req.user.id);
 
         if (favoriteTeams) user.preferences.favoriteTeams = favoriteTeams;
         if (favoriteSports) user.preferences.favoriteSports = favoriteSports;
+        if (favoriteLeagues) user.preferences.favoriteLeagues = favoriteLeagues;
         if (notifications !== undefined) user.preferences.notifications = notifications;
 
         await user.save();
