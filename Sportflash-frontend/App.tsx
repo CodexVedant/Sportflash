@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { Platform, View, ActivityIndicator } from 'react-native';
 import { Provider } from 'react-redux';
-import { store } from '@store/store';
+import { store, persistor } from '@store/store';
 import AppNavigator from '@navigation/AppNavigator';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { ToastProvider } from '@context/ToastContext';
@@ -9,6 +9,7 @@ import { theme } from '@utils/theme';
 import { useGetLiveMatchesQuery, useGetUpcomingMatchesQuery } from '@store/api/matchesApi';
 import { useFonts } from 'expo-font';
 import { Ionicons } from '@expo/vector-icons';
+import { PersistGate } from 'redux-persist/integration/react';
 
 // Prefetch component to load data on app start
 function DataPrefetcher() {
@@ -47,12 +48,14 @@ export default function App() {
 
     return (
         <Provider store={store}>
-            <SafeAreaProvider>
-                <ToastProvider>
-                    <DataPrefetcher />
-                    <AppNavigator />
-                </ToastProvider>
-            </SafeAreaProvider>
+            <PersistGate loading={null} persistor={persistor}>
+                <SafeAreaProvider>
+                    <ToastProvider>
+                        <DataPrefetcher />
+                        <AppNavigator />
+                    </ToastProvider>
+                </SafeAreaProvider>
+            </PersistGate>
         </Provider>
     );
 }
