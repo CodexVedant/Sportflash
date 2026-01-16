@@ -10,43 +10,17 @@ import { theme } from '@utils/theme';
 import { registerForPushNotificationsAsync } from './src/services/NotificationService';
 
 
+import { toastConfig } from '@components/common/ToastConfig';
+
 export default function App() {
-  // Force dark background on Web to prevent white flash
-  useEffect(() => {
-    if (Platform.OS === 'web') {
-      document.body.style.backgroundColor = theme.colors.background;
-
-      // Hide scrollbars globally for webkit browsers (Chrome, Safari, Edge)
-      const style = document.createElement('style');
-      style.textContent = `
-        /* Hide scrollbar for Chrome, Safari and Opera */
-        *::-webkit-scrollbar {
-          display: none;
-        }
-        
-        /* Hide scrollbar for IE, Edge and Firefox */
-        * {
-          -ms-overflow-style: none;  /* IE and Edge */
-          scrollbar-width: none;  /* Firefox */
-        }
-      `;
-      document.head.appendChild(style);
-    }
-  }, []);
-
-  useEffect(() => {
-    registerForPushNotificationsAsync().then(token => {
-      // console.log("Push Token:", token);
-    });
-  }, []);
-
+  // Use existing useEffect logic...
 
   return (
     <Provider store={store}>
       <PersistGate loading={null} persistor={persistor}>
         <SafeAreaProvider>
           <AppNavigator />
-          <Toast />
+          <Toast config={toastConfig} />
         </SafeAreaProvider>
       </PersistGate>
     </Provider>

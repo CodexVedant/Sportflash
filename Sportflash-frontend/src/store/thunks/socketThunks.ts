@@ -108,7 +108,7 @@ export const initSocketListeners = () => (dispatch: AppDispatch, getState: () =>
         if (shouldNotify) {
             // 1. Show In-App Toast (Foreground)
             Toast.show({
-                type: 'info', // Customize based on event type if needed
+                type: 'match_update', // Use Custom Bell Icon Toast
                 text1: title,
                 text2: message,
                 position: 'top',
@@ -127,7 +127,8 @@ export const initSocketListeners = () => (dispatch: AppDispatch, getState: () =>
 
                     navigate('MatchDetail', {
                         matchId: newMatch.id.toString(),
-                        sport: newMatch.sport || 'football'
+                        sport: newMatch.sport || 'football',
+                        match: newMatch // 🚀 PASS FULL DATA direct to screen
                     });
                 }
             });

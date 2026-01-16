@@ -14,6 +14,7 @@ import { savePushToken } from './src/store/slices/authSlice';
 import { registerForPushNotificationsAsync } from './src/services/NotificationService';
 import * as Notifications from 'expo-notifications';
 import { useAppDispatch, useAppSelector } from './src/hooks/redux';
+import { toastConfig } from '@components/common/ToastConfig';
 
 // Prefetch component to load data on app start
 function DataPrefetcher() {
@@ -88,7 +89,7 @@ function AppContent() {
                 <DataPrefetcher />
                 <AppNavigator />
             </ToastProvider>
-            <Toast />
+            <Toast config={toastConfig} />
         </SafeAreaProvider>
     );
 }
