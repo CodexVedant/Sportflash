@@ -2,13 +2,9 @@ export type RootStackParamList = {
     Main: undefined;
     Login: undefined;
     Register: undefined;
-<<<<<<< HEAD
-    MatchDetail: { match?: any; id?: string; matchId?: string; sport?: string };
-=======
     ForgotPassword: undefined;
     ResetPassword: { resetToken: string };
-    MatchDetail: { match?: any; id?: string; sport?: string };
->>>>>>> origin/main
+    MatchDetail: { match?: any; id?: string; matchId?: string; sport?: string };
     Series: { id: string; sport: string };
     Following: undefined;
     Bookmarks: undefined;
