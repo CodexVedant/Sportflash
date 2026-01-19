@@ -20,15 +20,10 @@ const newsSlice = createSlice({
         },
         toggleBookmark: (state, action: PayloadAction<string>) => {
             const articleId = action.payload;
-            console.log('toggleBookmark called with ID:', articleId);
-            console.log('Current bookmarks:', state.bookmarks);
-
             if (state.bookmarks.includes(articleId)) {
                 state.bookmarks = state.bookmarks.filter(id => id !== articleId);
-                console.log('Removed bookmark. New bookmarks:', state.bookmarks);
             } else {
                 state.bookmarks.push(articleId);
-                console.log('Added bookmark. New bookmarks:', state.bookmarks);
             }
         },
     },

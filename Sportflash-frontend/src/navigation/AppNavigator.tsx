@@ -16,6 +16,8 @@ import MainNavigator from '@navigation/MainNavigator';
 // Screens
 import LoginScreen from '@screens/auth/LoginScreen';
 import RegisterScreen from '@screens/auth/RegisterScreen';
+import ForgotPasswordScreen from '@screens/auth/ForgotPasswordScreen';
+import ResetPasswordScreen from '@screens/auth/ResetPasswordScreen';
 import MatchDetailScreen from '@screens/matches/MatchDetailScreen';
 import SeriesScreen from '@screens/series/SeriesScreen';
 import FollowingScreen from '@screens/following/FollowingScreen';
@@ -27,6 +29,7 @@ import NotificationSettingsScreen from '@screens/profile/NotificationSettingsScr
 import PreferencesScreen from '@screens/profile/PreferencesScreen';
 import NewsDetailScreen from '@screens/news/NewsDetailScreen';
 import LeagueDetailsScreen from '@screens/league/LeagueDetailsScreen';
+import LeagueDetailScreen from '@screens/series/LeagueDetailScreen';
 import TeamProfileScreen from '@screens/team/TeamProfileScreen';
 import UpcomingMatchesScreen from '@screens/matches/UpcomingMatchesScreen';
 import PremiumScreen from '@screens/profile/PremiumScreen';
@@ -133,12 +136,15 @@ export default function AppNavigator() {
                 <Stack.Screen name="Main" component={MainNavigator} />
                 <Stack.Screen name="Login" component={LoginScreen} />
                 <Stack.Screen name="Register" component={RegisterScreen} />
+                <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
+                <Stack.Screen name="ResetPassword" component={ResetPasswordScreen} />
                 <Stack.Screen name="MatchDetail" component={MatchDetailScreen} />
                 <Stack.Screen name="Series" component={SeriesScreen} />
                 <Stack.Screen name="Following" component={FollowingScreen} />
                 <Stack.Screen name="Bookmarks" component={BookmarksScreen} />
                 <Stack.Screen name="Settings" component={SettingsScreen} />
-                <Stack.Screen name="LeagueDetails" component={LeagueDetailsScreen} />
+                <Stack.Screen name="LeagueDetails" component={LeagueDetailScreen} />
+                <Stack.Screen name="LeagueDetail" component={LeagueDetailScreen} />
                 <Stack.Screen name="TeamProfile" component={TeamProfileScreen} />
                 <Stack.Screen name="PlayerProfile" component={PlayerProfileScreen} />
                 <Stack.Screen name="Notifications" component={NotificationsScreen} />

@@ -33,13 +33,7 @@ export default function BookmarksScreen() {
 
     const bookmarkedArticles = combinedNews.filter(item => bookmarks.includes(String(item.id)));
 
-    // Debug logging
-    React.useEffect(() => {
-        console.log('BookmarksScreen - bookmarks:', bookmarks);
-        console.log('BookmarksScreen - combinedNews count:', combinedNews.length);
-        console.log('BookmarksScreen - bookmarkedArticles count:', bookmarkedArticles.length);
-        console.log('BookmarksScreen - combinedNews IDs:', combinedNews.map(item => String(item.id)));
-    }, [bookmarks, combinedNews, bookmarkedArticles]);
+
 
     // Helper function to format time ago
     const getTimeAgo = (dateString: string) => {

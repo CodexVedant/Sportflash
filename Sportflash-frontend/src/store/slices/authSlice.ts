@@ -132,10 +132,20 @@ const authSlice = createSlice({
         clearError: (state) => {
             state.error = null;
         },
+<<<<<<< HEAD
         setPremiumStatus: (state, action: PayloadAction<boolean>) => {
             if (state.user) {
                 state.user.isPremium = action.payload;
             }
+=======
+        setCredentials: (state, action: PayloadAction<AuthResponseData>) => {
+            state.user = action.payload.user;
+            state.token = action.payload.token;
+            // Store in AsyncStorage
+            AsyncStorage.setItem('token', action.payload.token);
+            AsyncStorage.setItem('user', JSON.stringify(action.payload.user));
+            api.defaults.headers.common['Authorization'] = `Bearer ${action.payload.token}`;
+>>>>>>> origin/main
         }
     },
     extraReducers: (builder) => {
@@ -194,6 +204,10 @@ const authSlice = createSlice({
     },
 });
 
+<<<<<<< HEAD
 export const { clearError, setPremiumStatus } = authSlice.actions;
+=======
+export const { clearError, setCredentials } = authSlice.actions;
+>>>>>>> origin/main
 export default authSlice.reducer;
 

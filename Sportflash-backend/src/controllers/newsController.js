@@ -1,4 +1,5 @@
 const newsDataService = require('../services/newsDataService');
+const cacheService = require('../services/CacheService');
 
 /**
  * @desc    Get all news or filtered by category
@@ -9,6 +10,15 @@ exports.getNews = async (req, res) => {
     try {
         const { category = 'all', limit = 20 } = req.query;
 
+        // Generate cache key
+        const cacheKey = cacheService.generateKey('news', { category, limit });
+
+        // Check cache first
+        const cachedData = cacheService.get(cacheKey);
+        if (cachedData) {
+            return res.json(cachedData);
+        }
+
         console.log(`📰 Fetching news - Category: ${category}, Limit: ${limit}`);
 
         const articles = await newsDataService.getSportsNews(category, parseInt(limit));
@@ -16,12 +26,18 @@ exports.getNews = async (req, res) => {
         // Map articles to our format
         const mappedArticles = articles.map(article => newsDataService.mapArticle(article));
 
-        res.json({
+        const response = {
             success: true,
             count: mappedArticles.length,
             category,
             data: mappedArticles
-        });
+        };
+
+        // Cache the response (15 minutes for news)
+        const ttl = parseInt(process.env.CACHE_TTL_NEWS) || 900;
+        cacheService.set(cacheKey, response, ttl);
+
+        res.json(response);
     } catch (error) {
         console.error('Error in getNews:', error);
         res.status(500).json({
@@ -73,19 +89,35 @@ exports.getNewsBySport = async (req, res) => {
         const { sport } = req.params;
         const { limit = 20 } = req.query;
 
+        // Generate cache key
+        const cacheKey = cacheService.generateKey('news_sport', { sport, limit });
+
+        // Check cache first
+        const cachedData = cacheService.get(cacheKey);
+        if (cachedData) {
+            return res.json(cachedData);
+        }
+
         console.log(`📰 Fetching ${sport} news - Limit: ${limit}`);
 
+        // Use NewsData.io for all sports (cricket, football, basketball)
         const articles = await newsDataService.getNewsBySport(sport, parseInt(limit));
-
-        // Map articles to our format
         const mappedArticles = articles.map(article => newsDataService.mapArticle(article));
+        const source = 'NewsData.io';
 
-        res.json({
+        const response = {
             success: true,
             count: mappedArticles.length,
             sport,
+            source,
             data: mappedArticles
-        });
+        };
+
+        // Cache the response (15 minutes for news)
+        const ttl = parseInt(process.env.CACHE_TTL_NEWS) || 900;
+        cacheService.set(cacheKey, response, ttl);
+
+        res.json(response);
     } catch (error) {
         console.error('Error in getNewsBySport:', error);
         res.status(500).json({

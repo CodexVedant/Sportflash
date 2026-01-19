@@ -24,9 +24,10 @@ interface FilterPanelProps {
     onClose: () => void;
     onApply: (filters: FilterState) => void;
     initialFilters?: Partial<FilterState>;
+    availableLeagues?: { id: string; name: string; icon?: string }[];
 }
 
-export default function FilterPanel({ visible, onClose, onApply, initialFilters = {} }: FilterPanelProps) {
+export default function FilterPanel({ visible, onClose, onApply, initialFilters = {}, availableLeagues = [] }: FilterPanelProps) {
     const [filters, setFilters] = useState<FilterState>({
         sport: initialFilters.sport || 'all',
         status: initialFilters.status || 'all',
@@ -37,12 +38,7 @@ export default function FilterPanel({ visible, onClose, onApply, initialFilters 
 
     const leagues = [
         { id: 'all', name: 'All Leagues', icon: 'globe-outline' },
-        { id: 'ipl', name: 'IPL', icon: 'baseball-outline' },
-        { id: 'premier-league', name: 'Premier League', icon: 'football-outline' },
-        { id: 'nba', name: 'NBA', icon: 'basketball-outline' },
-        { id: 'la-liga', name: 'La Liga', icon: 'football-outline' },
-        { id: 'champions-league', name: 'Champions League', icon: 'trophy-outline' },
-        { id: 'world-cup', name: 'World Cup', icon: 'trophy-outline' },
+        ...availableLeagues.map(l => ({ ...l, icon: l.icon || 'trophy-outline' }))
     ];
 
     const handleApply = () => {

@@ -1,4 +1,5 @@
 import { BaseEntity, Dictionary } from '../common';
+import { Player } from './player';
 
 export interface Team extends BaseEntity {
     name: string;
@@ -14,6 +15,7 @@ export interface Team extends BaseEntity {
         capacity?: number;
         [key: string]: any;
     };
+    players?: Player[];
 }
 
 // For standings

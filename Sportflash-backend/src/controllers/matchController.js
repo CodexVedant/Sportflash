@@ -1,4 +1,5 @@
 const allSportsApi = require('../services/allSportsApiService');
+const cacheService = require('../services/CacheService');
 const {
     mapFootballMatch,
     mapBasketballMatch,
@@ -70,6 +71,16 @@ exports.getMatches = async (req, res) => {
 exports.getUpcomingMatches = async (req, res) => {
     try {
         const { sport, date, days = 7 } = req.query;
+        const targetDate = date || new Date().toISOString().split('T')[0];
+
+        // Generate cache key
+        const cacheKey = cacheService.generateKey('upcoming', { sport: sport || 'all', date: targetDate, days });
+
+        // Check cache first
+        const cachedData = cacheService.get(cacheKey);
+        if (cachedData) {
+            return res.json(cachedData);
+        }
 
         let upcomingMatches = [];
 
@@ -85,6 +96,7 @@ exports.getUpcomingMatches = async (req, res) => {
                         case 'cricket': return rawMatches.map(mapCricketMatch).filter(m => m !== null);
                     }
                 }
+<<<<<<< HEAD
             } else {
                 // All Sports
                 const [football, basketball, cricket] = await Promise.allSettled([
@@ -123,6 +135,35 @@ exports.getUpcomingMatches = async (req, res) => {
                 console.log(`   - Date ${dateStr}: Found ${matches.length} matches (before filter)`);
                 upcomingMatches.push(...matches);
             }
+=======
+            }
+        } else {
+            // Get upcoming matches for all sports
+            console.log('[getUpcomingMatches] Fetching all sports for date:', targetDate);
+            const [footballFixtures, basketballFixtures, cricketFixtures] = await Promise.allSettled([
+                allSportsApi.getFootballFixtures({ date: targetDate }),
+                allSportsApi.getBasketballFixtures({ date: targetDate }),
+                allSportsApi.getCricketFixtures({ date: targetDate })
+            ]);
+
+            console.log('[getUpcomingMatches] Results:', {
+                football: { status: footballFixtures.status, count: footballFixtures.value?.length || 0 },
+                basketball: { status: basketballFixtures.status, count: basketballFixtures.value?.length || 0 },
+                cricket: { status: cricketFixtures.status, count: cricketFixtures.value?.length || 0 }
+            });
+
+            upcomingMatches = [
+                ...(footballFixtures.status === 'fulfilled' && footballFixtures.value
+                    ? footballFixtures.value.map(mapFootballMatch).filter(m => m !== null)
+                    : []),
+                ...(basketballFixtures.status === 'fulfilled' && basketballFixtures.value
+                    ? basketballFixtures.value.map(mapBasketballMatch).filter(m => m !== null)
+                    : []),
+                ...(cricketFixtures.status === 'fulfilled' && cricketFixtures.value
+                    ? cricketFixtures.value.map(mapCricketMatch).filter(m => m !== null)
+                    : [])
+            ];
+>>>>>>> origin/main
         }
 
         // Deduplicate matches (API might return overlapping results for date ranges)
@@ -143,16 +184,26 @@ exports.getUpcomingMatches = async (req, res) => {
             return dateA - dateB;
         });
 
+<<<<<<< HEAD
         // Filter only upcoming
         upcomingMatches = upcomingMatches.filter(m => m.status === 'upcoming' || m.status === 'Not Started');
         console.log(`📤 getUpcomingMatches: Returning ${upcomingMatches.length} valid upcoming matches`);
 
         res.json({
+=======
+        const response = {
+>>>>>>> origin/main
             success: true,
             count: upcomingMatches.length,
             date: date || 'range',
             data: upcomingMatches
-        });
+        };
+
+        // Cache the response
+        const ttl = parseInt(process.env.CACHE_TTL_UPCOMING) || 3600;
+        cacheService.set(cacheKey, response, ttl);
+
+        res.json(response);
     } catch (error) {
         console.error('Error in getUpcomingMatches:', error);
         res.status(500).json({
@@ -594,6 +645,15 @@ exports.getLeagues = async (req, res) => {
     try {
         const { sport, country } = req.query;
 
+        // Generate cache key
+        const cacheKey = cacheService.generateKey('leagues', { sport: sport || 'all', country: country || 'all' });
+
+        // Check cache first
+        const cachedData = cacheService.get(cacheKey);
+        if (cachedData) {
+            return res.json(cachedData);
+        }
+
         let leagues = [];
 
         switch (sport?.toLowerCase()) {
@@ -617,11 +677,18 @@ exports.getLeagues = async (req, res) => {
                 });
         }
 
-        res.json({
+        const response = {
             success: true,
             count: leagues.length,
+            sport,
             data: leagues
-        });
+        };
+
+        // Cache the response (6 hours for leagues)
+        const ttl = parseInt(process.env.CACHE_TTL_LEAGUES) || 21600;
+        cacheService.set(cacheKey, response, ttl);
+
+        res.json(response);
     } catch (error) {
         console.error('Error in getLeagues:', error);
         res.status(500).json({
@@ -646,6 +713,15 @@ exports.getStandings = async (req, res) => {
                 success: false,
                 message: 'League ID is required'
             });
+        }
+
+        // Generate cache key
+        const cacheKey = cacheService.generateKey('standings', { sport, league });
+
+        // Check cache first
+        const cachedData = cacheService.get(cacheKey);
+        if (cachedData) {
+            return res.json(cachedData);
         }
 
         let standings = null;
@@ -676,10 +752,16 @@ exports.getStandings = async (req, res) => {
             // Quietly handle empty standings without logging to console/terminal
         }
 
-        res.json({
+        const response = {
             success: true,
             data: standings || []
-        });
+        };
+
+        // Cache the response
+        const ttl = parseInt(process.env.CACHE_TTL_STANDINGS) || 1800;
+        cacheService.set(cacheKey, response, ttl);
+
+        res.json(response);
     } catch (error) {
         console.error('Error in getStandings:', error);
         res.status(500).json({
@@ -833,3 +915,153 @@ exports.updateMatch = async (req, res) => {
         message: 'Match update not implemented - using live API data'
     });
 };
+
+/**
+ * @desc    Get matches for a specific league
+ * @route   GET /api/matches/league/:leagueId
+ * @access  Public
+ */
+exports.getLeagueMatches = async (req, res) => {
+    try {
+        const { leagueId } = req.params;
+        const { sport, status } = req.query;
+
+        if (!sport) {
+            return res.status(400).json({
+                success: false,
+                message: 'Sport parameter is required'
+            });
+        }
+
+        // Generate cache key
+        const cacheKey = cacheService.generateKey('league_matches', { leagueId, sport, status: status || 'all' });
+
+        // Check cache first
+        const cachedData = cacheService.get(cacheKey);
+        if (cachedData) {
+            return res.json(cachedData);
+        }
+
+        let allMatches = [];
+        const today = new Date().toISOString().split('T')[0];
+
+        // Fetch matches based on status
+        if (status === 'live') {
+            // Get live matches
+            const liveMatches = await allSportsApi.getLiveScoresBySport(sport);
+            allMatches = liveMatches || [];
+        } else if (status === 'finished') {
+            // Get finished matches (last 7 days)
+            const finishedMatches = await allSportsApi.getFixturesBySport(sport, today, -7);
+            allMatches = finishedMatches || [];
+        } else {
+            // Get upcoming matches (default or status='upcoming')
+            const upcomingMatches = await allSportsApi.getFixturesBySport(sport, today);
+            allMatches = upcomingMatches || [];
+        }
+
+        // Map matches based on sport
+        let mappedMatches = [];
+        switch (sport.toLowerCase()) {
+            case 'football':
+            case 'soccer':
+                mappedMatches = allMatches.map(mapFootballMatch).filter(m => m !== null);
+                break;
+            case 'basketball':
+                mappedMatches = allMatches.map(mapBasketballMatch).filter(m => m !== null);
+                break;
+            case 'cricket':
+                mappedMatches = allMatches.map(mapCricketMatch).filter(m => m !== null);
+                break;
+        }
+
+        // Filter by league ID
+        const leagueMatches = mappedMatches.filter(match => {
+            const matchLeagueId = match.leagueInfo?.id || match.league?.id;
+            return matchLeagueId && matchLeagueId.toString() === leagueId.toString();
+        });
+
+        // Sort by date
+        leagueMatches.sort((a, b) => {
+            const dateA = new Date(a.date || a.startTime || 0);
+            const dateB = new Date(b.date || b.startTime || 0);
+            return dateA - dateB;
+        });
+
+        const response = {
+            success: true,
+            count: leagueMatches.length,
+            leagueId,
+            sport,
+            status: status || 'upcoming',
+            data: leagueMatches
+        };
+
+        // Cache the response
+        // Use shorter TTL for live matches, longer for upcoming/finished
+        const ttl = status === 'live'
+            ? 300  // 5 minutes for live
+            : parseInt(process.env.CACHE_TTL_LEAGUE_MATCHES) || 3600; // 1 hour for others
+        cacheService.set(cacheKey, response, ttl);
+
+        res.json(response);
+    } catch (error) {
+        console.error('Error in getLeagueMatches:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error fetching league matches',
+            error: error.message
+        });
+    }
+};
+
+/**
+ * @desc    Get top scorers for a league
+ * @route   GET /api/matches/league/:leagueId/topscorers
+ * @access  Public
+ */
+exports.getTopScorers = async (req, res) => {
+    try {
+        const { leagueId } = req.params;
+        const { sport } = req.query;
+
+        if (!sport) {
+            return res.status(400).json({
+                success: false,
+                message: 'Sport parameter is required'
+            });
+        }
+
+        if (sport.toLowerCase() !== 'football') {
+             return res.status(400).json({
+                success: false,
+                message: 'Top scorers only available for football currently'
+            });
+        }
+
+        // Check cache
+        const cacheKey = cacheService.generateKey('topscorers', { leagueId, sport });
+        const cachedData = cacheService.get(cacheKey);
+        if (cachedData) return res.json(cachedData);
+
+        const scorers = await allSportsApi.getFootballTopScorers(leagueId);
+
+        const response = {
+            success: true,
+            data: scorers || []
+        };
+
+        // Cache for 12 hours
+        cacheService.set(cacheKey, response, 43200);
+
+        res.json(response);
+    } catch (error) {
+        console.error('Error in getTopScorers:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error fetching top scorers',
+            error: error.message
+        });
+    }
+};
+

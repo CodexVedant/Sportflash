@@ -39,36 +39,60 @@ export default function TeamProfileScreen({ navigation, route }: Props) {
                             <Text style={styles.cardTitle}>Team Info</Text>
                             <View style={styles.infoRow}>
                                 <Text style={styles.label}>Country</Text>
+<<<<<<< HEAD
                                 <Text style={styles.value}>{teamData?.country || 'N/A'}</Text>
                             </View>
                             <View style={styles.infoRow}>
                                 <Text style={styles.label}>Founded</Text>
                                 <Text style={styles.value}>{teamData?.founded || 'N/A'}</Text>
+=======
+                                <Text style={styles.value}>{teamData?.country || 'Not available'}</Text>
+                            </View>
+                            <View style={styles.infoRow}>
+                                <Text style={styles.label}>Founded</Text>
+                                <Text style={styles.value}>{teamData?.founded || 'Not available'}</Text>
+>>>>>>> origin/main
                             </View>
                             <View style={styles.infoRow}>
                                 <Text style={styles.label}>Stadium</Text>
-                                <Text style={styles.value}>{teamData?.venue?.name || 'N/A'}</Text>
+                                <Text style={styles.value}>{teamData?.venue?.name || 'Not available'}</Text>
                             </View>
+                            <Text style={[styles.value, { fontSize: 12, marginTop: 12, opacity: 0.6 }]}>
+                                Note: Detailed team information is limited by the data provider
+                            </Text>
                         </View>
 
                         <View style={styles.card}>
                             <Text style={styles.cardTitle}>Recent Form</Text>
-                            <View style={styles.formRow}>
-                                {['W', 'W', 'D', 'L', 'W'].map((res, idx) => (
-                                    <View key={idx} style={[styles.formBadge,
-                                    { backgroundColor: res === 'W' ? theme.colors.success : res === 'D' ? theme.colors.warning : theme.colors.danger }
-                                    ]}>
-                                        <Text style={styles.formText}>{res}</Text>
-                                    </View>
-                                ))}
-                            </View>
+                            <Text style={[styles.value, { opacity: 0.6 }]}>
+                                Form data coming soon
+                            </Text>
                         </View>
                     </View>
                 );
             case 'Squad':
                 return (
-                    <View style={styles.placeholderContainer}>
-                        <Text style={styles.placeholderText}>Squad List Coming Soon</Text>
+                    <View style={styles.tabContent}>
+                        <View style={styles.card}>
+                            <Text style={styles.cardTitle}>Squad</Text>
+                            {teamData?.players && teamData.players.length > 0 ? (
+                                teamData.players.map((player, index: number) => (
+                                    <View key={index} style={styles.playerRow}>
+                                        <Text style={styles.playerNumber}>{player.number || '-'}</Text>
+                                        <View style={styles.playerInfo}>
+                                            <Text style={styles.playerName}>{player.name}</Text>
+                                            <Text style={styles.playerPosition}>{player.position || 'Player'}</Text>
+                                        </View>
+                                    </View>
+                                ))
+                            ) : (
+                                <Text style={[styles.value, { opacity: 0.6 }]}>
+                                    Squad information is not available from the data provider.
+                                    {'\n\n'}
+                                    Player details are typically available during live matches.
+                                </Text>
+                            )}
+                        </View>
                     </View>
                 );
             case 'Fixtures':

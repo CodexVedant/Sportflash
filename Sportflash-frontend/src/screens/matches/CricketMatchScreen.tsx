@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+﻿import React from 'react';
 import { View, FlatList, ActivityIndicator } from 'react-native';
 import { theme } from '@utils/theme';
 import MatchCard from '@components/match/MatchCard';
@@ -11,13 +11,17 @@ import { RootStackParamList } from '@app-types/navigation';
 type Props = NativeStackScreenProps<RootStackParamList, 'CricketMatch'>;
 
 export default function CricketMatchScreen({ navigation }: Props) {
-    const { data: allMatches = [], isLoading } = useGetLiveMatchesQuery(undefined);
-    const [cricketMatches, setCricketMatches] = useState<any[]>([]);
+    // Use matchesApi for all sports including cricket with real-time polling
+    const { data: allMatches = [], isLoading } = useGetLiveMatchesQuery(
+        undefined,
+        {
+            pollingInterval: 30000, // Poll every 30 seconds for live updates
+        }
+    );
 
-    useEffect(() => {
-        // Filter only cricket matches
-        const filtered = allMatches.filter(match => match.sport?.toLowerCase() === 'cricket');
-        setCricketMatches(filtered);
+    // Filter for cricket matches only
+    const cricketMatches = React.useMemo(() => {
+        return allMatches.filter(match => match.sport?.toLowerCase() === 'cricket');
     }, [allMatches]);
 
     const renderMatchItem = ({ item }: { item: any }) => (
@@ -48,7 +52,7 @@ export default function CricketMatchScreen({ navigation }: Props) {
         <View style={styles.container}>
             <FlatList
                 data={cricketMatches}
-                keyExtractor={item => item._id}
+                keyExtractor={item => String(item.id)}
                 renderItem={renderMatchItem}
                 contentContainerStyle={styles.listContent}
                 ListEmptyComponent={

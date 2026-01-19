@@ -125,5 +125,33 @@ export const styles = StyleSheet.create({
     },
     tabContent: {
         // padding handled by scrollview content container
-    }
+    },
+    playerRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingVertical: 12,
+        borderBottomWidth: 1,
+        borderBottomColor: 'rgba(255,255,255,0.05)',
+    },
+    playerNumber: {
+        color: theme.colors.primary,
+        fontSize: 16,
+        fontWeight: 'bold',
+        width: 40,
+        textAlign: 'center',
+    },
+    playerInfo: {
+        flex: 1,
+        marginLeft: 12,
+    },
+    playerName: {
+        color: theme.colors.text,
+        fontSize: 15,
+        fontWeight: '600',
+        marginBottom: 2,
+    },
+    playerPosition: {
+        color: theme.colors.textMuted,
+        fontSize: 13,
+    },
 });

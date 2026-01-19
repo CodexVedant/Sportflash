@@ -1,5 +1,10 @@
+<<<<<<< HEAD
 ﻿import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, useWindowDimensions, StyleSheet, AppState } from 'react-native';
+=======
+﻿import React, { useState, useEffect, useMemo } from 'react';
+import { View, Text, TouchableOpacity, useWindowDimensions, StyleSheet, ScrollView } from 'react-native';
+>>>>>>> origin/main
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { theme } from '@utils/theme';
 import { Ionicons } from '@expo/vector-icons';
@@ -65,24 +70,49 @@ export default function HomeScreen({ navigation }: Props) {
     const [sidebarVisible, setSidebarVisible] = useState(false);
     const [notificationVisible, setNotificationVisible] = useState(false);
     const [activeSport, setActiveSport] = useState('cricket');
+    const [selectedLeague, setSelectedLeague] = useState('all');
 
-    // Redux State - Single Source of Truth
+    // Redux State - Socket-based live matches (all sports including cricket)
     const allLiveMatches = useAppSelector(selectAllLiveMatches);
-    // Explicitly type the result of the query hook if needed, but standard usage usually infers correctly
     const { isLoading: isMatchesLoading } = useGetLiveMatchesQuery(undefined);
 
     // Derived State (Filtering)
+    // Derived State (Filtering)
     const matches = React.useMemo(() => {
-        // Ensure allLiveMatches is an array
         const liveMatchesArray = Array.isArray(allLiveMatches) ? allLiveMatches : [];
-
-        const live = liveMatchesArray
+        let live = liveMatchesArray
             .map(mapMatchToUI)
             .filter(m => m.status === 'live');
 
-        return activeSport === 'all'
-            ? live
-            : live.filter(m => m.sport?.toLowerCase() === activeSport);
+        if (activeSport !== 'all') {
+            live = live.filter(m => m.sport?.toLowerCase() === activeSport);
+        }
+
+        if (selectedLeague !== 'all') {
+            live = live.filter(m => (typeof m.league === 'string' ? m.league : m.league?.name) === selectedLeague);
+        }
+
+        return live;
+    }, [allLiveMatches, activeSport, selectedLeague]);
+
+    // Extract available leagues for the current sport
+    const availableLeagues = React.useMemo(() => {
+        const liveMatchesArray = Array.isArray(allLiveMatches) ? allLiveMatches : [];
+        let filteredBySport = liveMatchesArray
+            .map(mapMatchToUI)
+            .filter(m => m.status === 'live');
+
+        if (activeSport !== 'all') {
+            filteredBySport = filteredBySport.filter(m => m.sport?.toLowerCase() === activeSport);
+        }
+
+        const leaguesSet = new Set<string>();
+        filteredBySport.forEach(match => {
+            const name = typeof match.league === 'string' ? match.league : match.league?.name;
+            if (name) leaguesSet.add(name);
+        });
+
+        return Array.from(leaguesSet).sort();
     }, [allLiveMatches, activeSport]);
 
     const loading = isMatchesLoading && matches.length === 0;
@@ -200,11 +230,54 @@ export default function HomeScreen({ navigation }: Props) {
             </View>
 
             {/* Sport Tabs */}
+            {/* Sport Tabs */}
             <TopBar
                 activeTab={activeSport}
-                onTabChange={setActiveSport}
+                onTabChange={(sport) => {
+                    setActiveSport(sport);
+                    setSelectedLeague('all'); // Reset league filter on sport change
+                }}
                 tabs={SPORT_TABS}
             />
+
+            {/* League Filters (Horizontal, only if leagues exist) */}
+            {availableLeagues.length > 0 && (
+                <View style={{ marginBottom: 8 }}>
+                    <ScrollView
+                        horizontal
+                        showsHorizontalScrollIndicator={false}
+                        contentContainerStyle={{ paddingHorizontal: theme.spacing.md, gap: 8, paddingVertical: 8 }}
+                    >
+                        <TouchableOpacity
+                            style={[
+                                styles.leagueChip,
+                                selectedLeague === 'all' && styles.leagueChipActive
+                            ]}
+                            onPress={() => setSelectedLeague('all')}
+                        >
+                            <Text style={[
+                                styles.leagueChipText,
+                                selectedLeague === 'all' && styles.leagueChipTextActive
+                            ]}>All</Text>
+                        </TouchableOpacity>
+                        {availableLeagues.map(leagueName => (
+                            <TouchableOpacity
+                                key={leagueName}
+                                style={[
+                                    styles.leagueChip,
+                                    selectedLeague === leagueName && styles.leagueChipActive
+                                ]}
+                                onPress={() => setSelectedLeague(selectedLeague === leagueName ? 'all' : leagueName)}
+                            >
+                                <Text style={[
+                                    styles.leagueChipText,
+                                    selectedLeague === leagueName && styles.leagueChipTextActive
+                                ]}>{leagueName}</Text>
+                            </TouchableOpacity>
+                        ))}
+                    </ScrollView>
+                </View>
+            )}
 
             {/* Live Section */}
             <View style={[styles.contentContainer, isDesktop && styles.contentContainerDesktop, { flex: 1 }]}>

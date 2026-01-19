@@ -171,7 +171,11 @@ exports.getMe = async (req, res) => {
 // @access  Private
 exports.updatePreferences = async (req, res) => {
     try {
+<<<<<<< HEAD
         const { favoriteTeams, favoriteSports, favoritePlayers, notifications } = req.body;
+=======
+        const { favoriteTeams, favoriteSports, notifications, favoriteLeagues } = req.body;
+>>>>>>> origin/main
 
         const user = await User.findById(req.user.id);
 
@@ -183,6 +187,7 @@ exports.updatePreferences = async (req, res) => {
             });
         }
         if (favoriteSports) user.preferences.favoriteSports = favoriteSports;
+<<<<<<< HEAD
         if (favoritePlayers) {
             user.preferences.favoritePlayers = favoritePlayers.map(p => {
                 if (typeof p === 'string') return { id: p, name: 'Unknown', sport: 'football' };
@@ -199,6 +204,9 @@ exports.updatePreferences = async (req, res) => {
                 return p;
             });
         }
+=======
+        if (favoriteLeagues) user.preferences.favoriteLeagues = favoriteLeagues;
+>>>>>>> origin/main
         if (notifications !== undefined) user.preferences.notifications = notifications;
 
         console.log('✅ Saving updated preferences for user:', user._id);

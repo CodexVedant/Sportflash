@@ -56,6 +56,7 @@ const userSchema = new mongoose.Schema({
             type: Boolean,
             default: true
         },
+<<<<<<< HEAD
         globalSettings: {
             cricket: {
                 wickets: { type: Boolean, default: true },
@@ -69,6 +70,15 @@ const userSchema = new mongoose.Schema({
                 points: { type: Boolean, default: true }
             }
         }
+=======
+        favoriteLeagues: [{
+            id: String,
+            name: String,
+            sport: String,
+            country: String,
+            logo: String
+        }]
+>>>>>>> origin/main
     },
     bookmarks: [{
         articleId: {

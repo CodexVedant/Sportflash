@@ -33,29 +33,17 @@ export default function MatchesScreen({ navigation }: Props) {
         dateRange: { start: null, end: null },
     });
 
-    // Fetch both live and upcoming matches on mount for instant tab switching
-    // Note: Live matches API returns both live AND finished matches
-    const { data: liveMatches = [], isLoading: isLoadingLive, error: liveError, refetch: refetchLive } = useGetLiveMatchesQuery(
+    // Fetch all live matches (including cricket from AllSportsAPI)
+    const { data: allLiveMatches = [], isLoading: isLoadingLive, error: liveError, refetch: refetchLive } = useGetLiveMatchesQuery(
         undefined
-        // No skip - always fetch live matches
     );
 
-    // Prefetch upcoming matches for ALL sports for instant tab switching
-    const { data: upcomingCricket = [] } = useGetUpcomingMatchesQuery({ sport: 'cricket' });
-    const { data: upcomingFootball = [] } = useGetUpcomingMatchesQuery({ sport: 'football' });
-    const { data: upcomingBasketball = [] } = useGetUpcomingMatchesQuery({ sport: 'basketball' });
+    const liveMatches = allLiveMatches;
 
-    // Combine all upcoming matches
-    const upcomingMatches = React.useMemo(() => {
-        return [...upcomingCricket, ...upcomingFootball, ...upcomingBasketball];
-    }, [upcomingCricket, upcomingFootball, upcomingBasketball]);
+    // Fetch all upcoming matches (including cricket)
+    const { data: allUpcomingMatches = [], isLoading: isLoadingUpcoming, error: upcomingError, refetch: refetchUpcoming } = useGetUpcomingMatchesQuery({});
 
-    const isLoadingUpcoming = false; // Data is always available from cache
-    const upcomingError = null;
-    const refetchUpcoming = () => {
-        // Refetch all sports
-        refetchLive();
-    };
+    const upcomingMatches = allUpcomingMatches;
 
     // Determine which data to use - memoized to prevent infinite loops
     const allMatches = React.useMemo(() => {
@@ -122,6 +110,25 @@ export default function MatchesScreen({ navigation }: Props) {
     ];
 
     const STATUS_TABS = ['Live', 'Upcoming', 'Results'];
+
+    // Extract unique leagues from current matches for filter
+    const availableLeagues = React.useMemo(() => {
+        let sourceMatches = Array.isArray(allMatches) ? allMatches : [];
+        if (activeSport !== 'all') {
+            sourceMatches = sourceMatches.filter(m => m.sport?.toLowerCase() === activeSport);
+        }
+
+        const leaguesMap = new Map();
+        sourceMatches.forEach(match => {
+            const id = match.league?.id || match.league || 'unknown';
+            const name = match.league?.name || match.league || 'Unknown League';
+            if (!leaguesMap.has(name)) {
+                leaguesMap.set(name, { id: name, name }); // Use name as ID for easier string comparison
+            }
+        });
+
+        return Array.from(leaguesMap.values()).sort((a, b) => a.name.localeCompare(b.name));
+    }, [allMatches, activeSport]);
 
     const handleApplyFilters = (newFilters: any) => {
         setFilters(newFilters);
@@ -280,6 +287,7 @@ export default function MatchesScreen({ navigation }: Props) {
                 onClose={() => setFilterVisible(false)}
                 onApply={handleApplyFilters}
                 initialFilters={filters}
+                availableLeagues={availableLeagues}
             />
 
             {/* Notification Panel */}

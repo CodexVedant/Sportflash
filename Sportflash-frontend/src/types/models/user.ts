@@ -12,9 +12,22 @@ export interface UserPreferences {
     theme?: 'light' | 'dark';
     notifications?: boolean;
     favoriteSports?: string[];
+<<<<<<< HEAD
     favoriteTeams?: any[]; // string[] or Team[]
     favoriteLeagues?: string[];
     favoritePlayers?: any[]; // string[] or Player[]
+=======
+    favoriteTeams?: string[];
+    favoriteLeagues?: FavoriteLeague[];
+}
+
+export interface FavoriteLeague {
+    id: string;
+    name: string;
+    sport: string;
+    country?: string;
+    logo?: string;
+>>>>>>> origin/main
 }
 
 export interface AuthResponse {

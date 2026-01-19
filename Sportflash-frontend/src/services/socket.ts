@@ -48,7 +48,7 @@ export const disconnectSocket = (): void => {
 
 // Log connection status for debugging
 socket.on('connect', () => {
-    console.log(`✅ Socket connected on ${Platform.OS}`);
+    console.log(`✅ Socket connected on ${Platform.OS} to ${SOCKET_URL}`);
 });
 
 socket.on('disconnect', (reason: string) => {
@@ -57,6 +57,7 @@ socket.on('disconnect', (reason: string) => {
 
 socket.on('connect_error', (error: Error) => {
     console.error(`🔴 Socket connection error on ${Platform.OS}:`, error.message);
+    console.error(`   Trying to connect to: ${SOCKET_URL}`);
 });
 
 export default socket;

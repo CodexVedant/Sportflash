@@ -8,7 +8,31 @@ const morgan = require('morgan');
 
 
 const { Server } = require('socket.io');
-require('dotenv').config();
+const path = require('path');
+const fs = require('fs');
+
+// Load environment variables from multiple possible locations
+// Priority: 1) /etc/secrets/.env (Render Secret Files)
+//          2) .env in project root
+//          3) .env in src directory
+const envPaths = [
+    '/etc/secrets/.env',
+    path.join(__dirname, '..', '.env'),
+    path.join(__dirname, '.env')
+];
+
+for (const envPath of envPaths) {
+    if (fs.existsSync(envPath)) {
+        console.log(`📄 Loading environment from: ${envPath}`);
+        require('dotenv').config({ path: envPath });
+        break;
+    }
+}
+
+// Fallback to default dotenv behavior if no file found
+if (!process.env.ALLSPORTS_API_KEY) {
+    require('dotenv').config();
+}
 
 const app = express();
 const server = http.createServer(app);
@@ -293,6 +317,7 @@ app.use('/api/teams', require('./routes/teamRoutes'));
 app.use('/api/players', require('./routes/playerRoutes'));
 app.use('/api/news', newsRoutes);
 
+<<<<<<< HEAD
 // Test Endpoint for Manual Push (GET for easy browser test)
 app.get('/api/test-push', async (req, res) => {
     const { email } = req.query; // Use query for GET
@@ -323,6 +348,8 @@ app.get('/api/test-push', async (req, res) => {
         res.status(500).json({ error: e.message });
     }
 });
+=======
+>>>>>>> origin/main
 
 // Socket.IO Connection Handler
 io.on('connection', (socket) => {
