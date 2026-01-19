@@ -126,8 +126,8 @@ export default function ProfileScreen() {
                     </View>
                     <View style={styles.statDivider} />
                     <View style={styles.statItem}>
-                        <Text style={styles.statValue}>{user?.preferences?.favoriteSports?.length || 0}</Text>
-                        <Text style={styles.statLabel}>Sports</Text>
+                        <Text style={styles.statValue}>{user?.preferences?.favoritePlayers?.length || 0}</Text>
+                        <Text style={styles.statLabel}>Players</Text>
                     </View>
                     <View style={styles.statDivider} />
                     <View style={styles.statItem}>

@@ -1,31 +1,22 @@
-<<<<<<< HEAD
 import React, { useEffect } from 'react';
-import { Platform } from 'react-native';
-=======
-import { useEffect } from 'react';
 import { Platform, View, ActivityIndicator } from 'react-native';
->>>>>>> origin/main
+import { useFonts } from 'expo-font';
+import { Ionicons } from '@expo/vector-icons';
 import { Provider } from 'react-redux';
-import { store, persistor } from '@store/store';
-import AppNavigator from '@navigation/AppNavigator';
-import { navigate, navigationRef } from '@services/NavigationService';
+import store, { persistor } from './src/store/store';
+import AppNavigator from './src/navigation/AppNavigator';
+import { navigate, navigationRef } from './src/services/NavigationService';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { ToastProvider } from '@context/ToastContext';
-import { theme } from '@utils/theme';
-import { useGetLiveMatchesQuery, useGetUpcomingMatchesQuery } from '@store/api/matchesApi';
-<<<<<<< HEAD
+import { ToastProvider } from './src/context/ToastContext';
+import { theme } from './src/utils/theme';
+import { useGetLiveMatchesQuery, useGetUpcomingMatchesQuery } from './src/store/api/matchesApi';
 import Toast from 'react-native-toast-message';
 import { PersistGate } from 'redux-persist/integration/react';
 import { savePushToken } from './src/store/slices/authSlice';
 import { registerForPushNotificationsAsync } from './src/services/NotificationService';
 import * as Notifications from 'expo-notifications';
 import { useAppDispatch, useAppSelector } from './src/hooks/redux';
-import { toastConfig } from '@components/common/ToastConfig';
-=======
-import { useFonts } from 'expo-font';
-import { Ionicons } from '@expo/vector-icons';
-import { PersistGate } from 'redux-persist/integration/react';
->>>>>>> origin/main
+import { toastConfig } from './src/components/common/ToastConfig';
 
 // Prefetch component to load data on app start
 function DataPrefetcher() {
@@ -130,16 +121,7 @@ export default function App() {
     return (
         <Provider store={store}>
             <PersistGate loading={null} persistor={persistor}>
-<<<<<<< HEAD
                 <AppContent />
-=======
-                <SafeAreaProvider>
-                    <ToastProvider>
-                        <DataPrefetcher />
-                        <AppNavigator />
-                    </ToastProvider>
-                </SafeAreaProvider>
->>>>>>> origin/main
             </PersistGate>
         </Provider>
     );

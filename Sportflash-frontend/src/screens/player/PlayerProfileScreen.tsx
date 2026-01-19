@@ -17,8 +17,6 @@ import { useToast } from '@context/ToastContext';
 type Props = NativeStackScreenProps<RootStackParamList, 'PlayerProfile'>;
 
 export default function PlayerProfileScreen({ route, navigation }: Props) {
-<<<<<<< HEAD
-    // Get player from params
     // Get player from params
     console.log('DEBUG: PlayerProfile Params:', JSON.stringify(route.params, null, 2));
     const { player: initialPlayer, playerId, sport: paramSport } = route.params || {};
@@ -40,10 +38,22 @@ export default function PlayerProfileScreen({ route, navigation }: Props) {
         queryId = `name_${initialPlayer.name}`;
     }
 
-    const { data: playerData, isLoading } = useGetPlayerDetailsQuery({ id: queryId, sport }, { skip: !queryId });
+    const { data: playerData, isLoading, error, refetch, isFetching } = useGetPlayerDetailsQuery(
+        { id: queryId, sport },
+        {
+            skip: !queryId,
+            pollingInterval: 60000
+        }
+    );
 
-    // Derive display data (API > Initial > Mock)
-    const player = playerData || initialPlayer;
+    const [refreshing, setRefreshing] = useState(false);
+
+    // Pull to refresh handler
+    const onRefresh = useCallback(async () => {
+        setRefreshing(true);
+        await refetch();
+        setRefreshing(false);
+    }, [refetch]);
 
     const dispatch = useAppDispatch();
     const { user } = useAppSelector(state => state.auth);
@@ -70,35 +80,6 @@ export default function PlayerProfileScreen({ route, navigation }: Props) {
             { label: 'Yellow Cards', value: playerData.statistics?.yellowCards || '0', icon: 'warning-outline' },
         ];
     }, [playerData, sport]);
-=======
-    const { player: initialPlayer, playerId, sport = 'football' } = route.params || {};
-    const id = playerId || initialPlayer?.id;
-
-    // Fetch player data with polling for real-time updates
-    const {
-        data: playerData,
-        isLoading,
-        isFetching,
-        error,
-        refetch
-    } = useGetPlayerDetailsQuery(
-        { id: id!, sport },
-        {
-            skip: !id,
-            pollingInterval: 60000, // Poll every 60 seconds for updates
-        }
-    );
-
-    const [isFollowing, setIsFollowing] = useState(false);
-    const [refreshing, setRefreshing] = useState(false);
-
-    // Pull to refresh handler
-    const onRefresh = useCallback(async () => {
-        setRefreshing(true);
-        await refetch();
-        setRefreshing(false);
-    }, [refetch]);
->>>>>>> origin/main
 
     // Derive display data (API > Initial)
     const player = playerData || initialPlayer;
@@ -187,13 +168,12 @@ export default function PlayerProfileScreen({ route, navigation }: Props) {
         }
     };
 
-    const stats = getStatsForSport();
+    // const stats = getStatsForSport(); // REMOVED DUPLICATE
 
     // Placeholder for form and achievements (to be implemented with match history)
     const form = ['?', '?', '?', '?', '?'];
     const achievements: any[] = [];
 
-<<<<<<< HEAD
     // Merge API data into player object passed to Header
     const displayPlayer = {
         ...player,
@@ -271,30 +251,16 @@ export default function PlayerProfileScreen({ route, navigation }: Props) {
             const msg = error?.message || error || 'Failed to update favorites';
             showToast(msg.toString(), 'error');
         }
-=======
-    const toggleFollow = () => {
-        setIsFollowing(!isFollowing);
-        // TODO: Implement actual follow/unfollow API call
->>>>>>> origin/main
     };
 
     // Loading state
     if (isLoading && !player) {
         return (
-<<<<<<< HEAD
             <SafeAreaView style={styles.container}>
                 <View style={[styles.container, styles.center]}>
                     <ActivityIndicator size="large" color={theme.colors.primary} />
                 </View>
             </SafeAreaView>
-=======
-            <View style={[styles.container, styles.center]}>
-                <ActivityIndicator size="large" color={theme.colors.primary} />
-                <Text style={{ color: theme.colors.textMuted, marginTop: 16 }}>
-                    Loading player data...
-                </Text>
-            </View>
->>>>>>> origin/main
         );
     }
 
@@ -328,7 +294,6 @@ export default function PlayerProfileScreen({ route, navigation }: Props) {
     // No player data
     if (!player) {
         return (
-<<<<<<< HEAD
             <SafeAreaView style={styles.container}>
                 <View style={styles.header}>
                     <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
@@ -341,30 +306,6 @@ export default function PlayerProfileScreen({ route, navigation }: Props) {
             </SafeAreaView>
         );
     }
-
-=======
-            <View style={[styles.container, styles.center]}>
-                <Ionicons name="person-outline" size={64} color={theme.colors.textMuted} />
-                <Text style={{ color: theme.colors.textMuted, marginTop: 16 }}>
-                    Player not found
-                </Text>
-            </View>
-        );
-    }
-
-    // Prepare display player object
-    const displayPlayer = {
-        ...player,
-        image: player.photo || player.image || `https://api.dicebear.com/7.x/avataaars/png?seed=${player.name}`,
-        team: typeof player.team === 'object' ? player.team.name : player.team,
-        nationality: player.nationality || 'Unknown',
-        position: player.position || 'Player',
-        number: player.number || '-',
-        age: player.age,
-        isFollowing: isFollowing
-    };
-
->>>>>>> origin/main
     return (
         <SafeAreaView style={styles.container}>
             {/* Header with back button and refresh indicator */}
@@ -397,104 +338,47 @@ export default function PlayerProfileScreen({ route, navigation }: Props) {
                 />
 
                 <View style={styles.content}>
-<<<<<<< HEAD
 
                     {/* 1. Show Stats ONLY if available */}
-                    {hasStats ? (
-                        <>
-                            <PlayerStats
-                                stats={stats}
-                                form={hasForm ? form : []}
-                                achievements={achievements}
-                            />
-                            {/* Hide Recent Form if empty/placeholder */}
-                            <View style={{ marginBottom: 20 }} />
-                        </>
-                    ) : (
-                        /* 2. Alternative: Player Info Card */
-                        <View style={{
-                            backgroundColor: 'rgba(255,255,255,0.05)',
-                            borderRadius: 16,
-                            padding: 20,
-                            marginBottom: 24,
-                            borderWidth: 1,
-                            borderColor: 'rgba(255,255,255,0.1)'
-                        }}>
-                            <Text style={{ color: '#fff', fontSize: 18, fontWeight: 'bold', marginBottom: 16 }}>Player Details</Text>
-
-                            <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 12 }}>
-                                <Text style={{ color: theme.colors.textMuted }}>Nationality</Text>
-                                <Text style={{ color: '#fff', fontWeight: '500' }}>{displayPlayer.nationality || displayPlayer.country || 'Unknown'}</Text>
-                            </View>
-
-                            <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 12 }}>
-                                <Text style={{ color: theme.colors.textMuted }}>Role</Text>
-                                <Text style={{ color: '#fff', fontWeight: '500' }}>{displayPlayer.position || displayPlayer.role || 'Player'}</Text>
-                            </View>
-
-                            <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-                                <Text style={{ color: theme.colors.textMuted }}>Team</Text>
-                                <Text style={{ color: theme.colors.primary, fontWeight: 'bold' }}>{displayPlayer.team || 'Free Agent'}</Text>
-=======
-                    {/* Player Info Card */}
-                    {playerData && (
-                        <View style={{
-                            backgroundColor: theme.colors.surface,
-                            borderRadius: 12,
-                            padding: 16,
-                            marginBottom: 16
-                        }}>
-                            <Text style={{
-                                color: theme.colors.text,
-                                fontSize: 16,
-                                fontWeight: '600',
-                                marginBottom: 12
+                    {
+                        hasStats ? (
+                            <>
+                                <PlayerStats
+                                    stats={stats}
+                                    form={hasForm ? form : []}
+                                    achievements={achievements}
+                                />
+                                {/* Hide Recent Form if empty/placeholder */}
+                                <View style={{ marginBottom: 20 }} />
+                            </>
+                        ) : (
+                            /* 2. Alternative: Player Info Card */
+                            <View style={{
+                                backgroundColor: 'rgba(255,255,255,0.05)',
+                                borderRadius: 16,
+                                padding: 20,
+                                marginBottom: 24,
+                                borderWidth: 1,
+                                borderColor: 'rgba(255,255,255,0.1)'
                             }}>
-                                Player Information
-                            </Text>
+                                <Text style={{ color: '#fff', fontSize: 18, fontWeight: 'bold', marginBottom: 16 }}>Player Details</Text>
 
-                            <View style={{ gap: 8 }}>
-                                {player.number && (
-                                    <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-                                        <Text style={{ color: theme.colors.textMuted }}>Number</Text>
-                                        <Text style={{ color: theme.colors.text, fontWeight: '500' }}>
-                                            #{player.number}
-                                        </Text>
-                                    </View>
-                                )}
+                                <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 12 }}>
+                                    <Text style={{ color: theme.colors.textMuted }}>Nationality</Text>
+                                    <Text style={{ color: '#fff', fontWeight: '500' }}>{displayPlayer.nationality || displayPlayer.country || 'Unknown'}</Text>
+                                </View>
 
-                                {player.position && (
-                                    <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-                                        <Text style={{ color: theme.colors.textMuted }}>Position</Text>
-                                        <Text style={{ color: theme.colors.text, fontWeight: '500' }}>
-                                            {player.position}
-                                        </Text>
-                                    </View>
-                                )}
+                                <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 12 }}>
+                                    <Text style={{ color: theme.colors.textMuted }}>Role</Text>
+                                    <Text style={{ color: '#fff', fontWeight: '500' }}>{displayPlayer.position || displayPlayer.role || 'Player'}</Text>
+                                </View>
 
-                                {player.age && (
-                                    <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-                                        <Text style={{ color: theme.colors.textMuted }}>Age</Text>
-                                        <Text style={{ color: theme.colors.text, fontWeight: '500' }}>
-                                            {player.age} years
-                                        </Text>
-                                    </View>
-                                )}
-
-                                {player.nationality && (
-                                    <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-                                        <Text style={{ color: theme.colors.textMuted }}>Nationality</Text>
-                                        <Text style={{ color: theme.colors.text, fontWeight: '500' }}>
-                                            {player.nationality}
-                                        </Text>
-                                    </View>
-                                )}
->>>>>>> origin/main
+                                <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                                    <Text style={{ color: theme.colors.textMuted }}>Team</Text>
+                                    <Text style={{ color: theme.colors.primary, fontWeight: 'bold' }}>{displayPlayer.team || 'Free Agent'}</Text>
+                                </View>
                             </View>
-                        </View>
-                    )}
-
-<<<<<<< HEAD
+                        )}
                     {/* Upcoming Matches Section */}
                     <View style={{ paddingHorizontal: 4 }}>
                         <Text style={{
@@ -507,33 +391,6 @@ export default function PlayerProfileScreen({ route, navigation }: Props) {
                             Upcoming Matches
                         </Text>
                         <PlayerFixtures teamId={displayPlayer.teamId} sport={sport} />
-=======
-                    {/* Statistics */}
-                    <PlayerStats
-                        stats={stats}
-                        form={form}
-                        achievements={achievements}
-                    />
-
-                    {/* Data source note */}
-                    <View style={{
-                        marginTop: 16,
-                        padding: 12,
-                        backgroundColor: theme.colors.surface,
-                        borderRadius: 8,
-                        opacity: 0.7
-                    }}>
-                        <Text style={{
-                            color: theme.colors.textMuted,
-                            fontSize: 12,
-                            textAlign: 'center'
-                        }}>
-                            {playerData ?
-                                `Last updated: ${new Date().toLocaleTimeString()}` :
-                                'Limited player data available'
-                            }
-                        </Text>
->>>>>>> origin/main
                     </View>
                 </View>
             </ScrollView>

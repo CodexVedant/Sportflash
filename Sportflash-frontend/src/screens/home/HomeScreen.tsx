@@ -1,10 +1,5 @@
-<<<<<<< HEAD
-﻿import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, useWindowDimensions, StyleSheet, AppState } from 'react-native';
-=======
-﻿import React, { useState, useEffect, useMemo } from 'react';
-import { View, Text, TouchableOpacity, useWindowDimensions, StyleSheet, ScrollView } from 'react-native';
->>>>>>> origin/main
+import React, { useState, useEffect, useMemo } from 'react';
+import { View, Text, TouchableOpacity, useWindowDimensions, StyleSheet, ScrollView, AppState } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { theme } from '@utils/theme';
 import { Ionicons } from '@expo/vector-icons';

@@ -317,7 +317,6 @@ app.use('/api/teams', require('./routes/teamRoutes'));
 app.use('/api/players', require('./routes/playerRoutes'));
 app.use('/api/news', newsRoutes);
 
-<<<<<<< HEAD
 // Test Endpoint for Manual Push (GET for easy browser test)
 app.get('/api/test-push', async (req, res) => {
     const { email } = req.query; // Use query for GET
@@ -348,9 +347,6 @@ app.get('/api/test-push', async (req, res) => {
         res.status(500).json({ error: e.message });
     }
 });
-=======
->>>>>>> origin/main
-
 // Socket.IO Connection Handler
 io.on('connection', (socket) => {
     console.log(`🔌 Client connected: ${socket.id}`);

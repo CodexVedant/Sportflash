@@ -196,8 +196,8 @@ export default function MatchDetailScreen({ navigation, route }: Props) {
     // Fetch Data for Tabs
     const { data: h2hData, isLoading: isH2HLoading, refetch: refetchH2H } = useGetMatchH2HQuery({
         sport: matchData.sport || 'football',
-        team1Id: matchData.homeTeam?.id,
-        team2Id: matchData.awayTeam?.id
+        team1Id: matchData.homeTeam?.id || '',
+        team2Id: matchData.awayTeam?.id || ''
     }, {
         skip: !matchData.homeTeam?.id || !matchData.awayTeam?.id,
         pollingInterval: isFinished ? 0 : 300000, // Disable polling if finished
@@ -206,7 +206,7 @@ export default function MatchDetailScreen({ navigation, route }: Props) {
 
     const { data: standingsData, isLoading: isStandingsLoading, refetch: refetchStandings } = useGetMatchStandingsQuery({
         sport: matchData.sport || 'football',
-        leagueId: matchData.leagueInfo?.id
+        leagueId: matchData.leagueInfo?.id || ''
     }, {
         skip: !matchData.leagueInfo?.id,
         pollingInterval: isFinished ? 0 : 300000, // Disable polling if finished
@@ -293,8 +293,8 @@ export default function MatchDetailScreen({ navigation, route }: Props) {
                         <StandingsWidget
                             data={standingsData?.map(item => ({
                                 team: {
-                                    id: item.team?.id,
-                                    name: item.team?.name
+                                    id: item.team?.id || '',
+                                    name: item.team?.name || ''
                                 },
                                 position: item.position ?? item.rank ?? 0,
                                 stats: {
@@ -305,7 +305,7 @@ export default function MatchDetailScreen({ navigation, route }: Props) {
                                     percentage: item.stats?.percentage ?? (item as any).percentage
                                 }
                             })) || []}
-                            highlightTeams={[matchData.homeTeam?.id, matchData.awayTeam?.id]}
+                            highlightTeams={[matchData.homeTeam?.id || '', matchData.awayTeam?.id || '']}
                         />
                     </View>
                 );

@@ -1,10 +1,7 @@
 import { configureStore, combineReducers } from '@reduxjs/toolkit';
 import { persistStore, persistReducer, FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER } from 'redux-persist';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-<<<<<<< HEAD
 
-=======
->>>>>>> origin/main
 import authReducer from './slices/authSlice';
 import matchesReducer from './slices/matchesSlice';
 import newsReducer from './slices/newsSlice';
@@ -58,24 +55,7 @@ const rootReducer = combineReducers({
     [leaguesApi.reducerPath]: leaguesApi.reducer,
 });
 
-<<<<<<< HEAD
-const rootReducer = combineReducers({
-    auth: authReducer,
-    matches: matchesReducer,
-    news: newsReducer,
-    notifications: notificationsReducer,
-    search: searchReducer,
-    theme: themeReducer,
-    user: userReducer,
-    liveMatches: liveMatchesReducer,
-    [matchesApi.reducerPath]: matchesApi.reducer,
-    [newsApi.reducerPath]: newsApi.reducer,
-    [teamsApi.reducerPath]: teamsApi.reducer,
-    [searchApi.reducerPath]: searchApi.reducer,
-    [usersApi.reducerPath]: usersApi.reducer,
-    [authApi.reducerPath]: authApi.reducer,
-    [playersApi.reducerPath]: playersApi.reducer,
-});
+
 
 const persistConfig = {
     key: 'root',
@@ -89,18 +69,10 @@ export const store = configureStore({
     reducer: persistedReducer,
     middleware: (getDefaultMiddleware) =>
         getDefaultMiddleware({
-            serializableCheck: false, // Disabled for performance in Dev
-            immutableCheck: false,    // Disabled for performance in Dev
-=======
-export const store = configureStore({
-    reducer: rootReducer,
-    middleware: (getDefaultMiddleware) =>
-        getDefaultMiddleware({
             serializableCheck: {
                 ignoredActions: [FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER],
             },
-            immutableCheck: { warnAfter: 100 },
->>>>>>> origin/main
+            immutableCheck: false,
         }).concat(
             matchesApi.middleware,
             newsApi.middleware,

@@ -39,19 +39,11 @@ export default function TeamProfileScreen({ navigation, route }: Props) {
                             <Text style={styles.cardTitle}>Team Info</Text>
                             <View style={styles.infoRow}>
                                 <Text style={styles.label}>Country</Text>
-<<<<<<< HEAD
-                                <Text style={styles.value}>{teamData?.country || 'N/A'}</Text>
-                            </View>
-                            <View style={styles.infoRow}>
-                                <Text style={styles.label}>Founded</Text>
-                                <Text style={styles.value}>{teamData?.founded || 'N/A'}</Text>
-=======
                                 <Text style={styles.value}>{teamData?.country || 'Not available'}</Text>
                             </View>
                             <View style={styles.infoRow}>
                                 <Text style={styles.label}>Founded</Text>
                                 <Text style={styles.value}>{teamData?.founded || 'Not available'}</Text>
->>>>>>> origin/main
                             </View>
                             <View style={styles.infoRow}>
                                 <Text style={styles.label}>Stadium</Text>

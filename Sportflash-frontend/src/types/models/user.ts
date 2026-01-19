@@ -11,14 +11,9 @@ export interface User extends BaseEntity {
 export interface UserPreferences {
     theme?: 'light' | 'dark';
     notifications?: boolean;
-    favoriteSports?: string[];
-<<<<<<< HEAD
-    favoriteTeams?: any[]; // string[] or Team[]
-    favoriteLeagues?: string[];
-    favoritePlayers?: any[]; // string[] or Player[]
-=======
-    favoriteTeams?: string[];
-    favoriteLeagues?: FavoriteLeague[];
+    favoriteTeams?: any[]; // string[] | Team[]
+    favoriteLeagues?: any[]; // string[] | FavoriteLeague[]
+    favoritePlayers?: any[]; // string[] | Player[]
 }
 
 export interface FavoriteLeague {
@@ -27,7 +22,7 @@ export interface FavoriteLeague {
     sport: string;
     country?: string;
     logo?: string;
->>>>>>> origin/main
+    season?: string;
 }
 
 export interface AuthResponse {

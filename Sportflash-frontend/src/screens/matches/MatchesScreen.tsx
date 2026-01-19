@@ -90,7 +90,7 @@ export default function MatchesScreen({ navigation }: Props) {
             type: 'match_start',
             title: 'Match Starting Soon',
             message: 'India vs Australia starts in 15 minutes',
-            timestamp: new Date(),
+            timestamp: new Date().toISOString(),
             read: false,
         },
         {
@@ -98,7 +98,7 @@ export default function MatchesScreen({ navigation }: Props) {
             type: 'goal',
             title: 'GOAL!',
             message: 'Manchester United scored! 1-0',
-            timestamp: new Date(Date.now() - 300000),
+            timestamp: new Date(Date.now() - 300000).toISOString(),
             read: false,
         },
     ]);

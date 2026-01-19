@@ -96,7 +96,6 @@ exports.getUpcomingMatches = async (req, res) => {
                         case 'cricket': return rawMatches.map(mapCricketMatch).filter(m => m !== null);
                     }
                 }
-<<<<<<< HEAD
             } else {
                 // All Sports
                 const [football, basketball, cricket] = await Promise.allSettled([
@@ -135,35 +134,6 @@ exports.getUpcomingMatches = async (req, res) => {
                 console.log(`   - Date ${dateStr}: Found ${matches.length} matches (before filter)`);
                 upcomingMatches.push(...matches);
             }
-=======
-            }
-        } else {
-            // Get upcoming matches for all sports
-            console.log('[getUpcomingMatches] Fetching all sports for date:', targetDate);
-            const [footballFixtures, basketballFixtures, cricketFixtures] = await Promise.allSettled([
-                allSportsApi.getFootballFixtures({ date: targetDate }),
-                allSportsApi.getBasketballFixtures({ date: targetDate }),
-                allSportsApi.getCricketFixtures({ date: targetDate })
-            ]);
-
-            console.log('[getUpcomingMatches] Results:', {
-                football: { status: footballFixtures.status, count: footballFixtures.value?.length || 0 },
-                basketball: { status: basketballFixtures.status, count: basketballFixtures.value?.length || 0 },
-                cricket: { status: cricketFixtures.status, count: cricketFixtures.value?.length || 0 }
-            });
-
-            upcomingMatches = [
-                ...(footballFixtures.status === 'fulfilled' && footballFixtures.value
-                    ? footballFixtures.value.map(mapFootballMatch).filter(m => m !== null)
-                    : []),
-                ...(basketballFixtures.status === 'fulfilled' && basketballFixtures.value
-                    ? basketballFixtures.value.map(mapBasketballMatch).filter(m => m !== null)
-                    : []),
-                ...(cricketFixtures.status === 'fulfilled' && cricketFixtures.value
-                    ? cricketFixtures.value.map(mapCricketMatch).filter(m => m !== null)
-                    : [])
-            ];
->>>>>>> origin/main
         }
 
         // Deduplicate matches (API might return overlapping results for date ranges)
@@ -184,15 +154,11 @@ exports.getUpcomingMatches = async (req, res) => {
             return dateA - dateB;
         });
 
-<<<<<<< HEAD
         // Filter only upcoming
         upcomingMatches = upcomingMatches.filter(m => m.status === 'upcoming' || m.status === 'Not Started');
         console.log(`📤 getUpcomingMatches: Returning ${upcomingMatches.length} valid upcoming matches`);
 
-        res.json({
-=======
         const response = {
->>>>>>> origin/main
             success: true,
             count: upcomingMatches.length,
             date: date || 'range',
@@ -1033,7 +999,7 @@ exports.getTopScorers = async (req, res) => {
         }
 
         if (sport.toLowerCase() !== 'football') {
-             return res.status(400).json({
+            return res.status(400).json({
                 success: false,
                 message: 'Top scorers only available for football currently'
             });
