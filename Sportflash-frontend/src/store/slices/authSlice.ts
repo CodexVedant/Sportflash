@@ -99,12 +99,24 @@ export const updateUserPreferences = createAsyncThunk<User, UserPreferences, { r
     }
 );
 
+// Use 'any' or define a subset interface to avoid circular dependency with RootState
+// or just use getState() as any safely here since we know the structure.
 export const savePushToken = createAsyncThunk<void, string>(
     'auth/savePushToken',
-    async (token, { rejectWithValue }) => {
+    async (token, { rejectWithValue, getState }) => {
         try {
+            const state = getState() as any; // Cast to any to avoid circular import of RootState
+            const authToken = state.auth.token;
+
             console.log('📌 Sending Push Token to Backend:', token);
-            await api.put('/auth/pushtoken', { token });
+            console.log('🔑 Auth Token from State:', authToken ? `${authToken.substring(0, 10)}...` : 'NULL/UNDEFINED');
+
+            // Explicitly attach header to avoid race condition with loadUser
+            const config = authToken ? {
+                headers: { Authorization: `Bearer ${authToken}` }
+            } : {};
+
+            await api.put('/auth/pushtoken', { token }, config);
             console.log('✅ Push Token Saved Successfully to Backend');
         } catch (error: any) {
             console.error('❌ Failed to save push token to Backend:', error.response?.data?.message || error.message);

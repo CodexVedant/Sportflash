@@ -63,6 +63,11 @@ export default function AppNavigator() {
 
     // 🔔 NOTIFICATION LISTENER SETUP
     useEffect(() => {
+        interface NotificationData {
+            matchId?: string;
+            sport?: string;
+        }
+
         // 1. Handle Cold Start (App Closed -> Notification Tap -> Open)
         const checkInitialNotification = async () => {
             // Web doesn't support Cold Start via this API (handled by URL usually)
@@ -70,7 +75,7 @@ export default function AppNavigator() {
 
             const response = await Notifications.getLastNotificationResponseAsync();
             if (response) {
-                const data = response.notification.request.content.data;
+                const data = response.notification.request.content.data as NotificationData;
                 console.log('🔔 Cold Start Notification:', data);
                 if (data?.matchId) {
                     // Wait for navigation mount
@@ -78,8 +83,8 @@ export default function AppNavigator() {
                         if (navigationRef.isReady()) {
                             // @ts-ignore
                             navigationRef.navigate('MatchDetail', {
-                                matchId: data.matchId,
-                                sport: data.sport || 'football'
+                                matchId: String(data.matchId),
+                                sport: String(data.sport || 'football')
                             });
                         }
                     }, 500);
@@ -91,15 +96,15 @@ export default function AppNavigator() {
 
         // 2. Handle Foreground/Background Tap
         const subscription = Notifications.addNotificationResponseReceivedListener(response => {
-            const data = response.notification.request.content.data;
+            const data = response.notification.request.content.data as NotificationData;
             console.log('🔔 Notification Tapped (Foreground/Background):', data);
 
             if (data?.matchId) {
                 if (navigationRef.isReady()) {
                     // @ts-ignore
                     navigationRef.navigate('MatchDetail', {
-                        matchId: data.matchId,
-                        sport: data.sport || 'football'
+                        matchId: String(data.matchId),
+                        sport: String(data.sport || 'football')
                     });
                 }
             }
