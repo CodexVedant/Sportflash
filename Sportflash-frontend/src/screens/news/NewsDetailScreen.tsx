@@ -4,13 +4,14 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { theme } from '@utils/theme';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
-import { useGetNewsDetailQuery } from '@store/api/newsApi';
+import { useGetNewsDetailQuery, useToggleBookmarkMutation } from '@store/api/newsApi';
 import { useDispatch } from 'react-redux';
-import { toggleBookmark } from '@store/slices/newsSlice';
+import { toggleBookmark as toggleLocalBookmark } from '@store/slices/newsSlice'; // Renamed import
 import { styles } from '@utils/style/NewsDetailScreen.styles';
 import { useAppSelector } from '@hooks/redux';
 import { RootStackParamList } from '@app-types/navigation';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useToast } from '@context/ToastContext';
 
 type NewsDetailScreenRouteProp = RouteProp<RootStackParamList, 'NewsDetail'>;
 
@@ -18,14 +19,15 @@ export default function NewsDetailScreen() {
     const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
     const route = useRoute<NewsDetailScreenRouteProp>();
     const { newsId } = route.params || {};
+    const { showToast } = useToast();
 
     const dispatch = useDispatch();
     const bookmarks = useAppSelector(state => state.news.bookmarks);
-    // Ensure ids are compared as strings or numbers consistently. API usually returns strings or numbers. 
-    // Assuming bookmarks stores same type as newsId.
     const isBookmarked = newsId ? bookmarks.includes(String(newsId)) : false;
 
+    // API Hooks
     const { data: article, isLoading, error } = useGetNewsDetailQuery(String(newsId || ''));
+    const [toggleBookmarkApi] = useToggleBookmarkMutation();
 
     // Helper function to format time ago
     const getTimeAgo = (dateString: string) => {
@@ -48,6 +50,27 @@ export default function NewsDetailScreen() {
             });
         } catch (error: any) {
             console.log((error as Error).message);
+        }
+    };
+
+    const handleBookmarkPress = async () => {
+        if (!newsId || !article) return;
+
+        // Optimistic UI Update
+        dispatch(toggleLocalBookmark(String(newsId)));
+
+        try {
+            // Call Backend API
+            await toggleBookmarkApi({
+                articleId: String(newsId),
+                articleData: article // Send article data to create local placeholder if needed
+            }).unwrap();
+
+            showToast(isBookmarked ? "Bookmark removed" : "Bookmark saved", "success");
+        } catch (err) {
+            console.error('Bookmark sync failed:', err);
+            dispatch(toggleLocalBookmark(String(newsId))); // Revert on failure
+            showToast("Failed to sync bookmark", "error");
         }
     };
 
@@ -89,7 +112,7 @@ export default function NewsDetailScreen() {
                             <Ionicons name="arrow-back" size={24} color="#FFF" />
                         </TouchableOpacity>
                         <View style={{ flexDirection: 'row', gap: 12 }}>
-                            <TouchableOpacity onPress={() => dispatch(toggleBookmark(String(newsId)))} style={styles.iconBtn}>
+                            <TouchableOpacity onPress={handleBookmarkPress} style={styles.iconBtn}>
                                 <Ionicons
                                     name={isBookmarked ? "bookmark" : "bookmark-outline"}
                                     size={24}

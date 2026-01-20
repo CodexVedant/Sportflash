@@ -66,23 +66,7 @@ const articleSchema = new mongoose.Schema({
     timestamps: true
 });
 
-// Auto-generate slug from title
-articleSchema.pre('save', function (next) {
-    if (this.isModified('title') && !this.slug) {
-        this.slug = this.title
-            .toLowerCase()
-            .replace(/[^a-z0-9]+/g, '-')
-            .replace(/(^-|-$)/g, '');
-    }
-    next();
-});
-
-// Set publishedAt when status changes to published
-articleSchema.pre('save', function (next) {
-    if (this.isModified('status') && this.status === 'published' && !this.publishedAt) {
-        this.publishedAt = new Date();
-    }
-    next();
-});
+// Hooks removed to prevent "next is not a function" error.
+// Slug generation should be handled in Controller or Service.
 
 module.exports = mongoose.model('Article', articleSchema);

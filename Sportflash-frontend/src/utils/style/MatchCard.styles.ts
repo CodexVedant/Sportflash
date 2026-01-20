@@ -33,6 +33,7 @@ export const styles = StyleSheet.create({
     league: {
         color: theme.colors.textMuted,
         fontSize: theme.sizes.xs,
+        marginLeft: 8, // Added gap between status and league name
     },
     scoreContainer: {
         flexDirection: 'row',
