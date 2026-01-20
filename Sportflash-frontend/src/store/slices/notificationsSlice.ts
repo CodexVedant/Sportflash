@@ -1,5 +1,6 @@
-﻿import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+﻿import { createSlice, PayloadAction, isAnyOf } from '@reduxjs/toolkit';
 import { NotificationItem } from '@app-types/models/notification';
+import { login, loadUser, updateUserPreferences, logout } from './authSlice'; // Import actions
 
 export interface NotificationsState {
     items: NotificationItem[];
@@ -45,8 +46,50 @@ const notificationsSlice = createSlice({
             state.unreadCount = action.payload.filter(n => !n.read).length;
         }
     },
+    extraReducers: (builder) => {
+        // Hydrate preferences from User object on Login / Load User / Update Preferences
+        builder.addMatcher(
+            isAnyOf(login.fulfilled, loadUser.fulfilled, updateUserPreferences.fulfilled),
+            (state, action) => {
+                if (!action.payload) return;
+
+                // Handle both User object (update) and AuthResponse (login/load)
+                // 'token' exists in AuthResponseData, but not in User
+                let user;
+                if ('token' in action.payload) {
+                    user = action.payload.user;
+                } else {
+                    user = action.payload;
+                }
+
+                if (user && user.preferences) {
+                    // 1. Sync Followed Matches
+                    if (user.preferences.followedMatches) {
+                        user.preferences.followedMatches.forEach((matchId: string) => {
+                            state.preferences[`match_${matchId}`] = true;
+                        });
+                    }
+
+                    // 2. Sync Global Notifications Toggle
+                    if (user.preferences.notifications !== undefined) {
+                        state.globalSettings['notifications'] = user.preferences.notifications;
+                    }
+                }
+            }
+        );
+
+        // CLEAR Notifications on Logout
+        builder.addMatcher(
+            isAnyOf(logout.fulfilled),
+            (state) => {
+                state.items = [];
+                state.unreadCount = 0;
+                state.preferences = {};
+                state.globalSettings = {};
+            }
+        );
+    }
 });
 
 export const { addNotification, markAsRead, markAllAsRead, setNotifications, updatePreference, updateGlobalSetting } = notificationsSlice.actions;
 export default notificationsSlice.reducer;
-

@@ -12,10 +12,9 @@ const isExpoGo = Constants.appOwnership === 'expo';
 if (!isExpoGo || Platform.OS !== 'android') {
     Notifications.setNotificationHandler({
         handleNotification: async () => ({
-            shouldShowAlert: true,
+            shouldShowBanner: true,
             shouldPlaySound: true,
             shouldSetBadge: false,
-            shouldShowBanner: true,
             shouldShowList: true,
         }),
     });

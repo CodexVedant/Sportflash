@@ -4,18 +4,39 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { theme } from '@utils/theme';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
-import { markAllAsRead, markAsRead } from '@store/slices/notificationsSlice';
+import {
+    useGetNotificationsQuery,
+    useMarkAllNotificationsReadMutation,
+    useMarkNotificationReadMutation
+} from '@store/api/notificationsApi';
+import { setNotifications, markAsRead as markAsReadAction, markAllAsRead as markAllAsReadAction } from '@store/slices/notificationsSlice';
 import { styles } from '@utils/style/NotificationsScreen.styles';
 import { useAppDispatch, useAppSelector } from '@hooks/redux';
+import { useEffect } from 'react';
 
 export default function NotificationsScreen() {
     const navigation = useNavigation();
     const dispatch = useAppDispatch();
     const notifications = useAppSelector(state => state.notifications.items);
 
-    const handlePress = (item: any) => {
+    // API Hooks
+    const { data: apiData, refetch } = useGetNotificationsQuery();
+    const [markReadApi] = useMarkNotificationReadMutation();
+    const [markAllReadApi] = useMarkAllNotificationsReadMutation();
+
+    // Sync API Data to Redux Store on Load
+    useEffect(() => {
+        if (apiData && apiData.data) {
+            dispatch(setNotifications(apiData.data));
+        }
+    }, [apiData, dispatch]);
+
+    const handlePress = async (item: any) => {
         if (!item.read) {
-            dispatch(markAsRead(item.id));
+            dispatch(markAsReadAction(item.id)); // Optimistic UI update
+            try {
+                await markReadApi(item.id).unwrap();
+            } catch (error) { console.error('Failed to mark read', error); }
         }
 
         // Deep Link Navigation
@@ -26,6 +47,13 @@ export default function NotificationsScreen() {
                 sport: item.sport || 'football'
             });
         }
+    };
+
+    const handleMarkAllRead = async () => {
+        dispatch(markAllAsReadAction()); // Optimistic
+        try {
+            await markAllReadApi().unwrap();
+        } catch (error) { console.error('Failed to mark all read', error); }
     };
 
     const renderItem = ({ item }: { item: any }) => (
@@ -56,7 +84,7 @@ export default function NotificationsScreen() {
                     <Ionicons name="arrow-back" size={24} color={theme.colors.text} />
                 </TouchableOpacity>
                 <Text style={styles.headerTitle}>Notifications</Text>
-                <TouchableOpacity onPress={() => dispatch(markAllAsRead())}>
+                <TouchableOpacity onPress={handleMarkAllRead}>
                     <Text style={styles.readAll}>Mark all read</Text>
                 </TouchableOpacity>
             </View>

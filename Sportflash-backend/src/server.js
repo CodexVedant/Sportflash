@@ -56,6 +56,7 @@ const { mapFootballMatch,
 
 const { sendPushNotification } = require('./services/expoPushService');
 const LiveMatchState = require('./models/LiveMatchState');
+const Notification = require('./models/Notification'); // Import Notification Model
 
 /**
  * Helper to detecting events and sending push
@@ -106,7 +107,7 @@ const checkAndNotify = async (sport, newMatches) => {
             let updates = {};
 
             // ================= STATUS CHANGE =================
-            const statusEvents = ['Innings Break', 'Tea Break', 'Lunch', 'Stumps', 'Rain Delay', 'Finished', 'FT', 'HT'];
+            const statusEvents = ['Innings Break', 'Tea Break', 'Lunch', 'Stumps', 'Rain Delay', 'Finished', 'FT', 'HT', 'Half Time', 'Q1', 'Q2', 'Q3', 'Q4', 'OT'];
             if (state.lastStatus !== match.status && (match.status !== 'NS' && match.status !== 'Not Started')) {
                 if (statusEvents.includes(match.status) || match.status === 'Live') {
                     shouldNotify = true;
@@ -116,17 +117,22 @@ const checkAndNotify = async (sport, newMatches) => {
                 state.lastStatus = match.status;
             }
 
-            // ================= FOOTBALL / BASKETBALL =================
-            if (sport === 'football' || sport === 'basketball') {
+            // ================= FOOTBALL =================
+            if (sport === 'football') {
                 const newTotal = (parseInt(match.homeTeam?.score) || 0) + (parseInt(match.awayTeam?.score) || 0);
 
                 if (newTotal > state.lastTotalScore) {
                     shouldNotify = true;
-                    title = sport === 'football' ? '⚽ GOAL!' : '🏀 Point Scored';
+                    title = '⚽ GOAL!';
                     body = `${match.homeTeam.name} ${match.homeTeam.score} - ${match.awayTeam.score} ${match.awayTeam.name}`;
                     state.lastTotalScore = newTotal;
                 }
             }
+
+            // ================= BASKETBALL =================
+            // User Request: Only notify on Quarter/Status changes, NOT every point.
+            // This is handled by the Status Change block above. 
+            // We removed the 'Point Scored' logic here to prevent spam.
 
             // ================= CRICKET =================
             if (sport === 'cricket') {
@@ -172,9 +178,44 @@ const checkAndNotify = async (sport, newMatches) => {
             }
 
             if (shouldNotify) {
-                console.log(`🔔 PUSH FIRED: ${title}`);
+                // LOG TO FILE FOR DEBUGGING
+                const fs = require('fs');
+                const logMsg = `[${new Date().toISOString()}] 🔔 PUSH TRIGGERED: ${title} | Body: ${body}\n`;
+                fs.appendFileSync('server_debug.log', logMsg);
+
                 await sendPushNotification(title, body, { matchId: match.id, sport: sport, type: 'match_update' }, (user) => {
-                    return true; // 🟢 FORCE ALLOW for verification
+                    const logPrefix = `[${new Date().toISOString()}]   - User ${user.email}`;
+
+                    // 1. Check Global Notification Setting
+                    if (!user.preferences?.notifications) {
+                        fs.appendFileSync('server_debug.log', `${logPrefix} BLOCKED (Global OFF)\n`);
+                        return false;
+                    }
+
+                    // 2. STRICT: Check if user follows this specific match
+                    // We treat followedMatches as the "Whitelist". If not in list, NO notification.
+                    const matchIdStr = String(match.id);
+                    const followedCallback = user.preferences?.followedMatches || [];
+
+                    if (followedCallback.includes(matchIdStr)) {
+                        fs.appendFileSync('server_debug.log', `${logPrefix} ALLOWED (Followed Match: ${matchIdStr})\n`);
+
+                        // NEW POST-FIX: Actually SAVE to Database for Persistence!
+                        try {
+                            Notification.create({
+                                user: user._id,
+                                title: title,
+                                body: body,
+                                data: { matchId: match.id, sport: sport, type: 'match_update' },
+                                type: 'match_update'
+                            });
+                        } catch (err) { console.error('Error saving notification to DB:', err.message); }
+
+                        return true;
+                    }
+
+                    fs.appendFileSync('server_debug.log', `${logPrefix} BLOCKED (Not Followed)\n`);
+                    return false;
                 });
 
                 state.updatedAt = new Date();
@@ -316,6 +357,7 @@ app.use('/api/matches', matchRoutes);
 app.use('/api/teams', require('./routes/teamRoutes'));
 app.use('/api/players', require('./routes/playerRoutes'));
 app.use('/api/news', newsRoutes);
+app.use('/api/notifications', require('./routes/notificationRoutes')); // Add Notification Routes
 
 // Test Endpoint for Manual Push (GET for easy browser test)
 app.get('/api/test-push', async (req, res) => {

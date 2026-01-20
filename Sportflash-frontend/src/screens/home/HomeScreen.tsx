@@ -5,6 +5,7 @@ import { theme } from '@utils/theme';
 import { Ionicons } from '@expo/vector-icons';
 import SearchModal from '@components/common/SearchModal';
 import { useGetLiveMatchesQuery } from '@store/api/matchesApi';
+import { useUpdatePreferencesMutation } from '@store/api/usersApi';
 import { useSelector, useDispatch } from 'react-redux';
 import { NotificationBell, NotificationPanel, NotificationOptionsModal } from '@components/notifications';
 import { updatePreference } from '@store/slices/notificationsSlice';
@@ -32,12 +33,18 @@ export default function HomeScreen({ navigation }: Props) {
     const { showToast } = useToast();
     const { width } = useWindowDimensions();
     const preferences = useAppSelector(state => state.notifications.preferences || {});
+    const [updatePreferencesApi] = useUpdatePreferencesMutation();
 
     // Notification Logic (Modal & Selection)
     const [modalVisible, setModalVisible] = useState(false);
     const [selectedMatch, setSelectedMatch] = useState<Match | null>(null);
 
     const handleBellPress = (match: Match) => {
+        if (!user) {
+            showToast('Please login to follow matches', 'error');
+            navigation.navigate('Login');
+            return;
+        }
         setSelectedMatch(match);
         setModalVisible(true);
     };
@@ -45,10 +52,10 @@ export default function HomeScreen({ navigation }: Props) {
     const handleSavePreferences = (newPrefs: any) => {
         if (!selectedMatch) return;
 
-        // Update Redux state
+        // Update Redux state (Local Notifications)
         const updates = {
             [`match_${selectedMatch.id}`]: newPrefs.match,
-            [`series_${selectedMatch.league}`]: newPrefs.series, // Ensure league is string or handle object
+            [`series_${selectedMatch.league}`]: newPrefs.series,
             [`team_${selectedMatch.homeTeam?.name}`]: newPrefs.homeTeam,
             [`team_${selectedMatch.awayTeam?.name}`]: newPrefs.awayTeam,
         };
@@ -56,6 +63,83 @@ export default function HomeScreen({ navigation }: Props) {
         Object.entries(updates).forEach(([key, value]) => {
             dispatch(updatePreference({ key, value: Boolean(value) }));
         });
+
+        // ================= SYNC WITH BACKEND =================
+        const apiUpdates: any = {};
+
+        // 1. Followed Matches (Existing Logic)
+        if (newPrefs.match !== undefined) {
+            const currentFollowed = Object.keys(preferences)
+                .filter(k => k.startsWith('match_') && preferences[k])
+                .map(k => k.replace('match_', ''));
+
+            let newFollowed = new Set(currentFollowed);
+            if (newPrefs.match) {
+                newFollowed.add(String(selectedMatch.id));
+            } else {
+                newFollowed.delete(String(selectedMatch.id));
+            }
+            apiUpdates.followedMatches = Array.from(newFollowed);
+        }
+
+        // 2. Favorite Teams
+        if (newPrefs.homeTeam !== undefined || newPrefs.awayTeam !== undefined) {
+            let currentTeams = user?.preferences?.favoriteTeams || [];
+
+            // Helper to toggle team
+            const toggleTeam = (team: any, shouldAdd: boolean) => {
+                if (!team || !team.name) return;
+                const exists = currentTeams.some(t => t.name === team.name); // Using Name as ID for now if ID missing
+
+                if (shouldAdd && !exists) {
+                    currentTeams = [...currentTeams, {
+                        id: team.id?.toString() || team.name, // Fallback to name if ID missing
+                        name: team.name,
+                        sport: activeSport,
+                        logo: team.logo_path || ''
+                    }];
+                } else if (!shouldAdd && exists) {
+                    currentTeams = currentTeams.filter(t => t.name !== team.name);
+                }
+            };
+
+            if (newPrefs.homeTeam !== undefined) toggleTeam(selectedMatch.homeTeam, newPrefs.homeTeam);
+            if (newPrefs.awayTeam !== undefined) toggleTeam(selectedMatch.awayTeam, newPrefs.awayTeam);
+
+            apiUpdates.favoriteTeams = currentTeams;
+        }
+
+        // 3. Favorite Leagues
+        if (newPrefs.series !== undefined) {
+            let currentLeagues = user?.preferences?.favoriteLeagues || [];
+            // Handle League Object vs String
+            const leagueName = typeof selectedMatch.league === 'string' ? selectedMatch.league : selectedMatch.league?.name;
+            const leagueId = (selectedMatch as any).league_id || leagueName; // Fallback
+
+            const exists = currentLeagues.some(l => l.name === leagueName);
+
+            if (newPrefs.series && !exists && leagueName) {
+                currentLeagues = [...currentLeagues, {
+                    id: leagueId?.toString(),
+                    name: leagueName,
+                    sport: activeSport,
+                    country: '', // Optional
+                    logo: '' // Optional
+                }];
+            } else if (!newPrefs.series && exists) {
+                currentLeagues = currentLeagues.filter(l => l.name !== leagueName);
+            }
+
+            apiUpdates.favoriteLeagues = currentLeagues;
+        }
+
+        // Send ONE API Call
+        if (Object.keys(apiUpdates).length > 0) {
+            updatePreferencesApi(apiUpdates)
+                .unwrap()
+                .then(() => console.log('✅ Preferences synced to backend:', Object.keys(apiUpdates)))
+                .catch((err: any) => console.error('❌ Failed to sync preferences:', err));
+        }
 
         showToast("Notification preferences updated", "success");
     };

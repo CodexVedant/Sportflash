@@ -19,6 +19,7 @@ import { usersApi } from './api/usersApi';
 import { authApi } from './api/authApi';
 import { playersApi } from './api/playersApi';
 import { leaguesApi } from './api/leaguesApi';
+import { notificationsApi } from './api/notificationsApi';
 
 // Persist Configs
 const newsPersistConfig = {
@@ -53,6 +54,7 @@ const rootReducer = combineReducers({
     [authApi.reducerPath]: authApi.reducer,
     [playersApi.reducerPath]: playersApi.reducer,
     [leaguesApi.reducerPath]: leaguesApi.reducer,
+    [notificationsApi.reducerPath]: notificationsApi.reducer,
 });
 
 
@@ -69,9 +71,7 @@ export const store = configureStore({
     reducer: persistedReducer,
     middleware: (getDefaultMiddleware) =>
         getDefaultMiddleware({
-            serializableCheck: {
-                ignoredActions: [FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER],
-            },
+            serializableCheck: false,
             immutableCheck: false,
         }).concat(
             matchesApi.middleware,
@@ -81,7 +81,8 @@ export const store = configureStore({
             usersApi.middleware,
             authApi.middleware,
             playersApi.middleware,
-            leaguesApi.middleware
+            leaguesApi.middleware,
+            notificationsApi.middleware
         ),
 });
 

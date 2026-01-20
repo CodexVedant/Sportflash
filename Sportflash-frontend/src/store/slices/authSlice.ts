@@ -79,9 +79,15 @@ export const register = createAsyncThunk<AuthResponseData, RegisterRequest, { re
 export const logout = createAsyncThunk<void, void>(
     'auth/logout',
     async () => {
-        await AsyncStorage.removeItem('token');
-        await AsyncStorage.removeItem('user');
-        delete api.defaults.headers.common['Authorization'];
+        try {
+            await api.post('/auth/logout'); // Tell backend to forget this device
+        } catch (error) {
+            console.error('Logout API failed:', error);
+        } finally {
+            await AsyncStorage.removeItem('token');
+            await AsyncStorage.removeItem('user');
+            delete api.defaults.headers.common['Authorization'];
+        }
     }
 );
 

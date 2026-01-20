@@ -14,6 +14,7 @@ export interface UserPreferences {
     favoriteTeams?: any[]; // string[] | Team[]
     favoriteLeagues?: any[]; // string[] | FavoriteLeague[]
     favoritePlayers?: any[]; // string[] | Player[]
+    followedMatches?: string[]; // Match IDs
 }
 
 export interface FavoriteLeague {

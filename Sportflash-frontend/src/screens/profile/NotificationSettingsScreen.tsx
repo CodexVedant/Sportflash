@@ -6,6 +6,7 @@ import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import MatchCard from '@components/match/MatchCard';
 import { useGetUpcomingMatchesQuery } from '@store/api/matchesApi';
+import { useUpdatePreferencesMutation } from '@store/api/usersApi';
 import { useToast } from '@context/ToastContext';
 import { useAppSelector, useAppDispatch } from '@hooks/redux';
 import { updatePreference } from '@store/slices/notificationsSlice';
@@ -71,6 +72,8 @@ export default function NotificationSettingsScreen() {
         }
     };
 
+    const [updatePreferencesApi] = useUpdatePreferencesMutation();
+
     // Fetch Real Data (UPCOMING)
     const { data: apiData = [], isLoading, refetch } = useGetUpcomingMatchesQuery({
         sport: activeTab.toLowerCase()
@@ -109,7 +112,80 @@ export default function NotificationSettingsScreen() {
         Object.entries(updates).forEach(([key, value]) => {
             dispatch(updatePreference({ key, value: Boolean(value) }));
         });
-        showToast("Notification preferences saved", "success");
+
+        // ================= SYNC WITH BACKEND =================
+        const apiUpdates: any = {};
+        const activeSport = activeTab.toLowerCase();
+
+        // 1. Followed Matches
+        if (newPrefs.match !== undefined) {
+            const currentFollowed = Object.keys(preferences)
+                .filter(k => k.startsWith('match_') && preferences[k])
+                .map(k => k.replace('match_', ''));
+
+            let newFollowed = new Set(currentFollowed);
+            if (newPrefs.match) {
+                newFollowed.add(String(selectedMatch.id));
+            } else {
+                newFollowed.delete(String(selectedMatch.id));
+            }
+            apiUpdates.followedMatches = Array.from(newFollowed);
+        }
+
+        // 2. Favorite Teams
+        if (newPrefs.homeTeam !== undefined || newPrefs.awayTeam !== undefined) {
+            let currentTeams = user?.preferences?.favoriteTeams || [];
+
+            const toggleTeam = (team: any, shouldAdd: boolean) => {
+                if (!team || !team.name) return;
+                const exists = currentTeams.some(t => t.name === team.name);
+
+                if (shouldAdd && !exists) {
+                    currentTeams = [...currentTeams, {
+                        id: team.id?.toString() || team.name,
+                        name: team.name,
+                        sport: activeSport,
+                        logo: team.logo_path || ''
+                    }];
+                } else if (!shouldAdd && exists) {
+                    currentTeams = currentTeams.filter(t => t.name !== team.name);
+                }
+            };
+            if (newPrefs.homeTeam !== undefined) toggleTeam(selectedMatch.homeTeam, newPrefs.homeTeam);
+            if (newPrefs.awayTeam !== undefined) toggleTeam(selectedMatch.awayTeam, newPrefs.awayTeam);
+            apiUpdates.favoriteTeams = currentTeams;
+        }
+
+        // 3. Favorite Leagues
+        if (newPrefs.series !== undefined) {
+            let currentLeagues = user?.preferences?.favoriteLeagues || [];
+            const leagueName = typeof selectedMatch.league === 'string' ? selectedMatch.league : selectedMatch.league?.name;
+            const leagueId = (selectedMatch as any).league_id || leagueName;
+
+            const exists = currentLeagues.some(l => l.name === leagueName);
+
+            if (newPrefs.series && !exists && leagueName) {
+                currentLeagues = [...currentLeagues, {
+                    id: leagueId?.toString(),
+                    name: leagueName,
+                    sport: activeSport,
+                    country: '', // Optional
+                    logo: '' // Optional
+                }];
+            } else if (!newPrefs.series && exists) {
+                currentLeagues = currentLeagues.filter(l => l.name !== leagueName);
+            }
+            apiUpdates.favoriteLeagues = currentLeagues;
+        }
+
+        if (Object.keys(apiUpdates).length > 0) {
+            updatePreferencesApi(apiUpdates)
+                .unwrap()
+                .then(() => console.log('✅ Preferences synced to backend (Settings Screen)'))
+                .catch((err: any) => console.error('❌ Failed to sync preferences:', err));
+        }
+
+        showToast("Notification preferences updated", "success");
     };
 
     const currentMatches = useMemo(() => {

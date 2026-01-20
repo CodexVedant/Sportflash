@@ -75,7 +75,8 @@ const userSchema = new mongoose.Schema({
             sport: String,
             country: String,
             logo: String
-        }]
+        }],
+        followedMatches: [String], // Array of Match IDs to strictly follow
     },
     bookmarks: [{
         articleId: {

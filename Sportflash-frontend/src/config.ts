@@ -4,7 +4,8 @@ import Constants from 'expo-constants';
 // Environment configuration
 const ENV = {
     // Set to 'production' to use Render backend, 'development' for local
-    MODE: process.env.NODE_ENV || 'development',
+    // MODE: process.env.NODE_ENV || 'development',
+    MODE: 'development', // 🟢 FORCE DEVELOPMENT MODE for debugging
 
     // Production backend URL (Render)
     PRODUCTION_URL: 'https://sportflash-backend-1.onrender.com',
@@ -54,8 +55,8 @@ export const SOCKET_URL: string = getBaseUrl();
 
 // Log current configuration (helpful for debugging)
 // Uncomment below to see API configuration in console
-// console.log(`🔧 API Configuration:
-//   Mode: ${ENV.MODE}
-//   API URL: ${API_BASE_URL}
-//   Socket URL: ${SOCKET_URL}
-// `);
+console.log(`🔧 API Configuration:
+  Mode: ${ENV.MODE}
+  API URL: ${API_BASE_URL}
+  Socket URL: ${SOCKET_URL}
+`);

@@ -201,6 +201,7 @@ exports.updatePreferences = async (req, res) => {
         }
         if (favoriteLeagues) user.preferences.favoriteLeagues = favoriteLeagues;
         if (notifications !== undefined) user.preferences.notifications = notifications;
+        if (req.body.followedMatches) user.preferences.followedMatches = req.body.followedMatches;
 
         console.log('✅ Saving updated preferences for user:', user._id);
         await user.save();
@@ -233,6 +234,20 @@ exports.savePushToken = async (req, res) => {
         res.status(200).json({ success: true, message: 'Push token updated' });
     } catch (error) {
         console.error('Error updating push token:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+// @desc    Logout user / Clear Push Token
+// @route   POST /api/auth/logout
+// @access  Private
+exports.logout = async (req, res) => {
+    try {
+        await User.findByIdAndUpdate(req.user.id, { pushToken: null });
+        console.log('✅ User logged out, push token cleared:', req.user.id);
+        res.status(200).json({ success: true, message: 'Logged out successfully' });
+    } catch (error) {
+        console.error('Error logging out:', error);
         res.status(500).json({ success: false, message: error.message });
     }
 };
