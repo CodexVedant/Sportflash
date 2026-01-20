@@ -68,7 +68,7 @@ export default function ResetPasswordScreen({ navigation, route }: Props) {
                 setTimeout(() => {
                     navigation.reset({
                         index: 0,
-                        routes: [{ name: 'Home' }],
+                        routes: [{ name: 'Main' }],
                     });
                 }, 2000);
             }
@@ -206,7 +206,7 @@ export default function ResetPasswordScreen({ navigation, route }: Props) {
                                         style={styles.manualLoginBtn}
                                         onPress={() => navigation.reset({
                                             index: 0,
-                                            routes: [{ name: 'Home' }],
+                                            routes: [{ name: 'Main' }],
                                         })}
                                     >
                                         <Text style={styles.manualLoginText}>Go to Home</Text>

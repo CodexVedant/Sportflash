@@ -9,13 +9,15 @@ interface AuthState {
     user: User | null;
     token: string | null;
     loading: boolean;
+    isInitialized: boolean;
     error: string | null;
 }
 
 const initialState: AuthState = {
     user: null,
     token: null,
-    loading: true,
+    loading: false, // Default false, only true during requests
+    isInitialized: false, // True after first loadUser check
     error: null,
 };
 
@@ -61,8 +63,41 @@ export const register = createAsyncThunk<AuthResponseData, RegisterRequest, { re
     'auth/register',
     async ({ name, email, password }, { rejectWithValue }) => {
         try {
-            const response = await api.post<{ data: AuthResponseData }>('/auth/register', { name, email, password });
-            const { token, user } = response.data.data;
+            console.log('🚀 Sending Register Request:', { name, email, password });
+            const response = await api.post<{ data: AuthResponseData } | any>('/auth/register', { name, email, password });
+
+            console.log('📩 Full Response Object keys:', Object.keys(response));
+            console.log('📩 Response Data:', response.data);
+
+            // Check if OTP is required (Backend returns explicit flag)
+            // Backend response structure might be { success: true, requireOtp: true, ... } directly, OR inside `data`.
+            // Based on backend implementation: res.status(201).json({ success, requireOtp, ... })
+            // Axios puts that in `response.data`.
+
+            const data = response.data;
+
+            if (data?.requireOtp) {
+                console.log('✅ requireOtp detected:', data.requireOtp);
+                return {
+                    requireOtp: true,
+                    email: data.email,
+                    message: data.message,
+                    token: '', // Placeholder to satisfy TS, won't be used
+                    user: {} as User // Placeholder
+                };
+                // Ideally we should use a different return type, but for quick fix avoiding big refactors:
+            }
+
+            console.log('⚠️ OTP not required, falling back to standard login.');
+
+            // Check if structure matches
+            if (!data.data || !data.data.token) {
+                console.error('❌ Unexpected response structure:', data);
+                throw new Error('Invalid response structure');
+            }
+
+            // Normal flow (if OTP disabled)
+            const { token, user } = data.data;
 
             await AsyncStorage.setItem('token', token);
             await AsyncStorage.setItem('user', JSON.stringify(user));
@@ -81,8 +116,11 @@ export const logout = createAsyncThunk<void, void>(
     async () => {
         try {
             await api.post('/auth/logout'); // Tell backend to forget this device
-        } catch (error) {
-            console.error('Logout API failed:', error);
+        } catch (error: any) {
+            // Ignore 401 (Unauthorized) as it means we are effectively already logged out
+            if (error.response?.status !== 401) {
+                console.error('Logout API failed:', error);
+            }
         } finally {
             await AsyncStorage.removeItem('token');
             await AsyncStorage.removeItem('user');
@@ -160,6 +198,7 @@ const authSlice = createSlice({
             })
             .addCase(loadUser.fulfilled, (state, action) => {
                 state.loading = false;
+                state.isInitialized = true;
                 if (action.payload) {
                     state.token = action.payload.token;
                     state.user = action.payload.user;
@@ -167,6 +206,7 @@ const authSlice = createSlice({
             })
             .addCase(loadUser.rejected, (state) => {
                 state.loading = false;
+                state.isInitialized = true;
             })
             // Login
             .addCase(login.pending, (state) => {
@@ -189,8 +229,11 @@ const authSlice = createSlice({
             })
             .addCase(register.fulfilled, (state, action) => {
                 state.loading = false;
-                state.token = action.payload.token;
-                state.user = action.payload.user;
+                if (!action.payload.requireOtp) {
+                    state.token = action.payload.token;
+                    state.user = action.payload.user;
+                }
+                // If ID OTP required, we rarely update state here, the component handles navigation
             })
             .addCase(register.rejected, (state, action) => {
                 state.loading = false;

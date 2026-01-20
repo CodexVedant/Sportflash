@@ -67,7 +67,9 @@ const userSchema = new mongoose.Schema({
             },
             basketball: {
                 points: { type: Boolean, default: true }
-            }
+            },
+            email_big_matches: { type: Boolean, default: false },
+            email_daily_digest: { type: Boolean, default: false }
         },
         favoriteLeagues: [{
             id: String,
@@ -99,11 +101,26 @@ const userSchema = new mongoose.Schema({
     },
     lastLogin: {
         type: Date
-    }
+    },
+    otp: {
+        type: String,
+        select: false
+    },
+    otpExpire: {
+        type: Date,
+        select: false
+    },
+    isVerified: {
+        type: Boolean,
+        default: false
+    },
+    resetPasswordToken: String,
+    resetPasswordExpire: Date
 }, {
     timestamps: true
 });
 
+// Hash password before saving
 // Hash password before saving
 userSchema.pre('save', async function () {
     if (!this.isModified('password')) {
@@ -114,13 +131,32 @@ userSchema.pre('save', async function () {
     this.password = await bcrypt.hash(this.password, salt);
 });
 
+// Method to generate reset token
+const crypto = require('crypto');
+
+userSchema.methods.getResetPasswordToken = function () {
+    // Generate token
+    const resetToken = crypto.randomBytes(20).toString('hex');
+
+    // Hash token and set to resetPasswordToken field
+    this.resetPasswordToken = crypto
+        .createHash('sha256')
+        .update(resetToken)
+        .digest('hex');
+
+    // Set expire (10 minutes)
+    this.resetPasswordExpire = Date.now() + 10 * 60 * 1000;
+
+    return resetToken;
+};
+
 // Compare password method
 userSchema.methods.comparePassword = async function (candidatePassword) {
     console.log('🔐 comparePassword called');
-    console.log('   Candidate:', candidatePassword);
-    console.log('   Stored:', this.password);
+    // console.log('   Candidate:', candidatePassword); // Security risk to log plain password
+    // console.log('   Stored:', this.password);
     const result = await bcrypt.compare(candidatePassword, this.password);
-    console.log('   Result:', result);
+    // console.log('   Result:', result);
     return result;
 };
 
@@ -128,6 +164,10 @@ userSchema.methods.comparePassword = async function (candidatePassword) {
 userSchema.methods.toJSON = function () {
     const user = this.toObject();
     delete user.password;
+    delete user.resetPasswordToken;
+    delete user.resetPasswordExpire;
+    delete user.otp;
+    delete user.otpExpire;
     return user;
 };
 

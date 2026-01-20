@@ -14,6 +14,9 @@ export interface RegisterRequest {
 export interface AuthResponseData {
     token: string;
     user: User;
+    requireOtp?: boolean; // For registration flow
+    email?: string;       // For registration flow
+    message?: string;     // For registration flow
 }
 
 export interface UpdatePreferencesRequest {

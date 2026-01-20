@@ -202,13 +202,15 @@ const checkAndNotify = async (sport, newMatches) => {
 
                         // NEW POST-FIX: Actually SAVE to Database for Persistence!
                         try {
-                            Notification.create({
-                                user: user._id,
-                                title: title,
-                                body: body,
-                                data: { matchId: match.id, sport: sport, type: 'match_update' },
-                                type: 'match_update'
-                            });
+                            if (title && body) {
+                                Notification.create({
+                                    user: user._id,
+                                    title: title,
+                                    body: body,
+                                    data: { matchId: match.id, sport: sport, type: 'match_update' },
+                                    type: 'match_update'
+                                });
+                            }
                         } catch (err) { console.error('Error saving notification to DB:', err.message); }
 
                         return true;
@@ -462,6 +464,7 @@ server.listen(PORT, '0.0.0.0', () => {
     console.log(' SportFlash Server Started');
     console.log('='.repeat(60));
     console.log(` Server running on http://localhost:${PORT}`);
+    console.log(` Network access: http://192.168.1.7:${PORT}`);
     console.log(` Health check: http://localhost:${PORT}/health`);
     console.log(` Socket.IO ready for connections`);
     console.log(` Environment: ${process.env.NODE_ENV}`);

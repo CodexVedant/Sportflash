@@ -97,7 +97,7 @@ export default function LiveMatchesWidget({ matches, loading, width, navigation,
                                     {...item}
                                     onPress={() => navigation.navigate('MatchDetail', { match: item })}
                                     onNotificationPress={onNotificationPress ? () => onNotificationPress(item) : undefined}
-                                    isSubscribed={preferences?.[`match_${item.id}`] === true}
+                                    isSubscribed={(preferences as any)?.followedMatches?.includes(item.id?.toString()) || (preferences as any)?.[`match_${item.id}`] === true}
                                 />
                             </View>
                         );

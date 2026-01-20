@@ -11,15 +11,17 @@ import { FilterPanel } from '@components/filter';
 import { NotificationBell, NotificationPanel } from '@components/notifications';
 import { useSelector } from 'react-redux';
 import TopBar from '@components/navigation/TopBar';
-import { useGetLiveMatchesQuery, useGetUpcomingMatchesQuery } from '@store/api/matchesApi';
+import { useGetLiveMatchesQuery, useGetUpcomingMatchesQuery, useGetFinishedMatchesQuery } from '@store/api/matchesApi';
 import { styles } from '@utils/style/MatchesScreen.styles';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '@app-types/navigation';
-import { useAppSelector } from '@hooks/redux';
+import { useAppSelector, useAppDispatch } from '@hooks/redux';
+import { updateUserPreferences } from '@store/slices/authSlice';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Matches'>;
 
 export default function MatchesScreen({ navigation }: Props) {
+    const dispatch = useAppDispatch();
     const { user } = useAppSelector(state => state.auth);
     const [activeSport, setActiveSport] = useState('cricket');
     const [activeTab, setActiveTab] = useState('Live');
@@ -45,14 +47,24 @@ export default function MatchesScreen({ navigation }: Props) {
 
     const upcomingMatches = allUpcomingMatches;
 
+    // Fetch finished matches (Results)
+    const { data: allFinishedMatches = [], isLoading: isLoadingFinished, error: finishedError, refetch: refetchFinished } = useGetFinishedMatchesQuery(
+        activeTab === 'Results' ? { sport: activeSport !== 'all' ? activeSport : undefined, days: 3 } : undefined,
+        { skip: activeTab !== 'Results' }
+    );
+
+    const finishedMatches = allFinishedMatches;
+
     // Determine which data to use - memoized to prevent infinite loops
     const allMatches = React.useMemo(() => {
-        return activeTab === 'Upcoming' ? upcomingMatches : liveMatches;
-    }, [activeTab, upcomingMatches, liveMatches]);
+        if (activeTab === 'Upcoming') return upcomingMatches;
+        if (activeTab === 'Results') return finishedMatches;
+        return liveMatches;
+    }, [activeTab, upcomingMatches, liveMatches, finishedMatches]);
 
-    const isLoading = activeTab === 'Upcoming' ? isLoadingUpcoming : isLoadingLive;
-    const apiError = activeTab === 'Upcoming' ? upcomingError : liveError;
-    const refetch = activeTab === 'Upcoming' ? refetchUpcoming : refetchLive;
+    const isLoading = activeTab === 'Upcoming' ? isLoadingUpcoming : (activeTab === 'Results' ? isLoadingFinished : isLoadingLive);
+    const apiError = activeTab === 'Upcoming' ? upcomingError : (activeTab === 'Results' ? finishedError : liveError);
+    const refetch = activeTab === 'Upcoming' ? refetchUpcoming : (activeTab === 'Results' ? refetchFinished : refetchLive);
 
     // Filter matches based on sport and status - use useMemo instead of useEffect
     const filteredMatches = React.useMemo(() => {
@@ -69,7 +81,9 @@ export default function MatchesScreen({ navigation }: Props) {
         } else if (activeTab === 'Upcoming') {
             matches = matches.filter(match => match.status === 'upcoming');
         } else if (activeTab === 'Results') {
-            matches = matches.filter(match => match.status === 'finished');
+            // Already filtered by backend, but ensure status check if needed
+            // matches = matches.filter(match => match.status === 'finished');
+            // Backend returns finished, so we just take them.
         }
 
         // Apply additional filters
@@ -130,6 +144,31 @@ export default function MatchesScreen({ navigation }: Props) {
         return Array.from(leaguesMap.values()).sort((a, b) => a.name.localeCompare(b.name));
     }, [allMatches, activeSport]);
 
+    const handleNotificationToggle = async (matchId: string) => {
+        if (!user) {
+            (navigation as any).navigate('Auth', { screen: 'Login' });
+            return;
+        }
+
+        const currentFollowed = user.preferences?.followedMatches || [];
+        const isFollowed = currentFollowed.includes(matchId);
+
+        let newFollowed;
+        if (isFollowed) {
+            newFollowed = currentFollowed.filter(id => id !== matchId);
+        } else {
+            newFollowed = [...currentFollowed, matchId];
+        }
+
+        try {
+            // Optimistic update locally could be done if we had a local slice for this, 
+            // but for now we wait for API response which updates user in Redux.
+            await dispatch(updateUserPreferences({ followedMatches: newFollowed })).unwrap();
+        } catch (error) {
+            console.error('Failed to update matched preference:', error);
+        }
+    };
+
     const handleApplyFilters = (newFilters: any) => {
         setFilters(newFilters);
         setFilterVisible(false);
@@ -160,38 +199,50 @@ export default function MatchesScreen({ navigation }: Props) {
         </View>
     );
 
-    const renderMatchItem = ({ item }: { item: any }) => (
-        <View style={{ marginBottom: 16 }}>
-            {item.sport === 'basketball' ? (
-                <BasketballMatchCard
-                    match={item}
-                    onPress={() => navigation.navigate('MatchDetail', { match: item })}
-                />
-            ) : (
-                <MatchCard
-                    sport={item.sport}
-                    status={item.status}
-                    displayStatus={item.displayStatus}
-                    league={item.league}
-                    homeTeam={item.homeTeam}
-                    awayTeam={item.awayTeam}
-                    score={item.status === 'finished' || item.status === 'live' ?
-                        (item.homeTeam.score && item.awayTeam.score ? `${item.homeTeam.score} - ${item.awayTeam.score}` : 'vs')
-                        : undefined
-                    }
-                    timer={
-                        item.sport === 'cricket'
-                            ? (item.cricketData?.overs ? `${item.cricketData.overs} Overs` : '')
-                            : (item.sport === 'basketball' && typeof item.timer === 'string' && item.timer.includes('Quarter'))
-                                ? item.timer
-                                : item.currentMinute || (item.scheduledAt ? new Date(item.scheduledAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '')
-                    }
-                    match={item} // Pass the full match object for flexibility if needed by new MatchCard
-                    onPress={() => navigation.navigate('MatchDetail', { match: item })}
-                />
-            )}
-        </View>
-    );
+    const renderMatchItem = React.useCallback(({ item }: { item: any }) => {
+        const isFinished = item.status === 'finished' || item.status === 'FT' || item.status === 'Ended';
+
+        const matchId = (item.id || item._id)?.toString();
+        const followed = user?.preferences?.followedMatches || [];
+        const isSubscribed = followed.includes(matchId);
+
+        return (
+            <View style={{ marginBottom: 16 }}>
+                {item.sport === 'basketball' ? (
+                    <BasketballMatchCard
+                        match={item}
+                        onPress={() => navigation.navigate('MatchDetail', { match: item })}
+                        onNotificationPress={!isFinished ? () => handleNotificationToggle(matchId) : undefined}
+                        isSubscribed={isSubscribed}
+                    />
+                ) : (
+                    <MatchCard
+                        sport={item.sport}
+                        status={item.status}
+                        displayStatus={item.displayStatus}
+                        league={item.league}
+                        homeTeam={item.homeTeam}
+                        awayTeam={item.awayTeam}
+                        score={item.status === 'finished' || item.status === 'live' ?
+                            (item.homeTeam.score && item.awayTeam.score ? `${item.homeTeam.score} - ${item.awayTeam.score}` : 'vs')
+                            : undefined
+                        }
+                        timer={
+                            item.sport === 'cricket'
+                                ? (item.cricketData?.overs ? `${item.cricketData.overs} Overs` : '')
+                                : (item.sport === 'basketball' && typeof item.timer === 'string' && item.timer.includes('Quarter'))
+                                    ? item.timer
+                                    : item.currentMinute || (item.scheduledAt ? new Date(item.scheduledAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '')
+                        }
+                        match={item}
+                        onPress={() => navigation.navigate('MatchDetail', { match: item })}
+                        onNotificationPress={!isFinished ? () => handleNotificationToggle(matchId) : undefined}
+                        isSubscribed={isSubscribed}
+                    />
+                )}
+            </View>
+        )
+    }, [navigation, user, handleNotificationToggle]);
 
     const unreadCount = notifications.filter(n => !n.read).length;
 
@@ -262,6 +313,7 @@ export default function MatchesScreen({ navigation }: Props) {
                     contentContainerStyle={styles.listContent}
                     stickySectionHeadersEnabled={true}
                     showsVerticalScrollIndicator={false}
+                    extraData={user?.preferences?.followedMatches} // More specific dependency
                     ListEmptyComponent={
                         <EmptyState
                             variant="noMatches"

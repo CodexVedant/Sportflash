@@ -12,7 +12,7 @@ export const validateEmail = (email: string): boolean => {
  * Send forgot password request
  */
 export const sendForgotPasswordRequest = async (email: string) => {
-    const response = await fetch(`${API_BASE_URL}/auth/forgot-password`, {
+    const response = await fetch(`${API_BASE_URL}/auth/forgotpassword`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',

@@ -37,7 +37,7 @@ export const meetsMinLength = (password: string): boolean => {
  * Send reset password request
  */
 export const sendResetPasswordRequest = async (resetToken: string, password: string) => {
-    const response = await fetch(`${API_BASE_URL}/auth/reset-password/${resetToken}`, {
+    const response = await fetch(`${API_BASE_URL}/auth/resetpassword/${resetToken}`, {
         method: 'PUT',
         headers: {
             'Content-Type': 'application/json',

@@ -11,60 +11,149 @@ const generateToken = (id) => {
 // @desc    Register user
 // @route   POST /api/auth/register
 // @access  Public
+const sendEmail = require('../utils/sendEmail');
+
+// @desc    Register user
+// @route   POST /api/auth/register
+// @access  Public
 exports.register = async (req, res) => {
     try {
         const { name, email, password } = req.body;
 
         console.log('📝 Registration attempt for:', email);
 
-        // Normalize email
         const normalizedEmail = email?.trim().toLowerCase();
-        console.log('   Normalized email:', normalizedEmail);
 
-        // Check if user exists
         const userExists = await User.findOne({ email: normalizedEmail });
         if (userExists) {
-            console.log('❌ User already exists:', email);
             return res.status(400).json({
                 success: false,
                 message: 'User already exists with this email'
             });
         }
 
-        console.log('✅ Creating new user:', email);
-        console.log('🔑 Password before hashing:', password);
+        // Generate 6-digit OTP
+        const otp = Math.floor(100000 + Math.random() * 900000).toString();
 
-        // Create user
+        const now = Date.now();
+        const otpExpire = new Date(now + 10 * 60 * 1000); // 10 minutes
+
+        console.log(`⏰ Time Debug: Now=${now} (${new Date(now).toISOString()}), Expire=${otpExpire.toISOString()}`);
+
         const user = await User.create({
             name,
             email: normalizedEmail,
-            password
+            password,
+            otp,
+            otpExpire,
+            isVerified: false
         });
 
-        console.log('✅ User created successfully:', email);
-        console.log('🔑 Password after hashing:', user.password);
-
-        // Generate token
-        const token = generateToken(user._id);
+        // Send OTP Email
+        try {
+            await sendEmail({
+                email: user.email,
+                subject: 'SportFlash - Verify Your Email',
+                message: `Your verification code is: ${otp}\n\nThis code expires in 10 minutes.`,
+                html: `<h1>Welcome to SportFlash! 🏏⚽🏀</h1>
+                       <p>Please verifying your email address using the code below:</p>
+                       <h2 style="color: #4F46E5; letter-spacing: 5px;">${otp}</h2>
+                       <p>This code expires in 10 minutes.</p>`
+            });
+            console.log(`✅ OTP sent to ${user.email}`);
+        } catch (err) {
+            console.error('❌ Email sending failed:', err);
+            // Optionally delete user or allow retry
+        }
 
         res.status(201).json({
             success: true,
-            data: {
-                user: {
-                    id: user._id,
-                    name: user.name,
-                    email: user.email,
-                    role: user.role
-                },
-                token
-            }
+            requireOtp: true,
+            email: user.email,
+            message: 'Verification code sent to email'
         });
+
     } catch (error) {
         console.error('🔴 Registration error:', error);
         res.status(500).json({
             success: false,
             message: error.message
         });
+    }
+};
+
+// @desc    Verify OTP
+// @route   POST /api/auth/verify-otp
+// @access  Public
+exports.verifyOtp = async (req, res) => {
+    try {
+        const { email, otp } = req.body;
+        console.log(`🔐 Verifying OTP for: ${email}, Code: ${otp}`);
+
+        const user = await User.findOne({ email: email?.toLowerCase() }).select('+otp +otpExpire');
+
+        if (!user) {
+            console.log('❌ Verify Failed: User not found');
+            return res.status(400).json({ success: false, message: 'User not found' });
+        }
+
+        console.log(`👤 User Found: ${user.email}, Stored OTP: ${user.otp}, Expire: ${user.otpExpire}`);
+
+        // If already verified, return success immediately (Handle double-clicks)
+        if (user.isVerified) {
+            console.log('✅ User already verified. Returning success.');
+            const token = generateToken(user._id);
+            return res.status(200).json({
+                success: true,
+                data: {
+                    user: {
+                        id: user._id,
+                        name: user.name,
+                        email: user.email,
+                        role: user.role,
+                        isVerified: true
+                    },
+                    token
+                }
+            });
+        }
+
+        if (user.otp !== otp) {
+            console.log(`❌ Verify Failed: OTP Mismatch (Expected: ${user.otp}, Received: ${otp})`);
+            return res.status(400).json({ success: false, message: 'Invalid verification code' });
+        }
+
+        if (user.otpExpire < Date.now()) {
+            console.log(`❌ Verify Failed: OTP Expired. Now=${Date.now()}, Expire=${user.otpExpire.getTime()}`);
+            return res.status(400).json({ success: false, message: 'Verification code expired' });
+        }
+
+        // Validate success
+        user.isVerified = true;
+        user.otp = null;       // Changed from undefined
+        user.otpExpire = null; // Changed from undefined
+        await user.save();
+
+        // Generate Token
+        const token = generateToken(user._id);
+
+        res.status(200).json({
+            success: true,
+            data: {
+                user: {
+                    id: user._id,
+                    name: user.name,
+                    email: user.email,
+                    role: user.role,
+                    isVerified: true
+                },
+                token
+            }
+        });
+
+    } catch (error) {
+        console.error('🔴 Verification error:', error);
+        res.status(500).json({ success: false, message: error.message });
     }
 };
 
@@ -203,6 +292,24 @@ exports.updatePreferences = async (req, res) => {
         if (notifications !== undefined) user.preferences.notifications = notifications;
         if (req.body.followedMatches) user.preferences.followedMatches = req.body.followedMatches;
 
+        // Handle Global Settings (Email, Sports Toggles)
+        if (req.body.globalSettings) {
+            // Merge deeper to avoid overwriting unrelated nested keys if possible, 
+            // but for now simple overwrite of keys is fine if frontend sends full object or we merge manually.
+            // Mongoose mixed types can be tricky.
+            // Let's assume frontend sends the partials it wants to update, 
+            // but we should probably merge with existing to be safe?
+            // Actually, frontend sends: { ...globalSettings, [key]: newValue } so it sends the "new full state".
+            // So overwriting is safe IF frontend sends the complete object.
+            // But if frontend only sends partial, we might lose data. 
+            // My frontend code sends: `const newGlobalSettings = { ...globalSettings, [key]: newValue };` (FULL OBJECT)
+            // So user.preferences.globalSettings = req.body.globalSettings is safe.
+            user.preferences.globalSettings = {
+                ...user.preferences.globalSettings, // Spread existing (mongoose object) to be safe
+                ...req.body.globalSettings
+            };
+        }
+
         console.log('✅ Saving updated preferences for user:', user._id);
         await user.save();
 
@@ -251,3 +358,87 @@ exports.logout = async (req, res) => {
         res.status(500).json({ success: false, message: error.message });
     }
 };
+
+// @desc    Forgot Password - Send Reset Email
+// @route   POST /api/auth/forgotpassword
+exports.forgotPassword = async (req, res) => {
+    try {
+        const { email } = req.body;
+        const user = await User.findOne({ email });
+
+        if (!user) {
+            return res.status(404).json({ success: false, message: 'User not found' });
+        }
+
+        // Get Reset Token
+        const resetToken = user.getResetPasswordToken();
+
+        await user.save({ validateBeforeSave: false });
+
+        // Create Reset URL
+        // Deep Link for Mobile App (sportflash://reset-password/{token})
+        const resetUrl = `sportflash://reset-password/${resetToken}`;
+
+        const message = `
+            You have requested a password reset. 
+            Please make a PUT request to: \n\n ${resetUrl} \n\n 
+            (Or paste this token in the app: ${resetToken})
+        `;
+
+        try {
+            await sendEmail({
+                email: user.email,
+                subject: 'Password Reset Token',
+                message
+            });
+
+            res.status(200).json({ success: true, data: 'Email sent' });
+        } catch (err) {
+            console.error('Email Send Error:', err);
+            user.resetPasswordToken = undefined;
+            user.resetPasswordExpire = undefined;
+            await user.save({ validateBeforeSave: false });
+            return res.status(500).json({ success: false, message: 'Email could not be sent' });
+        }
+    } catch (error) {
+        console.error('Forgot Password Error:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+};
+
+// @desc    Reset Password
+// @route   PUT /api/auth/resetpassword/:resettoken
+exports.resetPassword = async (req, res) => {
+    try {
+        const crypto = require('crypto');
+        const resetPasswordToken = crypto
+            .createHash('sha256')
+            .update(req.params.resettoken)
+            .digest('hex');
+
+        const user = await User.findOne({
+            resetPasswordToken,
+            resetPasswordExpire: { $gt: Date.now() }
+        });
+
+        if (!user) {
+            return res.status(400).json({ success: false, message: 'Invalid token' });
+        }
+
+        // Set new password
+        user.password = req.body.password;
+        user.resetPasswordToken = undefined;
+        user.resetPasswordExpire = undefined;
+        await user.save();
+
+        res.status(201).json({
+            success: true,
+            data: 'Password updated success'
+        });
+    } catch (error) {
+        console.error('Reset Password Error:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+};
+
+// End of file

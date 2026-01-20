@@ -20,6 +20,7 @@ const { protect, authorize } = require('../middleware/auth');
 // Public routes
 router.get('/', getMatches);
 router.get('/live', getLiveMatches);
+router.get('/finished', require('../controllers/matchController').getFinishedMatches);
 router.get('/upcoming', getUpcomingMatches);
 router.post('/following', getFollowedMatches); // Using POST to send large array of teams
 router.get('/leagues', getLeagues);

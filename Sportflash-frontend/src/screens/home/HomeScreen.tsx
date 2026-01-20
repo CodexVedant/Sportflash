@@ -9,6 +9,7 @@ import { useUpdatePreferencesMutation } from '@store/api/usersApi';
 import { useSelector, useDispatch } from 'react-redux';
 import { NotificationBell, NotificationPanel, NotificationOptionsModal } from '@components/notifications';
 import { updatePreference } from '@store/slices/notificationsSlice';
+import { updateUserPreferences, loadUser } from '@store/slices/authSlice';
 import { useToast } from '@context/ToastContext';
 import { Match } from '@app-types/models/match';
 import { initSocketListeners, forceRefreshScores } from '@store/thunks/socketThunks';
@@ -135,9 +136,9 @@ export default function HomeScreen({ navigation }: Props) {
 
         // Send ONE API Call
         if (Object.keys(apiUpdates).length > 0) {
-            updatePreferencesApi(apiUpdates)
+            dispatch(updateUserPreferences(apiUpdates))
                 .unwrap()
-                .then(() => console.log('✅ Preferences synced to backend:', Object.keys(apiUpdates)))
+                .then(() => console.log('✅ Preferences synced to backend & Redux:', Object.keys(apiUpdates)))
                 .catch((err: any) => console.error('❌ Failed to sync preferences:', err));
         }
 
@@ -207,8 +208,9 @@ export default function HomeScreen({ navigation }: Props) {
 
         const subscription = AppState.addEventListener('change', nextAppState => {
             if (nextAppState === 'active') {
-                console.log('📱 App has come to the foreground! Refreshing scores...');
+                console.log('📱 App has come to the foreground! Refreshing scores & user profile...');
                 dispatch(forceRefreshScores());
+                dispatch(loadUser()); // Sync user profile (notifications etc)
             }
         });
 
@@ -372,7 +374,7 @@ export default function HomeScreen({ navigation }: Props) {
                             <View style={{ height: 80 }} />
                         </>
                     }
-                    preferences={preferences}
+                    preferences={user?.preferences as any}
                     onNotificationPress={handleBellPress}
                 />
             </View>

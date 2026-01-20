@@ -181,6 +181,107 @@ exports.getUpcomingMatches = async (req, res) => {
 };
 
 /**
+ * @desc    Get finished matches (Results)
+ * @route   GET /api/matches/finished
+ * @access  Public
+ */
+exports.getFinishedMatches = async (req, res) => {
+    try {
+        const { sport, days = 3 } = req.query; // Default last 3 days
+
+        // Generate cache key
+        const cacheKey = cacheService.generateKey('finished', { sport: sport || 'all', days });
+
+        // Check cache first
+        const cachedData = cacheService.get(cacheKey);
+        if (cachedData) {
+            return res.json(cachedData);
+        }
+
+        let finishedMatches = [];
+        const today = new Date();
+        const pastDates = [];
+
+        // Generate array of past dates (Yesterday, Day Before, etc.)
+        for (let i = 1; i <= parseInt(days); i++) {
+            const d = new Date(today);
+            d.setDate(d.getDate() - i);
+            pastDates.push(d.toISOString().split('T')[0]);
+        }
+
+        // Helper to fetch for a Single Date
+        const fetchForDate = async (targetDate) => {
+            if (sport) {
+                // Specific Sport
+                const rawMatches = await allSportsApi.getFixturesBySport(sport, targetDate);
+                if (rawMatches) {
+                    switch (sport.toLowerCase()) {
+                        case 'football': case 'soccer': return rawMatches.map(mapFootballMatch).filter(m => m !== null);
+                        case 'basketball': return rawMatches.map(mapBasketballMatch).filter(m => m !== null);
+                        case 'cricket': return rawMatches.map(mapCricketMatch).filter(m => m !== null);
+                    }
+                }
+            } else {
+                // All Sports
+                const [football, basketball, cricket] = await Promise.allSettled([
+                    allSportsApi.getFootballFixtures({ date: targetDate }),
+                    allSportsApi.getBasketballFixtures({ date: targetDate }),
+                    allSportsApi.getCricketFixtures({ date: targetDate })
+                ]);
+
+                return [
+                    ...(football.status === 'fulfilled' && football.value ? football.value.map(mapFootballMatch).filter(m => m !== null) : []),
+                    ...(basketball.status === 'fulfilled' && basketball.value ? basketball.value.map(mapBasketballMatch).filter(m => m !== null) : []),
+                    ...(cricket.status === 'fulfilled' && cricket.value ? cricket.value.map(mapCricketMatch).filter(m => m !== null) : [])
+                ];
+            }
+            return [];
+        };
+
+        // Fetch for all past dates in parallel
+        const results = await Promise.all(pastDates.map(date => fetchForDate(date)));
+        finishedMatches = results.flat();
+
+        // Filter only Finished
+        finishedMatches = finishedMatches.filter(m =>
+            m.status === 'finished' ||
+            m.status === 'FT' ||
+            m.status === 'Ended' ||
+            m.status?.toLowerCase().includes('won') // Cricket sometimes has "India won by..."
+        );
+
+        // Sort by date/time descending (Most recent first)
+        finishedMatches.sort((a, b) => {
+            const dateA = new Date(a.date || a.startTime || 0);
+            const dateB = new Date(b.date || b.startTime || 0);
+            return dateB - dateA;
+        });
+
+        console.log(`🏁 getFinishedMatches: Found ${finishedMatches.length} results`);
+
+        const response = {
+            success: true,
+            count: finishedMatches.length,
+            days: days,
+            data: finishedMatches
+        };
+
+        // Cache the response
+        const ttl = parseInt(process.env.CACHE_TTL_FINISHED) || 1800;
+        cacheService.set(cacheKey, response, ttl);
+
+        res.json(response);
+    } catch (error) {
+        console.error('Error in getFinishedMatches:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error fetching finished matches',
+            error: error.message
+        });
+    }
+};
+
+/**
  * @desc    Get live matches
  * @route   GET /api/matches/live
  * @access  Public

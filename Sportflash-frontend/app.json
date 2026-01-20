@@ -3,6 +3,7 @@
     "name": "Sportflash-frontend",
     "slug": "Sportflash-frontend",
     "version": "1.0.0",
+    "scheme": "sportflash",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "userInterfaceStyle": "dark",

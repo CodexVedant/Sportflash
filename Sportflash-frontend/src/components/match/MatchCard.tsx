@@ -86,7 +86,7 @@ const MatchCard: React.FC<MatchCardProps> = ({
                             <Ionicons
                                 name={isSubscribed ? "notifications" : "notifications-outline"}
                                 size={20}
-                                color={isSubscribed ? theme.colors.warning : theme.colors.textMuted}
+                                color={isSubscribed ? '#FFD700' : theme.colors.textMuted}
                             />
                         </TouchableOpacity>
                     )}

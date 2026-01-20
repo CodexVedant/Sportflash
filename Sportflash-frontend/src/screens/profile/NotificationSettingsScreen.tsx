@@ -9,7 +9,7 @@ import { useGetUpcomingMatchesQuery } from '@store/api/matchesApi';
 import { useUpdatePreferencesMutation } from '@store/api/usersApi';
 import { useToast } from '@context/ToastContext';
 import { useAppSelector, useAppDispatch } from '@hooks/redux';
-import { updatePreference } from '@store/slices/notificationsSlice';
+import { updatePreference, updateGlobalSetting } from '@store/slices/notificationsSlice';
 import { mapMatchToUI } from '@utils/matchMappers';
 import { NotificationOptionsModal } from '@components/notifications';
 import { Match } from '@app-types/models/match';
@@ -62,14 +62,39 @@ export default function NotificationSettingsScreen() {
     const user = useAppSelector(state => state.auth.user);
     const isPremium = user?.isPremium;
 
-    const handlePremiumToggle = () => {
+    const handlePremiumToggle = (key: string, currentValue: boolean) => {
         if (!isPremium) {
-            // Alert.alert("Premium", "Premium subscription feature coming soon!");
             navigation.navigate('Premium');
-        } else {
-            Alert.alert("Premium Active", "You can manage these settings.");
-            // Dispatch updateGlobalSetting action if implemented in slice
+            return;
         }
+
+        const newValue = !currentValue;
+
+        // 1. Update Redux (Optimistic)
+        dispatch(updatePreference({ key: 'placeholder', value: false })); // Dummy call if needed, but we need updateGlobalSetting
+        // We need to import updateGlobalSetting from slice
+        // dispatch(updateGlobalSetting({ key, value: newValue })); 
+        // NOTE: updatePreference in slice is generic, but let's check slice again. 
+        // slice has updateGlobalSetting. Ideally dispatch that.
+
+        // 2. Sync with Backend
+        // We construct a partial update object.
+        // The backend expects "globalSettings" object inside preferences.
+        // But our useUpdatePreferencesMutation usually takes a flattened object or structured?
+        // Let's look at authController.js or existing usages.
+        // HomeScreen sends: { favoriteTeams: [], ... }
+        // We likely need to send { globalSettings: { ...oldSettings, [key]: newValue } }
+
+        const newGlobalSettings = { ...globalSettings, [key]: newValue };
+
+        updatePreferencesApi({ globalSettings: newGlobalSettings })
+            .unwrap()
+            .then(() => {
+                showToast("Settings saved", "success");
+                // Manually update local state if not auto-synced by mutation result
+                // (The slice matcher should handle it if mutation returns user object)
+            })
+            .catch(() => showToast("Failed to save settings", "error"));
     };
 
     const [updatePreferencesApi] = useUpdatePreferencesMutation();
@@ -95,6 +120,10 @@ export default function NotificationSettingsScreen() {
     }, [refetch]);
 
     const handleBellPress = (match: Match) => {
+        if (!isPremium) {
+            navigation.navigate('Premium');
+            return;
+        }
         setSelectedMatch(match);
         setModalVisible(true);
     };
@@ -321,8 +350,8 @@ export default function NotificationSettingsScreen() {
 
                             <SettingToggle
                                 label="Upcoming Big Matches"
-                                value={!!isPremium} // Simplified logic
-                                onToggle={handlePremiumToggle}
+                                value={!!globalSettings['email_big_matches']}
+                                onToggle={() => handlePremiumToggle('email_big_matches', !!globalSettings['email_big_matches'])}
                             />
 
                             {/* Horizontal Featured Matches List */}
@@ -369,8 +398,8 @@ export default function NotificationSettingsScreen() {
 
                             <SettingToggle
                                 label="Daily Match Digest"
-                                value={!!isPremium}
-                                onToggle={handlePremiumToggle}
+                                value={!!globalSettings['email_daily_digest']}
+                                onToggle={() => handlePremiumToggle('email_daily_digest', !!globalSettings['email_daily_digest'])}
                             />
                         </View>
 

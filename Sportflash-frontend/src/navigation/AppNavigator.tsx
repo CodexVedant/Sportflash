@@ -33,6 +33,7 @@ import LeagueDetailScreen from '@screens/series/LeagueDetailScreen';
 import TeamProfileScreen from '@screens/team/TeamProfileScreen';
 import UpcomingMatchesScreen from '@screens/matches/UpcomingMatchesScreen';
 import PremiumScreen from '@screens/profile/PremiumScreen';
+import OtpScreen from '@screens/auth/OtpScreen';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -49,7 +50,7 @@ const NavigationTheme: NavigationThemeType = {
 
 export default function AppNavigator() {
     const dispatch = useAppDispatch();
-    const { loading } = useAppSelector(state => state.auth);
+    const { isInitialized, user } = useAppSelector(state => state.auth);
 
     useEffect(() => {
         async function prepare() {
@@ -116,7 +117,7 @@ export default function AppNavigator() {
         return () => subscription.remove();
     }, []);
 
-    if (loading) {
+    if (!isInitialized) {
         return (
             <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: theme.colors.background }}>
                 <ActivityIndicator size="large" color={theme.colors.primary} />
@@ -124,8 +125,18 @@ export default function AppNavigator() {
         );
     }
 
+    const linking = {
+        prefixes: ['sportflash://', 'https://sportflash.app'],
+        config: {
+            screens: {
+                ResetPassword: 'reset-password/:resetToken',
+                // other screens if needed
+            }
+        }
+    };
+
     return (
-        <NavigationContainer theme={NavigationTheme} ref={navigationRef}>
+        <NavigationContainer theme={NavigationTheme} ref={navigationRef} linking={linking}>
             <StatusBar style="light" />
             <Stack.Navigator
                 screenOptions={{
@@ -133,11 +144,17 @@ export default function AppNavigator() {
                     contentStyle: { backgroundColor: theme.colors.background }
                 }}
             >
+                {/* 🏠 Main Entry Point (Accessible to Guests) */}
                 <Stack.Screen name="Main" component={MainNavigator} />
+
+                {/* 🔐 Auth Screens */}
                 <Stack.Screen name="Login" component={LoginScreen} />
                 <Stack.Screen name="Register" component={RegisterScreen} />
                 <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
                 <Stack.Screen name="ResetPassword" component={ResetPasswordScreen} />
+                <Stack.Screen name="OtpVerification" component={OtpScreen} />
+
+                {/* 🏆 App Screens */}
                 <Stack.Screen name="MatchDetail" component={MatchDetailScreen} />
                 <Stack.Screen name="Series" component={SeriesScreen} />
                 <Stack.Screen name="Following" component={FollowingScreen} />

@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, AppState } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { theme } from '@utils/theme';
 import Sidebar from '@components/navigation/Sidebar';
@@ -7,10 +7,27 @@ import { Ionicons } from '@expo/vector-icons';
 import MatchesTab from './MatchesTab';
 import TeamsTab from './TeamsTab';
 import PlayersTab from './PlayersTab';
+import { useAppDispatch } from '@hooks/redux';
+import { loadUser } from '@store/slices/authSlice';
 
 export default function FollowingScreen() {
+    const dispatch = useAppDispatch();
     const [sidebarVisible, setSidebarVisible] = useState(false);
     const [activeTab, setActiveTab] = useState('Matches');
+
+    // Reload user profile when app comes to foreground
+    useEffect(() => {
+        const subscription = AppState.addEventListener('change', nextAppState => {
+            if (nextAppState === 'active') {
+                console.log('📱 Following screen: Refreshing user profile...');
+                dispatch(loadUser());
+            }
+        });
+
+        return () => {
+            subscription.remove();
+        };
+    }, [dispatch]);
 
     return (
         <SafeAreaView style={styles.container}>
