@@ -1,9 +1,0 @@
-﻿src/screens/matches/MatchesScreen.tsx(297,17): error TS2322: Type '{ id: number; type: string; title: string; message: string; timestamp: Date; read: boolean; }[]' is not assignable to type 'NotificationItem[]'.
-  Type '{ id: number; type: string; title: string; message: string; timestamp: Date; read: boolean; }' is not assignable to type 'NotificationItem'.
-    Types of property 'timestamp' are incompatible.
-      Type 'Date' is not assignable to type 'string'.
-src/screens/profile/ProfileScreen.tsx(129,76): error TS2339: Property 'favoriteSports' does not exist on type 'UserPreferences'.
-src/screens/standings/StandingsScreen.tsx(298,17): error TS2322: Type '{ id: number; type: string; title: string; message: string; timestamp: Date; read: boolean; }[]' is not assignable to type 'NotificationItem[]'.
-  Type '{ id: number; type: string; title: string; message: string; timestamp: Date; read: boolean; }' is not assignable to type 'NotificationItem'.
-    Types of property 'timestamp' are incompatible.
-      Type 'Date' is not assignable to type 'string'.
