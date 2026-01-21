@@ -222,6 +222,7 @@ exports.login = async (req, res) => {
                     name: user.name,
                     email: user.email,
                     role: user.role,
+                    isPremium: user.isPremium,
                     preferences: user.preferences
                 },
                 token
@@ -491,6 +492,27 @@ exports.resetPassword = async (req, res) => {
     } catch (error) {
         console.error('Reset Password Error:', error);
         res.status(500).json({ success: false, error: error.message });
+    }
+};
+
+// @desc    Upgrade to Premium (Simulated)
+// @route   POST /api/auth/subscribe
+// @access  Private
+exports.subscribe = async (req, res) => {
+    try {
+        // In a real app, verify Stripe/Payment Gateway signature here
+        const user = await User.findByIdAndUpdate(req.user.id, { isPremium: true }, { new: true });
+
+        console.log('💎 User upgraded to PREMIUM:', user.email);
+
+        res.status(200).json({
+            success: true,
+            data: user,
+            message: 'Premium subscription activated'
+        });
+    } catch (error) {
+        console.error('Subscribe Error:', error);
+        res.status(500).json({ success: false, message: 'Subscription failed' });
     }
 };
 

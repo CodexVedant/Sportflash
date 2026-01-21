@@ -46,6 +46,7 @@ export default function HomeScreen({ navigation }: Props) {
             navigation.navigate('Login');
             return;
         }
+
         setSelectedMatch(match);
         setModalVisible(true);
     };
@@ -157,7 +158,6 @@ export default function HomeScreen({ navigation }: Props) {
     const { isLoading: isMatchesLoading } = useGetLiveMatchesQuery(undefined);
 
     // Derived State (Filtering)
-    // Derived State (Filtering)
     const matches = React.useMemo(() => {
         const liveMatchesArray = Array.isArray(allLiveMatches) ? allLiveMatches : [];
         let live = liveMatchesArray
@@ -198,8 +198,6 @@ export default function HomeScreen({ navigation }: Props) {
     const loading = isMatchesLoading && matches.length === 0;
 
     // Initialize Socket Listeners & AppState handling
-
-    // Initialize Socket Listeners & AppState handling
     useEffect(() => {
         dispatch(initSocketListeners());
 
@@ -216,7 +214,6 @@ export default function HomeScreen({ navigation }: Props) {
 
         return () => {
             subscription.remove();
-            // dispatch(stopSocketListeners()); // Optional
         };
     }, [dispatch]);
 
@@ -247,11 +244,6 @@ export default function HomeScreen({ navigation }: Props) {
                     console.log('Notification pressed:', notification);
                     setNotificationVisible(false);
 
-                    // Strategy:
-                    // 1. Try Snapshot (Best for closed matches)
-                    // 2. Try Live Store (Best for currently live matches if snapshot missing)
-                    // 3. Fallback to ID-based fetch (might fail if network issue)
-
                     let targetMatch = notification.matchSnapshot;
 
                     if (!targetMatch && notification.matchId) {
@@ -264,18 +256,10 @@ export default function HomeScreen({ navigation }: Props) {
                         }
                     }
 
-                    if (targetMatch) {
-                        // Ensure mapped to UI format if needed (MatchDetail expects full object)
-                        // But usually Live store data is raw? No, MatchDetail handles raw 'fetchedMatch' structure usually.
-                        // Wait, MatchDetail expects 'match' param. 
-                        // LiveMatchesWidget passes mapped data?
-                        // Let's pass what we have. MatchDetail handles it.
-                    }
-
                     navigation.navigate('MatchDetail', {
                         matchId: notification.matchId,
                         sport: notification.sport || 'football',
-                        match: targetMatch // 🚀 Pass Data (Snapshot or Live Lookup)
+                        match: targetMatch
                     });
                 }}
             />
@@ -310,7 +294,6 @@ export default function HomeScreen({ navigation }: Props) {
                 </View>
             </View>
 
-            {/* Sport Tabs */}
             {/* Sport Tabs */}
             <TopBar
                 activeTab={activeSport}
@@ -374,11 +357,10 @@ export default function HomeScreen({ navigation }: Props) {
                             <View style={{ height: 80 }} />
                         </>
                     }
-                    preferences={user?.preferences as any}
+                    preferences={preferences}
                     onNotificationPress={handleBellPress}
                 />
             </View>
         </SafeAreaView>
     );
 }
-

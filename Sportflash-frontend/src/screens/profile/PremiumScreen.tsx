@@ -4,7 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '@hooks/useTheme';
 import { useNavigation } from '@react-navigation/native';
 import { useAppDispatch } from '@hooks/redux';
-import { setPremiumStatus } from '@store/slices/authSlice';
+import { setPremiumStatus, subscribeToPremium } from '@store/slices/authSlice';
 import { Ionicons } from '@expo/vector-icons';
 import BackButton from '@components/common/BackButton';
 import { Theme } from '@utils/theme';
@@ -16,18 +16,24 @@ export default function PremiumScreen() {
     const [loading, setLoading] = useState(false);
 
     const dispatch = useAppDispatch();
-    const handleSubscribe = () => {
+    const handleSubscribe = async () => {
         setLoading(true);
-        // Simulate payment processing
-        setTimeout(() => {
+        try {
+            // Call Backend API
+            await dispatch(subscribeToPremium()).unwrap();
+
             setLoading(false);
-            dispatch(setPremiumStatus(true)); // ACTIVATE PREMIUM
             setPaymentSuccess(true);
+
             // Auto close after 2 seconds
             setTimeout(() => {
                 navigation.goBack();
             }, 2500);
-        }, 2000);
+        } catch (error) {
+            setLoading(false);
+            Alert.alert("Error", "Subscription failed. Please try again.");
+            console.error(error);
+        }
     };
 
     if (paymentSuccess) {

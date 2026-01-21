@@ -12,7 +12,8 @@ const {
     logout,
     forgotPassword,
     verifyResetOtp, // New
-    resetPassword
+    resetPassword,
+    subscribe // New
 } = require('../controllers/authController');
 const { protect } = require('../middleware/auth');
 
@@ -43,5 +44,6 @@ router.get('/me', protect, getMe);
 router.put('/preferences', protect, updatePreferences);
 router.put('/pushtoken', protect, savePushToken);
 router.post('/logout', protect, logout);
+router.post('/subscribe', protect, subscribe); // New Endpoint
 
 module.exports = router;

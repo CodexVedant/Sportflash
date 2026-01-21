@@ -63,6 +63,9 @@ const notificationsSlice = createSlice({
                 }
 
                 if (user && user.preferences) {
+                    // RESET Preferences to ensure removals are reflected
+                    state.preferences = {};
+
                     // 1. Sync Followed Matches
                     if (user.preferences.followedMatches) {
                         user.preferences.followedMatches.forEach((matchId: string) => {
@@ -73,6 +76,26 @@ const notificationsSlice = createSlice({
                     // 2. Sync Global Notifications Toggle
                     if (user.preferences.notifications !== undefined) {
                         state.globalSettings['notifications'] = user.preferences.notifications;
+                    }
+
+                    // 3. Sync Favorite Teams (Essential for Match Bell)
+                    if (user.preferences.favoriteTeams) {
+                        console.log('🔄 NotificationSlice: Syncing Teams:', user.preferences.favoriteTeams.length);
+                        user.preferences.favoriteTeams.forEach((team: any) => {
+                            const name = typeof team === 'string' ? team : team.name;
+                            if (name) {
+                                state.preferences[`team_${name}`] = true;
+                                console.log(`   + Set Pref: team_${name}`);
+                            }
+                        });
+                    }
+
+                    // 4. Sync Favorite Leagues
+                    if (user.preferences.favoriteLeagues) {
+                        user.preferences.favoriteLeagues.forEach((league: any) => {
+                            const name = typeof league === 'string' ? league : league.name;
+                            if (name) state.preferences[`series_${name}`] = true;
+                        });
                     }
                 }
             }

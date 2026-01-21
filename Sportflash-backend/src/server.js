@@ -178,29 +178,21 @@ const checkAndNotify = async (sport, newMatches) => {
             }
 
             if (shouldNotify) {
-                // LOG TO FILE FOR DEBUGGING
-                const fs = require('fs');
-                const logMsg = `[${new Date().toISOString()}] 🔔 PUSH TRIGGERED: ${title} | Body: ${body}\n`;
-                fs.appendFileSync('server_debug.log', logMsg);
+                // await sendPushNotification(...)
+                // console.log(`🔔 PUSH TRIGGERED: ${title}`);
 
                 await sendPushNotification(title, body, { matchId: match.id, sport: sport, type: 'match_update' }, (user) => {
-                    const logPrefix = `[${new Date().toISOString()}]   - User ${user.email}`;
-
                     // 1. Check Global Notification Setting
                     if (!user.preferences?.notifications) {
-                        fs.appendFileSync('server_debug.log', `${logPrefix} BLOCKED (Global OFF)\n`);
                         return false;
                     }
 
                     // 2. STRICT: Check if user follows this specific match
-                    // We treat followedMatches as the "Whitelist". If not in list, NO notification.
                     const matchIdStr = String(match.id);
                     const followedCallback = user.preferences?.followedMatches || [];
 
                     if (followedCallback.includes(matchIdStr)) {
-                        fs.appendFileSync('server_debug.log', `${logPrefix} ALLOWED (Followed Match: ${matchIdStr})\n`);
-
-                        // NEW POST-FIX: Actually SAVE to Database for Persistence!
+                        // SAVE to Database for Persistence
                         try {
                             if (title && body) {
                                 Notification.create({
@@ -216,7 +208,6 @@ const checkAndNotify = async (sport, newMatches) => {
                         return true;
                     }
 
-                    fs.appendFileSync('server_debug.log', `${logPrefix} BLOCKED (Not Followed)\n`);
                     return false;
                 });
 
@@ -312,14 +303,8 @@ app.use(express.urlencoded({ extended: true }));
 app.use(morgan('dev'));
 
 // Global Request Logger
+// Global Request Logger - Removed
 app.use((req, res, next) => {
-    const fs = require('fs');
-    const path = require('path');
-    const logFile = path.resolve('debug_requests.log');
-    const msg = `[${new Date().toISOString()}] ${req.method} ${req.url}\n`;
-    try {
-        fs.appendFileSync(logFile, msg);
-    } catch (e) { }
     next();
 });
 

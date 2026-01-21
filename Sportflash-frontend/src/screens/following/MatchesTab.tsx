@@ -5,14 +5,16 @@ import { useGetFollowedMatchesMutation } from '@store/api/matchesApi';
 import { theme } from '@utils/theme';
 import { useToast } from '@context/ToastContext';
 import MatchCard from '@components/match/MatchCard';
-import { useFocusEffect } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
-import { NotificationOptionsModal } from '@components/notifications';
+import { updateUserPreferences } from '@store/slices/authSlice';
 import { updatePreference } from '@store/slices/notificationsSlice';
+import { NotificationOptionsModal } from '@components/notifications';
 import { Match } from '@app-types/models/match';
 
 export default function MatchesTab() {
     const dispatch = useAppDispatch();
+    const navigation = useNavigation();
     const { showToast } = useToast();
     const user = useAppSelector(state => state.auth.user);
     const preferences = useAppSelector(state => state.notifications.preferences || {});
@@ -22,12 +24,22 @@ export default function MatchesTab() {
     const [selectedMatch, setSelectedMatch] = useState<Match | null>(null);
 
     const handleBellPress = (match: Match) => {
+        if (!user) return;
+
+        if (!user.isPremium) {
+            showToast("Upgrade to Premium to enable match notifications", "info");
+            (navigation as any).navigate('Premium');
+            return;
+        }
+
         setSelectedMatch(match);
         setModalVisible(true);
     };
 
     const handleSavePreferences = (newPrefs: any) => {
         if (!selectedMatch) return;
+
+        // 1. Update Redux (Local)
         const updates = {
             [`match_${selectedMatch.id}`]: newPrefs.match,
             [`series_${selectedMatch.league}`]: newPrefs.series,
@@ -37,11 +49,65 @@ export default function MatchesTab() {
         Object.entries(updates).forEach(([key, value]) => {
             dispatch(updatePreference({ key, value: Boolean(value) }));
         });
+
+        // 2. Sync with Backend
+        let apiUpdates: any = {};
+
+        // Followed Matches
+        const currentFollowed = user?.preferences?.followedMatches || [];
+        const matchIdStr = String(selectedMatch.id);
+        let newFollowed = [...currentFollowed];
+
+        if (newPrefs.match) {
+            if (!newFollowed.includes(matchIdStr)) newFollowed.push(matchIdStr);
+        } else {
+            newFollowed = newFollowed.filter(id => id !== matchIdStr);
+        }
+        apiUpdates.followedMatches = newFollowed;
+
+        // Favorite Teams
+        const currentTeams = user?.preferences?.favoriteTeams || [];
+
+        let newTeams = currentTeams.filter((t: any) => {
+            const tName = typeof t === 'string' ? t : t.name;
+            return tName !== selectedMatch.homeTeam?.name && tName !== selectedMatch.awayTeam?.name;
+        });
+
+        if (newPrefs.homeTeam && selectedMatch.homeTeam) {
+            const homeId = selectedMatch.homeTeam.id || (selectedMatch.homeTeam as any)._id; // Safe access
+            newTeams.push({ name: selectedMatch.homeTeam.name, id: homeId });
+        }
+        if (newPrefs.awayTeam && selectedMatch.awayTeam) {
+            const awayId = selectedMatch.awayTeam.id || (selectedMatch.awayTeam as any)._id; // Safe access
+            newTeams.push({ name: selectedMatch.awayTeam.name, id: awayId });
+        }
+        apiUpdates.favoriteTeams = newTeams;
+
+        // Favorite Leagues (Series)
+        const currentLeagues = user?.preferences?.favoriteLeagues || [];
+        let newLeagues = currentLeagues.filter((l: any) => {
+            const lName = typeof l === 'string' ? l : l.name;
+            return lName !== selectedMatch.league;
+        });
+
+        if (newPrefs.series && selectedMatch.league) {
+            newLeagues.push({ name: selectedMatch.league });
+        }
+        apiUpdates.favoriteLeagues = newLeagues;
+
+        dispatch(updateUserPreferences(apiUpdates));
         showToast("Preferences updated", "success");
     };
 
-    const isSubscribedToMatch = (matchId: string) => {
-        return preferences[`match_${matchId}`] === true;
+    const isSubscribedToMatch = (match: Match) => {
+        const matchId = String(match.id);
+
+        // Using Notification Preferences directly
+        const isMatchEnabled = preferences[`match_${matchId}`];
+        const isHomeTeamEnabled = preferences[`team_${match.homeTeam?.name}`];
+        const isAwayTeamEnabled = preferences[`team_${match.awayTeam?.name}`];
+
+        return isMatchEnabled || isHomeTeamEnabled || isAwayTeamEnabled;
     };
 
     const favoriteTeams = user?.preferences?.favoriteTeams || [];
@@ -79,7 +145,7 @@ export default function MatchesTab() {
                     {...item}
                     league={leagueName}
                     onNotificationPress={() => handleBellPress(item)}
-                    isSubscribed={isSubscribedToMatch(String(item.id))}
+                    isSubscribed={isSubscribedToMatch(item)}
                 />
             </View>
         );
@@ -105,7 +171,9 @@ export default function MatchesTab() {
                 match={selectedMatch}
                 onClose={() => setModalVisible(false)}
                 onSave={handleSavePreferences}
-                initialPreferences={preferences}
+                initialPreferences={{
+                    [`match_${selectedMatch?.id}`]: (preferences[`match_${selectedMatch?.id}`] || (user?.preferences?.followedMatches || []).includes(String(selectedMatch?.id)))
+                }}
             />
             {matches.length === 0 ? (
                 <View style={styles.center}>

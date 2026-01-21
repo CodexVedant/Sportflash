@@ -57,20 +57,34 @@ export default function MatchDetailScreen({ navigation, route }: Props) {
     const isFollowingHome = React.useMemo(() => {
         return user?.preferences?.favoriteTeams?.some(t => {
             const tId = typeof t === 'string' ? t : t.id;
+            const tName = typeof t === 'string' ? t : t.name; // Get name from saved pref
+
             const hId = matchData.homeTeam?.id;
-            return (hId && String(tId) === String(hId)) ||
-                (typeof t === 'string' && t === matchData.homeTeam?.name) ||
-                (typeof t !== 'string' && t?.name === matchData.homeTeam?.name);
+            const hName = matchData.homeTeam?.name;
+
+            // 1. ID Match
+            if (hId && tId && String(tId) === String(hId)) return true;
+            // 2. Name Match (Normalized)
+            if (hName && tName && hName.trim().toLowerCase() === tName.trim().toLowerCase()) return true;
+
+            return false;
         });
     }, [user?.preferences?.favoriteTeams, matchData.homeTeam]);
 
     const isFollowingAway = React.useMemo(() => {
         return user?.preferences?.favoriteTeams?.some(t => {
             const tId = typeof t === 'string' ? t : t.id;
+            const tName = typeof t === 'string' ? t : t.name;
+
             const aId = matchData.awayTeam?.id;
-            return (aId && String(tId) === String(aId)) ||
-                (typeof t === 'string' && t === matchData.awayTeam?.name) ||
-                (typeof t !== 'string' && t?.name === matchData.awayTeam?.name);
+            const aName = matchData.awayTeam?.name;
+
+            // 1. ID Match
+            if (aId && tId && String(tId) === String(aId)) return true;
+            // 2. Name Match (Normalized)
+            if (aName && tName && aName.trim().toLowerCase() === tName.trim().toLowerCase()) return true;
+
+            return false;
         });
     }, [user?.preferences?.favoriteTeams, matchData.awayTeam]);
 
@@ -131,25 +145,30 @@ export default function MatchDetailScreen({ navigation, route }: Props) {
     }, [matchData]);
 
 
-    const handleFollow = useCallback(async (teamName: string) => {
+    const handleFollow = useCallback(async (team: any) => {
         if (!user) {
             showToast('Please login to follow teams', 'info');
             return;
         }
 
+        const teamName = team.name || 'Unknown';
+        const teamId = team.id;
+
         try {
             const currentTeams = user.preferences?.favoriteTeams || [];
 
-            // Determine Team Data
-            const isHome = teamName === matchData.homeTeam?.name;
-            const teamData = isHome ? matchData.homeTeam : matchData.awayTeam;
-
-            // Check if following (Robust check)
+            // Robust check for existing follow
             const isFollowing = currentTeams.some((t: any) => {
                 const tId = typeof t === 'string' ? t : t.id;
-                return (teamData.id && String(tId) === String(teamData.id)) ||
-                    (typeof t === 'string' && t === teamName) ||
-                    (typeof t !== 'string' && t?.name === teamName);
+                const tName = typeof t === 'string' ? t : t.name;
+
+                // 1. Check ID existence and match
+                if (teamId && tId && String(tId) === String(teamId)) return true;
+
+                // 2. Check Name existence and match (Normalize)
+                if (tName && teamName && tName.trim().toLowerCase() === teamName.trim().toLowerCase()) return true;
+
+                return false;
             });
 
             let newTeams;
@@ -158,16 +177,20 @@ export default function MatchDetailScreen({ navigation, route }: Props) {
                 newTeams = currentTeams.filter((t: any) => {
                     const tId = typeof t === 'string' ? t : t.id;
                     const tName = typeof t === 'string' ? t : t.name;
-                    return String(tId) !== String(teamData.id) && tName !== teamName;
+
+                    if (teamId && tId && String(tId) === String(teamId)) return false;
+                    if (tName && teamName && tName.trim().toLowerCase() === teamName.trim().toLowerCase()) return false;
+
+                    return true;
                 });
                 showToast(`Unfollowed ${teamName}`, 'success');
             } else {
-                // Follow - Save Object if possible
+                // Follow - Save Full Object
                 const teamToSave = {
-                    id: teamData.id,
-                    name: teamData.name || teamName,
+                    id: teamId ? String(teamId) : undefined, // Ensure ID is saved if present
+                    name: teamName,
                     sport: matchData.sport,
-                    logo: teamData.logo
+                    logo: team.logo
                 };
                 newTeams = [...currentTeams, teamToSave];
                 showToast(`Following ${teamName}`, 'success');
@@ -178,7 +201,7 @@ export default function MatchDetailScreen({ navigation, route }: Props) {
             console.error('Follow Error:', error);
             showToast('Failed to update favorites', 'error');
         }
-    }, [user, dispatch, showToast, matchData]);
+    }, [user, dispatch, showToast, matchData.sport]);
 
     const getSportColor = () => {
         switch (matchData.sport?.toLowerCase()) {

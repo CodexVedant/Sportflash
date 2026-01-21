@@ -169,6 +169,20 @@ export const savePushToken = createAsyncThunk<void, string>(
     }
 );
 
+export const subscribeToPremium = createAsyncThunk<User, void, { rejectValue: string }>(
+    'auth/subscribe',
+    async (_, { rejectWithValue }) => {
+        try {
+            const res = await api.post<{ data: User }>('/auth/subscribe');
+            const updatedUser = res.data.data;
+            await AsyncStorage.setItem('user', JSON.stringify(updatedUser));
+            return updatedUser;
+        } catch (error: any) {
+            return rejectWithValue(error.message || 'Subscription failed');
+        }
+    }
+);
+
 const authSlice = createSlice({
     name: 'auth',
     initialState,
@@ -246,7 +260,13 @@ const authSlice = createSlice({
             })
             // Update Preferences
             .addCase(updateUserPreferences.fulfilled, (state, action) => {
-                state.user = action.payload;
+                // Force new reference to ensure UI updates deep nested props
+                state.user = { ...action.payload };
+            })
+            // Subscribe
+            .addCase(subscribeToPremium.fulfilled, (state, action) => {
+                state.user = { ...action.payload };
+                state.user.isPremium = true; // Ensure UI reflects it immediately
             });
     },
 });
