@@ -11,6 +11,7 @@ const {
     savePushToken,
     logout,
     forgotPassword,
+    verifyResetOtp, // New
     resetPassword
 } = require('../controllers/authController');
 const { protect } = require('../middleware/auth');
@@ -35,6 +36,7 @@ const loginValidation = [
 router.post('/register', registerValidation, register);
 router.post('/verify-otp', verifyOtp);
 router.post('/forgotpassword', forgotPassword);
+router.post('/verifyresetotp', verifyResetOtp); // New
 router.put('/resetpassword/:resettoken', resetPassword);
 router.post('/login', login);
 router.get('/me', protect, getMe);

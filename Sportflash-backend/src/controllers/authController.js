@@ -360,49 +360,102 @@ exports.logout = async (req, res) => {
 };
 
 // @desc    Forgot Password - Send Reset Email
+// @desc    Forgot Password - Send OTP
 // @route   POST /api/auth/forgotpassword
 exports.forgotPassword = async (req, res) => {
     try {
         const { email } = req.body;
-        const user = await User.findOne({ email });
+        const normalizedEmail = email?.trim().toLowerCase();
+
+        const user = await User.findOne({ email: normalizedEmail });
 
         if (!user) {
             return res.status(404).json({ success: false, message: 'User not found' });
         }
 
-        // Get Reset Token
-        const resetToken = user.getResetPasswordToken();
+        // Generate 6-digit OTP
+        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+
+        // Hash OTP and save
+        const crypto = require('crypto');
+        user.resetPasswordOtp = crypto
+            .createHash('sha256')
+            .update(otp)
+            .digest('hex');
+
+        user.resetPasswordOtpExpire = Date.now() + 10 * 60 * 1000; // 10 Minutes
 
         await user.save({ validateBeforeSave: false });
 
-        // Create Reset URL
-        // Deep Link for Mobile App (sportflash://reset-password/{token})
-        const resetUrl = `sportflash://reset-password/${resetToken}`;
-
         const message = `
             You have requested a password reset. 
-            Please make a PUT request to: \n\n ${resetUrl} \n\n 
-            (Or paste this token in the app: ${resetToken})
+            Your Verification Code is: \n\n ${otp} \n\n 
+            This code will expire in 10 minutes.
         `;
 
         try {
             await sendEmail({
                 email: user.email,
-                subject: 'Password Reset Token',
+                subject: 'Password Reset OTP',
                 message
             });
 
-            res.status(200).json({ success: true, data: 'Email sent' });
+            res.status(200).json({ success: true, data: 'OTP sent to email' });
         } catch (err) {
             console.error('Email Send Error:', err);
-            user.resetPasswordToken = undefined;
-            user.resetPasswordExpire = undefined;
+            user.resetPasswordOtp = undefined;
+            user.resetPasswordOtpExpire = undefined;
             await user.save({ validateBeforeSave: false });
             return res.status(500).json({ success: false, message: 'Email could not be sent' });
         }
     } catch (error) {
         console.error('Forgot Password Error:', error);
         res.status(500).json({ success: false, error: error.message });
+    }
+};
+
+// @desc    Verify Reset OTP & Return Reset Token
+// @route   POST /api/auth/verifyresetotp
+exports.verifyResetOtp = async (req, res) => {
+    try {
+        const { email, otp } = req.body;
+        const normalizedEmail = email?.trim().toLowerCase();
+
+        const crypto = require('crypto');
+        const resetPasswordOtp = crypto
+            .createHash('sha256')
+            .update(otp)
+            .digest('hex');
+
+        const user = await User.findOne({
+            email: normalizedEmail,
+            resetPasswordOtp,
+            resetPasswordOtpExpire: { $gt: Date.now() }
+        });
+
+        if (!user) {
+            return res.status(400).json({ success: false, message: 'Invalid or expired OTP' });
+        }
+
+        // OTP Verified. Now generate a secure token for use in resetPassword
+        // This reuses the existing method which generates a token and sets expiry
+        const resetToken = user.getResetPasswordToken();
+
+        // Clear OTP fields
+        user.resetPasswordOtp = undefined;
+        user.resetPasswordOtpExpire = undefined;
+
+        await user.save({ validateBeforeSave: false });
+
+        res.status(200).json({
+            success: true,
+            data: 'OTP Verified',
+            resetToken // Send this to frontend to pass to resetPassword
+        });
+
+    } catch (error) {
+        console.error('Verify Reset OTP Error:', error);
+        res.status(500).json({ success: false, message: 'Server Error' });
     }
 };
 

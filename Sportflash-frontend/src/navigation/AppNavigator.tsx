@@ -18,6 +18,7 @@ import LoginScreen from '@screens/auth/LoginScreen';
 import RegisterScreen from '@screens/auth/RegisterScreen';
 import ForgotPasswordScreen from '@screens/auth/ForgotPasswordScreen';
 import ResetPasswordScreen from '@screens/auth/ResetPasswordScreen';
+import ResetOtpVerificationScreen from '@screens/auth/ResetOtpVerificationScreen';
 import MatchDetailScreen from '@screens/matches/MatchDetailScreen';
 import SeriesScreen from '@screens/series/SeriesScreen';
 import FollowingScreen from '@screens/following/FollowingScreen';
@@ -152,6 +153,7 @@ export default function AppNavigator() {
                 <Stack.Screen name="Register" component={RegisterScreen} />
                 <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
                 <Stack.Screen name="ResetPassword" component={ResetPasswordScreen} />
+                <Stack.Screen name="ResetOtpVerification" component={ResetOtpVerificationScreen} />
                 <Stack.Screen name="OtpVerification" component={OtpScreen} />
 
                 {/* 🏆 App Screens */}

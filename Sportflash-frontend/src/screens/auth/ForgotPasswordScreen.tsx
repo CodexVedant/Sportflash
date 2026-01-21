@@ -38,23 +38,13 @@ export default function ForgotPasswordScreen({ navigation }: Props) {
 
         setLoading(true);
         try {
-            const data = await sendForgotPasswordRequest(email);
-
-            setSuccess(true);
-            // In development, we get the token back
-            if (data.resetToken) {
-                setResetToken(data.resetToken);
-            }
+            await sendForgotPasswordRequest(email);
+            // Navigate to OTP verification
+            navigation.navigate('ResetOtpVerification', { email });
         } catch (err: any) {
             setError(err.message || 'Network error. Please try again.');
         } finally {
             setLoading(false);
-        }
-    };
-
-    const handleGoToReset = () => {
-        if (resetToken) {
-            navigation.navigate('ResetPassword', { resetToken });
         }
     };
 
@@ -94,78 +84,41 @@ export default function ForgotPasswordScreen({ navigation }: Props) {
                                 </Text>
                             </View>
 
-                            {!success ? (
-                                <View style={styles.form}>
-                                    {error && (
-                                        <ErrorMessage
-                                            message={error}
-                                            type="error"
-                                            onDismiss={() => setError(null)}
-                                        />
-                                    )}
-
-                                    <Input
-                                        label="Email"
-                                        placeholder="Enter your email"
-                                        value={email}
-                                        onChangeText={setEmail}
-                                        icon="mail-outline"
-                                        autoCapitalize="none"
-                                        keyboardType="email-address"
+                            <View style={styles.form}>
+                                {error && (
+                                    <ErrorMessage
+                                        message={error}
+                                        type="error"
+                                        onDismiss={() => setError(null)}
                                     />
+                                )}
 
-                                    <Button
-                                        title="Send Reset Link"
-                                        onPress={handleForgotPassword}
-                                        loading={loading}
-                                        size="lg"
-                                        style={{ marginTop: 10 }}
-                                    />
+                                <Input
+                                    label="Email"
+                                    placeholder="Enter your email"
+                                    value={email}
+                                    onChangeText={setEmail}
+                                    icon="mail-outline"
+                                    autoCapitalize="none"
+                                    keyboardType="email-address"
+                                />
 
-                                    <TouchableOpacity
-                                        style={styles.backToLoginBtn}
-                                        onPress={() => navigation.goBack()}
-                                    >
-                                        <Ionicons name="arrow-back" size={16} color={theme.colors.primary} />
-                                        <Text style={styles.backToLoginText}>Back to Login</Text>
-                                    </TouchableOpacity>
-                                </View>
-                            ) : (
-                                <View style={styles.successContainer}>
-                                    <View style={styles.successIcon}>
-                                        <Ionicons name="checkmark-circle" size={64} color={theme.colors.success} />
-                                    </View>
-                                    <Text style={styles.successTitle}>Email Sent!</Text>
-                                    <Text style={styles.successMessage}>
-                                        We've sent password reset instructions to {email}
-                                    </Text>
+                                <Button
+                                    title="Send Reset Code"
+                                    onPress={handleForgotPassword}
+                                    loading={loading}
+                                    size="lg"
+                                    style={{ marginTop: 10 }}
+                                />
 
-                                    {resetToken && (
-                                        <>
-                                            <View style={styles.devModeContainer}>
-                                                <Text style={styles.devModeTitle}>Development Mode</Text>
-                                                <Text style={styles.devModeText}>
-                                                    In production, you would receive an email. For now, click below:
-                                                </Text>
-                                                <Button
-                                                    title="Go to Reset Password"
-                                                    onPress={handleGoToReset}
-                                                    size="md"
-                                                    style={{ marginTop: 10 }}
-                                                />
-                                            </View>
-                                        </>
-                                    )}
-
-                                    <TouchableOpacity
-                                        style={styles.backToLoginBtn}
-                                        onPress={() => navigation.navigate('Login')}
-                                    >
-                                        <Ionicons name="arrow-back" size={16} color={theme.colors.primary} />
-                                        <Text style={styles.backToLoginText}>Back to Login</Text>
-                                    </TouchableOpacity>
-                                </View>
-                            )}
+                                <TouchableOpacity
+                                    style={styles.backToLoginBtn}
+                                    onPress={() => navigation.goBack()}
+                                >
+                                    <Ionicons name="arrow-back" size={16} color={theme.colors.primary} />
+                                    <Text style={styles.backToLoginText}>Back to Login</Text>
+                                </TouchableOpacity>
+                            </View>
                         </View>
                     </View>
                 </ScrollView>

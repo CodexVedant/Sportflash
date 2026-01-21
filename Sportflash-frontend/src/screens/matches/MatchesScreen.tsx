@@ -8,7 +8,6 @@ import Sidebar from '@components/navigation/Sidebar';
 import { Ionicons } from '@expo/vector-icons';
 import { SkeletonList, EmptyState, NetworkError } from '@components/common';
 import { FilterPanel } from '@components/filter';
-import { NotificationBell, NotificationPanel } from '@components/notifications';
 import { useSelector } from 'react-redux';
 import TopBar from '@components/navigation/TopBar';
 import { useGetLiveMatchesQuery, useGetUpcomingMatchesQuery, useGetFinishedMatchesQuery } from '@store/api/matchesApi';
@@ -27,7 +26,6 @@ export default function MatchesScreen({ navigation }: Props) {
     const [activeTab, setActiveTab] = useState('Live');
     const [sidebarVisible, setSidebarVisible] = useState(false);
     const [filterVisible, setFilterVisible] = useState(false);
-    const [notificationVisible, setNotificationVisible] = useState(false);
     const [filters, setFilters] = useState({
         sport: 'all',
         status: 'all',
@@ -96,26 +94,6 @@ export default function MatchesScreen({ navigation }: Props) {
 
         return matches;
     }, [allMatches, activeSport, activeTab, filters]);
-
-    // Mock notifications
-    const [notifications] = useState([
-        {
-            id: 1,
-            type: 'match_start',
-            title: 'Match Starting Soon',
-            message: 'India vs Australia starts in 15 minutes',
-            timestamp: new Date().toISOString(),
-            read: false,
-        },
-        {
-            id: 2,
-            type: 'goal',
-            title: 'GOAL!',
-            message: 'Manchester United scored! 1-0',
-            timestamp: new Date(Date.now() - 300000).toISOString(),
-            read: false,
-        },
-    ]);
 
     const SPORT_TABS = [
         { id: 'cricket', label: 'Cricket', icon: 'baseball-outline' },
@@ -244,7 +222,7 @@ export default function MatchesScreen({ navigation }: Props) {
         )
     }, [navigation, user, handleNotificationToggle]);
 
-    const unreadCount = notifications.filter(n => !n.read).length;
+
 
     return (
         <SafeAreaView style={styles.container}>
@@ -267,12 +245,6 @@ export default function MatchesScreen({ navigation }: Props) {
                     <TouchableOpacity onPress={() => setFilterVisible(true)} style={styles.iconBtn}>
                         <Ionicons name="options-outline" size={24} color={theme.colors.text} />
                     </TouchableOpacity>
-                    {user && (
-                        <NotificationBell
-                            count={unreadCount}
-                            onPress={() => setNotificationVisible(true)}
-                        />
-                    )}
                 </View>
             </View>
 
@@ -340,17 +312,6 @@ export default function MatchesScreen({ navigation }: Props) {
                 onApply={handleApplyFilters}
                 initialFilters={filters}
                 availableLeagues={availableLeagues}
-            />
-
-            {/* Notification Panel */}
-            <NotificationPanel
-                visible={notificationVisible}
-                onClose={() => setNotificationVisible(false)}
-                notifications={notifications}
-                onNotificationPress={(notification) => {
-                    console.log('Notification pressed:', notification);
-                    setNotificationVisible(false);
-                }}
             />
         </SafeAreaView>
     );

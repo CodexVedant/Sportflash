@@ -3,6 +3,7 @@ export type RootStackParamList = {
     Login: undefined;
     Register: undefined;
     ForgotPassword: undefined;
+    ResetOtpVerification: { email: string };
     ResetPassword: { resetToken: string };
     OtpVerification: { email: string };
     MatchDetail: { match?: any; id?: string; matchId?: string; sport?: string };

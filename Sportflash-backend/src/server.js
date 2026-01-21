@@ -464,7 +464,7 @@ server.listen(PORT, '0.0.0.0', () => {
     console.log(' SportFlash Server Started');
     console.log('='.repeat(60));
     console.log(` Server running on http://localhost:${PORT}`);
-    console.log(` Network access: http://192.168.1.7:${PORT}`);
+    console.log(` Network access: http://192.168.1.5:${PORT}`);
     console.log(` Health check: http://localhost:${PORT}/health`);
     console.log(` Socket.IO ready for connections`);
     console.log(` Environment: ${process.env.NODE_ENV}`);

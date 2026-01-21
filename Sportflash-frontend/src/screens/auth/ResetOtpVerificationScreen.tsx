@@ -8,18 +8,15 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '@app-types/navigation';
 import { API_BASE_URL } from '@config/index';
 import axios from 'axios';
-import { setCredentials } from '@store/slices/authSlice';
-import { useAppDispatch } from '@hooks/redux';
 
-type Props = NativeStackScreenProps<RootStackParamList, 'OtpVerification'>;
+type Props = NativeStackScreenProps<RootStackParamList, 'ResetOtpVerification'>;
 
-export default function OtpScreen({ route, navigation }: Props) {
-    const { email } = route.params; // Email passed from RegisterScreen
+export default function ResetOtpVerificationScreen({ route, navigation }: Props) {
+    const { email } = route.params;
     const [otp, setOtp] = useState(['', '', '', '', '', '']);
     const [loading, setLoading] = useState(false);
-    const [timer, setTimer] = useState(60); // 60s countdown for resend
+    const [timer, setTimer] = useState(600); // 10 minutes expiry
     const inputs = useRef<Array<TextInput | null>>([]);
-    const dispatch = useAppDispatch();
 
     useEffect(() => {
         const interval = setInterval(() => {
@@ -59,38 +56,35 @@ export default function OtpScreen({ route, navigation }: Props) {
 
         setLoading(true);
         try {
-            const response = await axios.post(`${API_BASE_URL}/auth/verify-otp`, {
+            const response = await axios.post(`${API_BASE_URL}/auth/verifyresetotp`, {
                 email,
                 otp: code
             });
 
             if (response.data.success) {
-                // Save token to Redux & Storage
-                dispatch(setCredentials(response.data.data));
+                const resetToken = response.data.resetToken;
 
-                console.log('✅ OTP Verified. Resetting to Main...');
-
-                // Force navigation reset relative to root
-                // Using setTimeout to allow Redux state to propagate if needed (though not strictly necessary)
-                setTimeout(() => {
-                    navigation.reset({
-                        index: 0,
-                        routes: [{ name: 'Main' }],
-                    });
-                }, 100);
+                // Navigate to ResetPassword with the secure token
+                navigation.replace('ResetPassword', { resetToken });
             }
         } catch (error: any) {
             console.error('Verify Error:', error);
-            const msg = error.response?.data?.message || 'Invalid code';
+            const msg = error.response?.data?.message || 'Invalid or expired code';
             Alert.alert('Verification Failed', msg);
         } finally {
             setLoading(false);
         }
     };
 
-    const handleResend = () => {
-        Alert.alert('Coming Soon', 'Resend API not implemented yet.');
-        setTimer(60);
+    const handleResend = async () => {
+        // Simple logic: call forgotPassword again
+        try {
+            await axios.post(`${API_BASE_URL}/auth/forgotpassword`, { email });
+            Alert.alert('Sent', 'A new code has been sent to your email');
+            setTimer(600);
+        } catch (error) {
+            Alert.alert('Error', 'Failed to resend code');
+        }
     };
 
     return (
@@ -101,12 +95,12 @@ export default function OtpScreen({ route, navigation }: Props) {
 
             <View style={styles.content}>
                 <View style={styles.iconContainer}>
-                    <Ionicons name="mail-open-outline" size={60} color={theme.colors.primary} />
+                    <Ionicons name="key-outline" size={60} color={theme.colors.primary} />
                 </View>
 
-                <Text style={styles.title}>Verification Code</Text>
+                <Text style={styles.title}>Reset Password</Text>
                 <Text style={styles.subtitle}>
-                    Please enter the verification code sent to{'\n'}
+                    Enter the code sent to your email{'\n'}
                     <Text style={styles.email}>{email}</Text>
                 </Text>
 
@@ -133,7 +127,7 @@ export default function OtpScreen({ route, navigation }: Props) {
                 </View>
 
                 <Button
-                    title="Verify"
+                    title="Verify Code"
                     onPress={handleVerify}
                     loading={loading}
                     size="lg"
@@ -142,10 +136,8 @@ export default function OtpScreen({ route, navigation }: Props) {
 
                 <View style={styles.resendContainer}>
                     <Text style={styles.resendText}>Didn't receive code? </Text>
-                    <TouchableOpacity onPress={handleResend} disabled={timer > 0}>
-                        <Text style={[styles.resendLink, timer > 0 && styles.resendDisabled]}>
-                            {timer > 0 ? `Resend in ${timer}s` : 'Resend Code'}
-                        </Text>
+                    <TouchableOpacity onPress={handleResend}>
+                        <Text style={styles.resendLink}>Resend Code</Text>
                     </TouchableOpacity>
                 </View>
             </View>
@@ -178,6 +170,5 @@ const styles = StyleSheet.create({
     otpInputFilled: { borderColor: theme.colors.primary, backgroundColor: theme.colors.surface },
     resendContainer: { flexDirection: 'row', marginTop: 24 },
     resendText: { color: theme.colors.textMuted },
-    resendLink: { color: theme.colors.primary, fontWeight: 'bold' },
-    resendDisabled: { color: theme.colors.textMuted, opacity: 0.6 }
+    resendLink: { color: theme.colors.primary, fontWeight: 'bold' }
 });
