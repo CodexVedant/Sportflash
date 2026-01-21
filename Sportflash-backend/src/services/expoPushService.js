@@ -20,7 +20,7 @@ const sendPushNotification = async (title, body, data = {}, filterFn = null) => 
             // 'preferences.notifications': true 
         }).select('pushToken preferences email');
 
-        console.log(`🔍 Push: Found ${users.length} potential users`);
+
 
         let messages = [];
 
@@ -28,7 +28,6 @@ const sendPushNotification = async (title, body, data = {}, filterFn = null) => 
             // 2. Apply Custom Filter (e.g. is subscribed to match?)
             if (filterFn) {
                 const shouldSend = filterFn(user);
-                console.log(`   - User ${user.email}: Filter says ${shouldSend}`);
                 if (!shouldSend) continue;
             }
 
@@ -49,7 +48,6 @@ const sendPushNotification = async (title, body, data = {}, filterFn = null) => 
         }
 
         // ... sending logic ...
-        console.log(`🚀 Sending ${messages.length} messages...`);
 
         // ... (rest of sending logic)
         let chunks = expo.chunkPushNotifications(messages);
@@ -64,7 +62,7 @@ const sendPushNotification = async (title, body, data = {}, filterFn = null) => 
             }
         }
 
-        console.log(`✅ Sent ${tickets.length} tickets for "${title}"`);
+
 
     } catch (error) {
         console.error('Error sending push notifications:', error);

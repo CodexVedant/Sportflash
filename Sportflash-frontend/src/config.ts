@@ -55,8 +55,8 @@ export const SOCKET_URL: string = getBaseUrl();
 
 // Log current configuration (helpful for debugging)
 // Uncomment below to see API configuration in console
-console.log(`🔧 API Configuration:
-  Mode: ${ENV.MODE}
-  API URL: ${API_BASE_URL}
-  Socket URL: ${SOCKET_URL}
-`);
+// console.log(`🔧 API Configuration:
+//   Mode: ${ENV.MODE}
+//   API URL: ${API_BASE_URL}
+//   Socket URL: ${SOCKET_URL}
+// `);

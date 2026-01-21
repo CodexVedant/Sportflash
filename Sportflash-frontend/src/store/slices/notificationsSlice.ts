@@ -80,12 +80,10 @@ const notificationsSlice = createSlice({
 
                     // 3. Sync Favorite Teams (Essential for Match Bell)
                     if (user.preferences.favoriteTeams) {
-                        console.log('🔄 NotificationSlice: Syncing Teams:', user.preferences.favoriteTeams.length);
                         user.preferences.favoriteTeams.forEach((team: any) => {
                             const name = typeof team === 'string' ? team : team.name;
                             if (name) {
                                 state.preferences[`team_${name}`] = true;
-                                console.log(`   + Set Pref: team_${name}`);
                             }
                         });
                     }

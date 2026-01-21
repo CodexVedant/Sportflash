@@ -63,21 +63,12 @@ export const register = createAsyncThunk<AuthResponseData, RegisterRequest, { re
     'auth/register',
     async ({ name, email, password }, { rejectWithValue }) => {
         try {
-            console.log('🚀 Sending Register Request:', { name, email, password });
             const response = await api.post<{ data: AuthResponseData } | any>('/auth/register', { name, email, password });
-
-            console.log('📩 Full Response Object keys:', Object.keys(response));
-            console.log('📩 Response Data:', response.data);
-
-            // Check if OTP is required (Backend returns explicit flag)
-            // Backend response structure might be { success: true, requireOtp: true, ... } directly, OR inside `data`.
-            // Based on backend implementation: res.status(201).json({ success, requireOtp, ... })
-            // Axios puts that in `response.data`.
 
             const data = response.data;
 
+
             if (data?.requireOtp) {
-                console.log('✅ requireOtp detected:', data.requireOtp);
                 return {
                     requireOtp: true,
                     email: data.email,
@@ -88,11 +79,10 @@ export const register = createAsyncThunk<AuthResponseData, RegisterRequest, { re
                 // Ideally we should use a different return type, but for quick fix avoiding big refactors:
             }
 
-            console.log('⚠️ OTP not required, falling back to standard login.');
+            // OTP not required, falling back to standard login
 
             // Check if structure matches
             if (!data.data || !data.data.token) {
-                console.error('❌ Unexpected response structure:', data);
                 throw new Error('Invalid response structure');
             }
 
@@ -119,7 +109,7 @@ export const logout = createAsyncThunk<void, void>(
         } catch (error: any) {
             // Ignore 401 (Unauthorized) as it means we are effectively already logged out
             if (error.response?.status !== 401) {
-                console.error('Logout API failed:', error);
+                // Logout API failed (ignoring 401)
             }
         } finally {
             await AsyncStorage.removeItem('token');
@@ -152,18 +142,14 @@ export const savePushToken = createAsyncThunk<void, string>(
             const state = getState() as any; // Cast to any to avoid circular import of RootState
             const authToken = state.auth.token;
 
-            console.log('📌 Sending Push Token to Backend:', token);
-            console.log('🔑 Auth Token from State:', authToken ? `${authToken.substring(0, 10)}...` : 'NULL/UNDEFINED');
-
             // Explicitly attach header to avoid race condition with loadUser
             const config = authToken ? {
                 headers: { Authorization: `Bearer ${authToken}` }
             } : {};
 
             await api.put('/auth/pushtoken', { token }, config);
-            console.log('✅ Push Token Saved Successfully to Backend');
         } catch (error: any) {
-            console.error('❌ Failed to save push token to Backend:', error.response?.data?.message || error.message);
+            // Failed to save push token to Backend
             // Optionally reject, but we mostly fire-and-forget
         }
     }

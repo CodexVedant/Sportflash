@@ -19,7 +19,6 @@ export default function FollowingScreen() {
     useEffect(() => {
         const subscription = AppState.addEventListener('change', nextAppState => {
             if (nextAppState === 'active') {
-                console.log('📱 Following screen: Refreshing user profile...');
                 dispatch(loadUser());
             }
         });

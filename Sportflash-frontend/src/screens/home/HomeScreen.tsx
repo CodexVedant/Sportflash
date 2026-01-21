@@ -139,8 +139,8 @@ export default function HomeScreen({ navigation }: Props) {
         if (Object.keys(apiUpdates).length > 0) {
             dispatch(updateUserPreferences(apiUpdates))
                 .unwrap()
-                .then(() => console.log('✅ Preferences synced to backend & Redux:', Object.keys(apiUpdates)))
-                .catch((err: any) => console.error('❌ Failed to sync preferences:', err));
+                .then(() => { })
+                .catch((err: any) => { });
         }
 
         showToast("Notification preferences updated", "success");
@@ -206,7 +206,6 @@ export default function HomeScreen({ navigation }: Props) {
 
         const subscription = AppState.addEventListener('change', nextAppState => {
             if (nextAppState === 'active') {
-                console.log('📱 App has come to the foreground! Refreshing scores & user profile...');
                 dispatch(forceRefreshScores());
                 dispatch(loadUser()); // Sync user profile (notifications etc)
             }
@@ -241,7 +240,6 @@ export default function HomeScreen({ navigation }: Props) {
                 onClose={() => setNotificationVisible(false)}
                 notifications={notifications}
                 onNotificationPress={(notification) => {
-                    console.log('Notification pressed:', notification);
                     setNotificationVisible(false);
 
                     let targetMatch = notification.matchSnapshot;
@@ -251,7 +249,6 @@ export default function HomeScreen({ navigation }: Props) {
                             m.id.toString() === notification.matchId?.toString()
                         );
                         if (liveMatch) {
-                            console.log('✅ Found match in Live Store during nav:', liveMatch.id);
                             targetMatch = liveMatch;
                         }
                     }

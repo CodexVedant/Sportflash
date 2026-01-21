@@ -20,7 +20,7 @@ if (!isExpoGo || Platform.OS !== 'android') {
     });
 } else {
     // Optional: Log that we are skipping handler setup
-    console.log('ℹ️ Skipping Notification Handler setup in Expo Go (Android).');
+    // Skipping Notification Handler setup in Expo Go (Android)
 }
 
 // 2. Register for Push Notifications (Get Token & Permissions)
@@ -30,12 +30,12 @@ export async function registerForPushNotificationsAsync(): Promise<string | unde
     // Check for Expo Go environment to avoid "Remote Notifications removed" error
     // const isExpoGo = Constants.executionEnvironment === ExecutionEnvironment.StoreClient; // Already defined above
     if (isExpoGo && Platform.OS === 'android') {
-        console.log('ℹ️ Skipping Remote Push Registration in Expo Go (Android). Use a Development Build for Push.');
+        // Skipping Remote Push Registration in Expo Go (Android)
         return undefined;
     }
 
     if (Platform.OS === 'web') {
-        console.log('Push notifications not supported on Web yet.');
+        // Push notifications not supported on Web yet
         return undefined;
     }
 
@@ -50,7 +50,7 @@ export async function registerForPushNotificationsAsync(): Promise<string | unde
             finalStatus = status;
         }
         if (finalStatus !== 'granted') {
-            console.log('Failed to get push token for push notification!');
+            // Failed to get push token for push notification
             return;
         }
 
@@ -62,20 +62,20 @@ export async function registerForPushNotificationsAsync(): Promise<string | unde
             });
             if (tokenData) {
                 token = tokenData.data;
-                console.log('Push Token:', token);
+                // Push Token obtained
             }
         } catch (error: any) {
             const errorMessage = error.message || '';
             if (errorMessage.includes('No "projectId" found')) {
-                console.log('⚠️ Push Notifications: Missing EAS Project ID in app.json. Run "eas init" to configure.');
+                // Missing EAS Project ID in app.json
             } else if (errorMessage.includes('removed from Expo Go') || errorMessage.includes('development build')) {
-                console.log('⚠️ Push Notifications: Remote Push is NOT supported in Expo Go (SDK 53+). Please use a Development Build.');
+                // Remote Push is NOT supported in Expo Go (SDK 53+)
             } else {
-                console.error('Error getting push token:', error);
+                // Error getting push token
             }
         }
     } else {
-        console.log('Must use physical device for Push Notifications');
+        // Must use physical device for Push Notifications
     }
 
     return token;

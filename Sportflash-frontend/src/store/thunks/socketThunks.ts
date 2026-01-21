@@ -92,7 +92,7 @@ export const initSocketListeners = () => (dispatch: AppDispatch, getState: () =>
                         });
                     });
                 } catch (e) {
-                    console.warn('Error processing milestones', e);
+                    // Error processing milestones
                 }
             }
 
@@ -114,7 +114,6 @@ export const initSocketListeners = () => (dispatch: AppDispatch, getState: () =>
                 position: 'top',
                 visibilityTime: 4000,
                 onPress: () => {
-                    console.log('🍞 Toast Clicked! Navigating to:', newMatch.id);
                     Toast.hide(); // Hide the notification toast
 
                     // Show feedback toast
