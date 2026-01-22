@@ -9,10 +9,15 @@ const api: AxiosInstance = axios.create({
     timeout: 10000,
 });
 
-// Request interceptor (useful for auth tokens later)
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+// Request interceptor
 api.interceptors.request.use(
-    (config: InternalAxiosRequestConfig): InternalAxiosRequestConfig => {
-        // TODO: specific token logic here
+    async (config: InternalAxiosRequestConfig) => {
+        const token = await AsyncStorage.getItem('token');
+        if (token) {
+            config.headers.Authorization = `Bearer ${token}`;
+        }
         return config;
     },
     (error: AxiosError): Promise<AxiosError> => {

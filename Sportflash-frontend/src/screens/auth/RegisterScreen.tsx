@@ -22,6 +22,7 @@ export default function RegisterScreen({ navigation }: Props) {
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [showOtpButton, setShowOtpButton] = useState(false); // Fallback for auto-nav failure
     const dispatch = useAppDispatch();
     const { width } = useWindowDimensions();
 
@@ -43,6 +44,17 @@ export default function RegisterScreen({ navigation }: Props) {
             return;
         }
 
+        if (name.length > 10) {
+            setError('Name must not exceed 10 characters');
+            return;
+        }
+
+        const nameRegex = /^[A-Za-z\s]+$/;
+        if (!nameRegex.test(name)) {
+            setError('Name must contain only alphabets');
+            return;
+        }
+
         if (password.length < 6) {
             setError('Password must be at least 6 characters');
             return;
@@ -56,9 +68,19 @@ export default function RegisterScreen({ navigation }: Props) {
 
         setLoading(true);
         try {
-            await dispatch(register({ name, email, password })).unwrap();
-            navigation.goBack();
+            const res = await dispatch(register({ name, email, password })).unwrap();
+
+            // Show fallback button in case auto-nav fails visually
+            setShowOtpButton(true);
+
+            if (res.requireOtp) {
+                // Small delay to ensure state updates or avoids conflicts
+                setTimeout(() => {
+                    navigation.navigate('OtpVerification', { email });
+                }, 500);
+            }
         } catch (err: any) {
+            console.error('Register Error:', err);
             setError(err || 'Registration failed. Please try again.');
         } finally {
             setLoading(false);
@@ -130,6 +152,19 @@ export default function RegisterScreen({ navigation }: Props) {
                                     icon="lock-closed-outline"
                                 />
 
+                                {showOtpButton && (
+                                    <View style={{ marginBottom: 20 }}>
+                                        <Text style={{ color: theme.colors.primary, textAlign: 'center', marginBottom: 10 }}>
+                                            Registration successful! If you weren't redirected...
+                                        </Text>
+                                        <Button
+                                            title="Enter Verification Code"
+                                            onPress={() => navigation.navigate('OtpVerification', { email })}
+                                            variant="outline"
+                                        />
+                                    </View>
+                                )}
+
                                 <Button
                                     title="Sign Up"
                                     onPress={handleRegister}
@@ -153,4 +188,3 @@ export default function RegisterScreen({ navigation }: Props) {
         </View>
     );
 }
-

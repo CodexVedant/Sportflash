@@ -5,7 +5,17 @@ import { ApiResponse } from '@app-types/models/user';
 
 export const newsApi = createApi({
     reducerPath: 'newsApi',
-    baseQuery: fetchBaseQuery({ baseUrl: API_BASE_URL }),
+    baseQuery: fetchBaseQuery({
+        baseUrl: API_BASE_URL,
+        prepareHeaders: (headers, { getState }) => {
+            const token = (getState() as any).auth.token;
+            if (token) {
+                headers.set('authorization', `Bearer ${token}`);
+            }
+            return headers;
+        },
+    }),
+    tagTypes: ['News'], // Define tag types here
     endpoints: (builder) => ({
         getNews: builder.query<Article[], NewsCategory | void>({
             query: (category = 'all') => `/news?category=${category}`,
@@ -21,8 +31,21 @@ export const newsApi = createApi({
             query: (id) => `/news/${id}`,
             transformResponse: (response: ApiResponse<Article>) => response.data,
         }),
+        toggleBookmark: builder.mutation<{ success: boolean; isBookmarked: boolean }, { articleId: string; articleData: any }>({
+            query: (body) => ({
+                url: '/news/bookmark',
+                method: 'POST',
+                body,
+            }),
+            invalidatesTags: ['News'],
+        }),
+        getBookmarks: builder.query<Article[], void>({
+            query: () => '/news/bookmarks',
+            transformResponse: (response: ApiResponse<Article[]>) => response.data,
+            providesTags: ['News'], // Re-fetch on toggle
+        }),
     }),
 });
 
-export const { useGetNewsQuery, useGetTrendingNewsQuery, useGetNewsDetailQuery } = newsApi;
+export const { useGetNewsQuery, useGetTrendingNewsQuery, useGetNewsDetailQuery, useToggleBookmarkMutation, useGetBookmarksQuery } = newsApi;
 

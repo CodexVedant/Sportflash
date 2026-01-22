@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, GestureResponderEvent } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { theme } from '@utils/theme';
 import LiveBadge from './LiveBadge';
@@ -26,6 +27,8 @@ interface MatchCardProps {
     timer?: string;
     match?: any;
     onPress?: (event: GestureResponderEvent) => void;
+    onNotificationPress?: () => void;
+    isSubscribed?: boolean;
 }
 
 const MatchCard: React.FC<MatchCardProps> = ({
@@ -37,7 +40,9 @@ const MatchCard: React.FC<MatchCardProps> = ({
     awayTeam,
     score,
     timer,
-    onPress
+    onPress,
+    onNotificationPress,
+    isSubscribed
 }) => {
     if (!homeTeam || !awayTeam) return null;
 
@@ -56,18 +61,35 @@ const MatchCard: React.FC<MatchCardProps> = ({
                 end={{ x: 1, y: 1 }}
                 style={[styles.card, { borderColor: sportColor }]}
             >
-                {/* Header: Live Badge + League */}
+                {/* Header: Live Badge + League + Notification Bell */}
                 <View style={styles.header}>
-                    {status === 'live' ? (
-                        <LiveBadge sport={sport} status={displayStatus} />
-                    ) : (
-                        <View style={styles.badgeContainer}>
-                            <Text style={[styles.statusText, { color: theme.colors.textMuted }]}>
-                                {displayStatus?.toUpperCase() || status.toUpperCase()}
-                            </Text>
-                        </View>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
+                        {status === 'live' ? (
+                            <LiveBadge sport={sport} status={displayStatus} />
+                        ) : (
+                            <View style={styles.badgeContainer}>
+                                <Text style={[styles.statusText, { color: theme.colors.textMuted }]}>
+                                    {displayStatus?.toUpperCase() || status.toUpperCase()}
+                                </Text>
+                            </View>
+                        )}
+                        <Text style={styles.league} numberOfLines={1}>{league}</Text>
+                    </View>
+
+                    {/* Notification Bell */}
+                    {onNotificationPress && (
+                        <TouchableOpacity
+                            onPress={onNotificationPress}
+                            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                            style={{ padding: 4 }}
+                        >
+                            <Ionicons
+                                name={isSubscribed ? "notifications" : "notifications-outline"}
+                                size={20}
+                                color={isSubscribed ? '#FFD700' : theme.colors.textMuted}
+                            />
+                        </TouchableOpacity>
                     )}
-                    <Text style={styles.league}>{league}</Text>
                 </View>
 
                 {/* Scores Area */}

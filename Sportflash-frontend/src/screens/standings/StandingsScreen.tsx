@@ -55,7 +55,7 @@ export default function StandingsScreen() {
             type: 'team_update',
             title: 'Team Update',
             message: 'Mumbai Indians moved to 2nd position',
-            timestamp: new Date(),
+            timestamp: new Date().toISOString(),
             read: false,
         },
     ]);

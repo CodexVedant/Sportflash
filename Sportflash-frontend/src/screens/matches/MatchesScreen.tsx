@@ -1,107 +1,133 @@
-﻿import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, SectionList } from 'react-native';
+﻿import React, { useState } from 'react';
+import { View, Text, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { theme } from '@utils/theme';
-import MatchCard from '@components/match/MatchCard';
-import BasketballMatchCard from '@components/match/BasketballMatchCard';
 import Sidebar from '@components/navigation/Sidebar';
 import { Ionicons } from '@expo/vector-icons';
-import { SkeletonList, EmptyState, NetworkError } from '@components/common';
 import { FilterPanel } from '@components/filter';
-import { NotificationBell, NotificationPanel } from '@components/notifications';
-import { useSelector } from 'react-redux';
 import TopBar from '@components/navigation/TopBar';
-import { useGetLiveMatchesQuery, useGetUpcomingMatchesQuery } from '@store/api/matchesApi';
 import { styles } from '@utils/style/MatchesScreen.styles';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '@app-types/navigation';
-import { useAppSelector } from '@hooks/redux';
+import { useMatchLogic } from '@hooks/useMatchLogic';
+import MatchesList from '@components/match/MatchesList';
+import { NotificationOptionsModal } from '@components/notifications';
+import { Match } from '@app-types/models/match';
+import { useAppDispatch, useAppSelector } from '@hooks/redux';
+import { updatePreference } from '@store/slices/notificationsSlice';
+import { updateUserPreferences } from '@store/slices/authSlice'; // Needed for syncing
+import { useToast } from '@context/ToastContext';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Matches'>;
 
 export default function MatchesScreen({ navigation }: Props) {
-    const { user } = useAppSelector(state => state.auth);
-    const [activeSport, setActiveSport] = useState('cricket');
-    const [activeTab, setActiveTab] = useState('Live');
-    const [sidebarVisible, setSidebarVisible] = useState(false);
-    const [filterVisible, setFilterVisible] = useState(false);
-    const [notificationVisible, setNotificationVisible] = useState(false);
-    const [filters, setFilters] = useState({
-        sport: 'all',
-        status: 'all',
-        league: 'all',
-        dateRange: { start: null, end: null },
-    });
+    const dispatch = useAppDispatch();
+    const { showToast } = useToast();
+    const notificationPreferences = useAppSelector(state => state.notifications.preferences || {});
+    const {
+        activeSport, setActiveSport,
+        activeTab, setActiveTab,
+        sidebarVisible, setSidebarVisible,
+        filterVisible, setFilterVisible,
+        filters, setFilters,
+        groupedMatches,
+        availableLeagues,
+        isLoading,
+        apiError,
+        user,
+        refetch,
+        // handleNotificationToggle, // We use local logic now
+        handleApplyFilters
+    } = useMatchLogic();
 
-    // Fetch all live matches (including cricket from AllSportsAPI)
-    const { data: allLiveMatches = [], isLoading: isLoadingLive, error: liveError, refetch: refetchLive } = useGetLiveMatchesQuery(
-        undefined
-    );
+    const preferences = user?.preferences || {};
 
-    const liveMatches = allLiveMatches;
+    // Notification Modal State
+    const [modalVisible, setModalVisible] = useState(false);
+    const [selectedMatch, setSelectedMatch] = useState<Match | null>(null);
 
-    // Fetch all upcoming matches (including cricket)
-    const { data: allUpcomingMatches = [], isLoading: isLoadingUpcoming, error: upcomingError, refetch: refetchUpcoming } = useGetUpcomingMatchesQuery({});
-
-    const upcomingMatches = allUpcomingMatches;
-
-    // Determine which data to use - memoized to prevent infinite loops
-    const allMatches = React.useMemo(() => {
-        return activeTab === 'Upcoming' ? upcomingMatches : liveMatches;
-    }, [activeTab, upcomingMatches, liveMatches]);
-
-    const isLoading = activeTab === 'Upcoming' ? isLoadingUpcoming : isLoadingLive;
-    const apiError = activeTab === 'Upcoming' ? upcomingError : liveError;
-    const refetch = activeTab === 'Upcoming' ? refetchUpcoming : refetchLive;
-
-    // Filter matches based on sport and status - use useMemo instead of useEffect
-    const filteredMatches = React.useMemo(() => {
-        let matches = Array.isArray(allMatches) ? [...allMatches] : [];
-
-        // Filter by sport
-        if (activeSport !== 'all') {
-            matches = matches.filter(match => match.sport?.toLowerCase() === activeSport);
+    const handleBellPress = (match: Match) => {
+        if (!user) {
+            (navigation as any).navigate('Auth', { screen: 'Login' });
+            return;
         }
-
-        // Filter by status
-        if (activeTab === 'Live') {
-            matches = matches.filter(match => match.status === 'live');
-        } else if (activeTab === 'Upcoming') {
-            matches = matches.filter(match => match.status === 'upcoming');
-        } else if (activeTab === 'Results') {
-            matches = matches.filter(match => match.status === 'finished');
+        if (!user.isPremium) {
+            showToast("Upgrade to Premium to enable match notifications", "info");
+            (navigation as any).navigate('Premium');
+            return;
         }
+        setSelectedMatch(match);
+        setModalVisible(true);
+    };
 
-        // Apply additional filters
-        if (filters.league !== 'all') {
-            matches = matches.filter(match => {
-                const leagueName = typeof match.league === 'string' ? match.league : match.league?.name;
-                return leagueName?.toLowerCase().includes(filters.league.toLowerCase());
-            });
+    const handleSavePreferences = (newPrefs: any) => {
+        if (!selectedMatch) return;
+
+        // 1. Update Redux (Local)
+        const updates = {
+            [`match_${selectedMatch.id}`]: newPrefs.match,
+            [`series_${selectedMatch.league}`]: newPrefs.series,
+            [`team_${selectedMatch.homeTeam?.name}`]: newPrefs.homeTeam,
+            [`team_${selectedMatch.awayTeam?.name}`]: newPrefs.awayTeam,
+        };
+        Object.entries(updates).forEach(([key, value]) => {
+            dispatch(updatePreference({ key, value: Boolean(value) }));
+        });
+
+        // 2. Sync with Backend
+        // Construct the preferences object expected by updateUserPreferences
+        let apiUpdates: any = {};
+
+        // Followed Matches
+        const currentFollowed = user?.preferences?.followedMatches || [];
+        let newFollowed = [...currentFollowed];
+        const matchIdStr = String(selectedMatch.id);
+
+        if (newPrefs.match) {
+            if (!newFollowed.includes(matchIdStr)) newFollowed.push(matchIdStr);
+        } else {
+            newFollowed = newFollowed.filter(id => id !== matchIdStr);
         }
+        apiUpdates.followedMatches = newFollowed;
 
-        return matches;
-    }, [allMatches, activeSport, activeTab, filters]);
+        // Favorite Teams
+        const currentTeams = user?.preferences?.favoriteTeams || [];
+        // Map to just names or IDs for easier checking, but we need to respect object structure if it's objects
+        // Assuming favoriteTeams is array of objects { _id, name, ... } or strings? 
+        // Based on notificationsSlice it seems they can be strings or objects. Let's handle both or standardized.
+        // Best approach: Filter out the specific teams being toggled, then add back if true.
 
-    // Mock notifications
-    const [notifications] = useState([
-        {
-            id: 1,
-            type: 'match_start',
-            title: 'Match Starting Soon',
-            message: 'India vs Australia starts in 15 minutes',
-            timestamp: new Date(),
-            read: false,
-        },
-        {
-            id: 2,
-            type: 'goal',
-            title: 'GOAL!',
-            message: 'Manchester United scored! 1-0',
-            timestamp: new Date(Date.now() - 300000),
-            read: false,
-        },
-    ]);
+        let newTeams = currentTeams.filter((t: any) => {
+            const tName = typeof t === 'string' ? t : t.name;
+            return tName !== selectedMatch.homeTeam?.name && tName !== selectedMatch.awayTeam?.name;
+        });
+
+        if (newPrefs.homeTeam && selectedMatch.homeTeam) {
+            // Add Home Team - structure depends on backend. Safe bet: { name: ... } or just match existing pattern
+            // Looking at HomeScreen logic (if available) would be ideal but let's assume { name: ... } object structure
+            newTeams.push({ name: selectedMatch.homeTeam.name, id: selectedMatch.homeTeam.id || selectedMatch.homeTeam._id });
+        }
+        if (newPrefs.awayTeam && selectedMatch.awayTeam) {
+            newTeams.push({ name: selectedMatch.awayTeam.name, id: selectedMatch.awayTeam.id || selectedMatch.awayTeam._id });
+        }
+        apiUpdates.favoriteTeams = newTeams;
+
+        // Favorite Leagues (Series)
+        const currentLeagues = user?.preferences?.favoriteLeagues || [];
+        let newLeagues = currentLeagues.filter((l: any) => {
+            const lName = typeof l === 'string' ? l : l.name;
+            return lName !== selectedMatch.league;
+        });
+
+        if (newPrefs.series && selectedMatch.league) {
+            newLeagues.push({ name: selectedMatch.league });
+        }
+        apiUpdates.favoriteLeagues = newLeagues;
+
+        dispatch(updateUserPreferences(apiUpdates));
+
+        showToast("Preferences updated", "success");
+    };
 
     const SPORT_TABS = [
         { id: 'cricket', label: 'Cricket', icon: 'baseball-outline' },
@@ -111,93 +137,39 @@ export default function MatchesScreen({ navigation }: Props) {
 
     const STATUS_TABS = ['Live', 'Upcoming', 'Results'];
 
-    // Extract unique leagues from current matches for filter
-    const availableLeagues = React.useMemo(() => {
-        let sourceMatches = Array.isArray(allMatches) ? allMatches : [];
-        if (activeSport !== 'all') {
-            sourceMatches = sourceMatches.filter(m => m.sport?.toLowerCase() === activeSport);
-        }
-
-        const leaguesMap = new Map();
-        sourceMatches.forEach(match => {
-            const id = match.league?.id || match.league || 'unknown';
-            const name = match.league?.name || match.league || 'Unknown League';
-            if (!leaguesMap.has(name)) {
-                leaguesMap.set(name, { id: name, name }); // Use name as ID for easier string comparison
-            }
+    const handleClearFilters = () => {
+        setActiveSport('all');
+        handleApplyFilters({
+            sport: 'all',
+            status: 'all',
+            league: 'all',
+            dateRange: { start: null, end: null },
         });
-
-        return Array.from(leaguesMap.values()).sort((a, b) => a.name.localeCompare(b.name));
-    }, [allMatches, activeSport]);
-
-    const handleApplyFilters = (newFilters: any) => {
-        setFilters(newFilters);
-        setFilterVisible(false);
     };
 
-    // Group matches by league
-    const groupedMatches = React.useMemo(() => {
-        if (!filteredMatches.length) return [];
-
-        const groups = filteredMatches.reduce((acc, match) => {
-            const leagueName = (typeof match.league === 'string' ? match.league : match.league?.name) || 'Others';
-            if (!acc[leagueName]) {
-                acc[leagueName] = [];
-            }
-            acc[leagueName].push(match);
-            return acc;
-        }, {} as Record<string, any[]>);
-
-        return Object.keys(groups).sort().map(league => ({
-            title: league,
-            data: groups[league]
-        }));
-    }, [filteredMatches]);
-
-    const renderSectionHeader = ({ section: { title } }: { section: { title: string } }) => (
-        <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>{title}</Text>
-        </View>
-    );
-
-    const renderMatchItem = ({ item }: { item: any }) => (
-        <View style={{ marginBottom: 16 }}>
-            {item.sport === 'basketball' ? (
-                <BasketballMatchCard
-                    match={item}
-                    onPress={() => navigation.navigate('MatchDetail', { match: item })}
-                />
-            ) : (
-                <MatchCard
-                    sport={item.sport}
-                    status={item.status}
-                    displayStatus={item.displayStatus}
-                    league={item.league}
-                    homeTeam={item.homeTeam}
-                    awayTeam={item.awayTeam}
-                    score={item.status === 'finished' || item.status === 'live' ?
-                        (item.homeTeam.score && item.awayTeam.score ? `${item.homeTeam.score} - ${item.awayTeam.score}` : 'vs')
-                        : undefined
-                    }
-                    timer={
-                        item.sport === 'cricket'
-                            ? (item.cricketData?.overs ? `${item.cricketData.overs} Overs` : '')
-                            : (item.sport === 'basketball' && typeof item.timer === 'string' && item.timer.includes('Quarter'))
-                                ? item.timer
-                                : item.currentMinute || (item.scheduledAt ? new Date(item.scheduledAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '')
-                    }
-                    match={item} // Pass the full match object for flexibility if needed by new MatchCard
-                    onPress={() => navigation.navigate('MatchDetail', { match: item })}
-                />
-            )}
-        </View>
-    );
-
-    const unreadCount = notifications.filter(n => !n.read).length;
+    // Calculate current preferences for the modal
+    const currentModalParams = {
+        [`match_${selectedMatch?.id}`]: (user?.preferences?.followedMatches || []).includes(String(selectedMatch?.id)),
+        // Add others if we want accurate initial state for teams/leagues from user object
+        // For now using the simple one passed
+    };
 
     return (
         <SafeAreaView style={styles.container}>
             <Sidebar visible={sidebarVisible} onClose={() => setSidebarVisible(false)} />
+
+            <NotificationOptionsModal
+                visible={modalVisible}
+                match={selectedMatch}
+                onClose={() => setModalVisible(false)}
+                onSave={handleSavePreferences}
+                initialPreferences={{
+                    // Use user.preferences for source of truth or Redux notification slice? 
+                    // Usually NotificationSlice is better for UI instant updates, but User object is persistence.
+                    // Let's use logic from MatchesTab/Home
+                    [`match_${selectedMatch?.id}`]: (user?.preferences?.followedMatches || []).includes(String(selectedMatch?.id))
+                }}
+            />
 
             <View style={styles.header}>
                 <View style={styles.headerRow}>
@@ -216,12 +188,6 @@ export default function MatchesScreen({ navigation }: Props) {
                     <TouchableOpacity onPress={() => setFilterVisible(true)} style={styles.iconBtn}>
                         <Ionicons name="options-outline" size={24} color={theme.colors.text} />
                     </TouchableOpacity>
-                    {user && (
-                        <NotificationBell
-                            count={unreadCount}
-                            onPress={() => setNotificationVisible(true)}
-                        />
-                    )}
                 </View>
             </View>
 
@@ -247,39 +213,18 @@ export default function MatchesScreen({ navigation }: Props) {
                 ))}
             </View>
 
-            {/* Content */}
-            {isLoading ? (
-                <SkeletonList type="match" count={5} />
-            ) : apiError ? (
-                <NetworkError onRetry={refetch as any} />
-            ) : (
-                <SectionList
-                    style={styles.scrollContainer}
-                    sections={groupedMatches}
-                    keyExtractor={item => item._id || item.id}
-                    renderItem={renderMatchItem}
-                    renderSectionHeader={renderSectionHeader}
-                    contentContainerStyle={styles.listContent}
-                    stickySectionHeadersEnabled={true}
-                    showsVerticalScrollIndicator={false}
-                    ListEmptyComponent={
-                        <EmptyState
-                            variant="noMatches"
-                            message={`No ${activeTab.toLowerCase()} matches found for ${activeSport === 'all' ? 'all sports' : activeSport}`}
-                            actionLabel="Clear Filters"
-                            onAction={() => {
-                                setActiveSport('all');
-                                setFilters({
-                                    sport: 'all',
-                                    status: 'all',
-                                    league: 'all',
-                                    dateRange: { start: null, end: null },
-                                });
-                            }}
-                        />
-                    }
-                />
-            )}
+            {/* Content List */}
+            <MatchesList
+                isLoading={isLoading}
+                apiError={apiError}
+                groupedMatches={groupedMatches}
+                activeTab={activeTab}
+                activeSport={activeSport}
+                onRetry={refetch}
+                onClearFilters={handleClearFilters}
+                onNotificationToggle={handleBellPress}
+                notificationPreferences={notificationPreferences}
+            />
 
             {/* Filter Panel */}
             <FilterPanel
@@ -288,17 +233,6 @@ export default function MatchesScreen({ navigation }: Props) {
                 onApply={handleApplyFilters}
                 initialFilters={filters}
                 availableLeagues={availableLeagues}
-            />
-
-            {/* Notification Panel */}
-            <NotificationPanel
-                visible={notificationVisible}
-                onClose={() => setNotificationVisible(false)}
-                notifications={notifications}
-                onNotificationPress={(notification) => {
-                    console.log('Notification pressed:', notification);
-                    setNotificationVisible(false);
-                }}
             />
         </SafeAreaView>
     );

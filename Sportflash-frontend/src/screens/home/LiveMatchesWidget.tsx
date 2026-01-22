@@ -12,9 +12,11 @@ interface LiveMatchesWidgetProps {
     navigation: any;
     gap?: number;
     ListFooterComponent?: React.ReactNode;
+    preferences?: { [key: string]: boolean };
+    onNotificationPress?: (match: Match) => void;
 }
 
-export default function LiveMatchesWidget({ matches, loading, width, navigation, gap, ListFooterComponent }: LiveMatchesWidgetProps) {
+export default function LiveMatchesWidget({ matches, loading, width, navigation, gap, ListFooterComponent, preferences, onNotificationPress }: LiveMatchesWidgetProps) {
 
     // Logic for layout
     const isDesktop = width > 768;
@@ -94,6 +96,13 @@ export default function LiveMatchesWidget({ matches, loading, width, navigation,
                                 <MatchCard
                                     {...item}
                                     onPress={() => navigation.navigate('MatchDetail', { match: item })}
+                                    onNotificationPress={onNotificationPress ? () => onNotificationPress(item) : undefined}
+                                    isSubscribed={Boolean(
+                                        (preferences as any)?.[`match_${item.id}`] ||
+                                        (preferences as any)?.[`series_${item.league?.name || (typeof item.league === 'string' ? item.league : '')}`] ||
+                                        (preferences as any)?.[`team_${item.homeTeam?.name}`] ||
+                                        (preferences as any)?.[`team_${item.awayTeam?.name}`]
+                                    )}
                                 />
                             </View>
                         );

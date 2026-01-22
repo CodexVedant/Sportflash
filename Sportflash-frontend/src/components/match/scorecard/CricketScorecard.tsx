@@ -40,7 +40,7 @@ const CricketScorecard = ({ match, onPlayerPress }: CricketScorecardProps) => {
                             {inning.batting?.map((batter: any, idx: number) => (
                                 <View key={idx} style={styles.row}>
                                     <View style={{ flex: 2 }}>
-                                        <TouchableOpacity onPress={() => onPlayerPress && onPlayerPress({ name: batter.player, sport: 'cricket' })}>
+                                        <TouchableOpacity onPress={() => onPlayerPress && onPlayerPress({ name: batter.player, id: batter.id, sport: 'cricket' })}>
                                             <Text style={[styles.playerName, { color: theme.colors.primary }]}>{batter.player || '-'}</Text>
                                         </TouchableOpacity>
                                         <Text style={styles.dismissal}>{batter.status || ''}</Text>
@@ -67,7 +67,7 @@ const CricketScorecard = ({ match, onPlayerPress }: CricketScorecardProps) => {
                             {inning.bowling?.map((bowler: any, idx: number) => (
                                 <View key={idx} style={styles.row}>
                                     <View style={{ flex: 2 }}>
-                                        <TouchableOpacity onPress={() => onPlayerPress && onPlayerPress({ name: bowler.player, sport: 'cricket' })}>
+                                        <TouchableOpacity onPress={() => onPlayerPress && onPlayerPress({ name: bowler.player, id: bowler.id, sport: 'cricket' })}>
                                             <Text style={[styles.playerName, { color: theme.colors.primary }]}>{bowler.player || '-'}</Text>
                                         </TouchableOpacity>
                                     </View>
@@ -99,7 +99,7 @@ const CricketScorecard = ({ match, onPlayerPress }: CricketScorecardProps) => {
                                     battingStyle={player.battingStyle}
                                     bowlingStyle={player.bowlingStyle}
                                     sport="cricket"
-                                    onPress={() => onPlayerPress && onPlayerPress({ ...player, sport: 'cricket' })}
+                                    onPress={() => onPlayerPress && onPlayerPress({ ...player, id: player.id, sport: 'cricket' })}
                                 />
                             ))
                         ) : (
@@ -119,7 +119,7 @@ const CricketScorecard = ({ match, onPlayerPress }: CricketScorecardProps) => {
                                     battingStyle={player.battingStyle}
                                     bowlingStyle={player.bowlingStyle}
                                     sport="cricket"
-                                    onPress={() => onPlayerPress && onPlayerPress({ ...player, sport: 'cricket' })}
+                                    onPress={() => onPlayerPress && onPlayerPress({ ...player, id: player.id, sport: 'cricket' })}
                                 />
                             ))
                         ) : (

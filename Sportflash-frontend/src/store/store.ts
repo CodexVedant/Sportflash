@@ -1,6 +1,7 @@
 import { configureStore, combineReducers } from '@reduxjs/toolkit';
 import { persistStore, persistReducer, FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER } from 'redux-persist';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+
 import authReducer from './slices/authSlice';
 import matchesReducer from './slices/matchesSlice';
 import newsReducer from './slices/newsSlice';
@@ -18,6 +19,7 @@ import { usersApi } from './api/usersApi';
 import { authApi } from './api/authApi';
 import { playersApi } from './api/playersApi';
 import { leaguesApi } from './api/leaguesApi';
+import { notificationsApi } from './api/notificationsApi';
 
 // Persist Configs
 const newsPersistConfig = {
@@ -52,16 +54,25 @@ const rootReducer = combineReducers({
     [authApi.reducerPath]: authApi.reducer,
     [playersApi.reducerPath]: playersApi.reducer,
     [leaguesApi.reducerPath]: leaguesApi.reducer,
+    [notificationsApi.reducerPath]: notificationsApi.reducer,
 });
 
+
+
+const persistConfig = {
+    key: 'root',
+    storage: AsyncStorage,
+    whitelist: ['auth', 'theme', 'notifications'], // Persist these slices
+};
+
+const persistedReducer = persistReducer(persistConfig, rootReducer);
+
 export const store = configureStore({
-    reducer: rootReducer,
+    reducer: persistedReducer,
     middleware: (getDefaultMiddleware) =>
         getDefaultMiddleware({
-            serializableCheck: {
-                ignoredActions: [FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER],
-            },
-            immutableCheck: { warnAfter: 100 },
+            serializableCheck: false,
+            immutableCheck: false,
         }).concat(
             matchesApi.middleware,
             newsApi.middleware,
@@ -70,7 +81,8 @@ export const store = configureStore({
             usersApi.middleware,
             authApi.middleware,
             playersApi.middleware,
-            leaguesApi.middleware
+            leaguesApi.middleware,
+            notificationsApi.middleware
         ),
 });
 

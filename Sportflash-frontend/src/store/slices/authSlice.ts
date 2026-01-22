@@ -9,13 +9,15 @@ interface AuthState {
     user: User | null;
     token: string | null;
     loading: boolean;
+    isInitialized: boolean;
     error: string | null;
 }
 
 const initialState: AuthState = {
     user: null,
     token: null,
-    loading: true,
+    loading: false, // Default false, only true during requests
+    isInitialized: false, // True after first loadUser check
     error: null,
 };
 
@@ -61,8 +63,31 @@ export const register = createAsyncThunk<AuthResponseData, RegisterRequest, { re
     'auth/register',
     async ({ name, email, password }, { rejectWithValue }) => {
         try {
-            const response = await api.post<{ data: AuthResponseData }>('/auth/register', { name, email, password });
-            const { token, user } = response.data.data;
+            const response = await api.post<{ data: AuthResponseData } | any>('/auth/register', { name, email, password });
+
+            const data = response.data;
+
+
+            if (data?.requireOtp) {
+                return {
+                    requireOtp: true,
+                    email: data.email,
+                    message: data.message,
+                    token: '', // Placeholder to satisfy TS, won't be used
+                    user: {} as User // Placeholder
+                };
+                // Ideally we should use a different return type, but for quick fix avoiding big refactors:
+            }
+
+            // OTP not required, falling back to standard login
+
+            // Check if structure matches
+            if (!data.data || !data.data.token) {
+                throw new Error('Invalid response structure');
+            }
+
+            // Normal flow (if OTP disabled)
+            const { token, user } = data.data;
 
             await AsyncStorage.setItem('token', token);
             await AsyncStorage.setItem('user', JSON.stringify(user));
@@ -79,9 +104,18 @@ export const register = createAsyncThunk<AuthResponseData, RegisterRequest, { re
 export const logout = createAsyncThunk<void, void>(
     'auth/logout',
     async () => {
-        await AsyncStorage.removeItem('token');
-        await AsyncStorage.removeItem('user');
-        delete api.defaults.headers.common['Authorization'];
+        try {
+            await api.post('/auth/logout'); // Tell backend to forget this device
+        } catch (error: any) {
+            // Ignore 401 (Unauthorized) as it means we are effectively already logged out
+            if (error.response?.status !== 401) {
+                // Logout API failed (ignoring 401)
+            }
+        } finally {
+            await AsyncStorage.removeItem('token');
+            await AsyncStorage.removeItem('user');
+            delete api.defaults.headers.common['Authorization'];
+        }
     }
 );
 
@@ -99,12 +133,53 @@ export const updateUserPreferences = createAsyncThunk<User, UserPreferences, { r
     }
 );
 
+// Use 'any' or define a subset interface to avoid circular dependency with RootState
+// or just use getState() as any safely here since we know the structure.
+export const savePushToken = createAsyncThunk<void, string>(
+    'auth/savePushToken',
+    async (token, { rejectWithValue, getState }) => {
+        try {
+            const state = getState() as any; // Cast to any to avoid circular import of RootState
+            const authToken = state.auth.token;
+
+            // Explicitly attach header to avoid race condition with loadUser
+            const config = authToken ? {
+                headers: { Authorization: `Bearer ${authToken}` }
+            } : {};
+
+            await api.put('/auth/pushtoken', { token }, config);
+        } catch (error: any) {
+            // Failed to save push token to Backend
+            // Optionally reject, but we mostly fire-and-forget
+        }
+    }
+);
+
+export const subscribeToPremium = createAsyncThunk<User, void, { rejectValue: string }>(
+    'auth/subscribe',
+    async (_, { rejectWithValue }) => {
+        try {
+            const res = await api.post<{ data: User }>('/auth/subscribe');
+            const updatedUser = res.data.data;
+            await AsyncStorage.setItem('user', JSON.stringify(updatedUser));
+            return updatedUser;
+        } catch (error: any) {
+            return rejectWithValue(error.message || 'Subscription failed');
+        }
+    }
+);
+
 const authSlice = createSlice({
     name: 'auth',
     initialState,
     reducers: {
         clearError: (state) => {
             state.error = null;
+        },
+        setPremiumStatus: (state, action: PayloadAction<boolean>) => {
+            if (state.user) {
+                state.user.isPremium = action.payload;
+            }
         },
         setCredentials: (state, action: PayloadAction<AuthResponseData>) => {
             state.user = action.payload.user;
@@ -123,6 +198,7 @@ const authSlice = createSlice({
             })
             .addCase(loadUser.fulfilled, (state, action) => {
                 state.loading = false;
+                state.isInitialized = true;
                 if (action.payload) {
                     state.token = action.payload.token;
                     state.user = action.payload.user;
@@ -130,6 +206,7 @@ const authSlice = createSlice({
             })
             .addCase(loadUser.rejected, (state) => {
                 state.loading = false;
+                state.isInitialized = true;
             })
             // Login
             .addCase(login.pending, (state) => {
@@ -152,8 +229,11 @@ const authSlice = createSlice({
             })
             .addCase(register.fulfilled, (state, action) => {
                 state.loading = false;
-                state.token = action.payload.token;
-                state.user = action.payload.user;
+                if (!action.payload.requireOtp) {
+                    state.token = action.payload.token;
+                    state.user = action.payload.user;
+                }
+                // If ID OTP required, we rarely update state here, the component handles navigation
             })
             .addCase(register.rejected, (state, action) => {
                 state.loading = false;
@@ -166,11 +246,17 @@ const authSlice = createSlice({
             })
             // Update Preferences
             .addCase(updateUserPreferences.fulfilled, (state, action) => {
-                state.user = action.payload;
+                // Force new reference to ensure UI updates deep nested props
+                state.user = { ...action.payload };
+            })
+            // Subscribe
+            .addCase(subscribeToPremium.fulfilled, (state, action) => {
+                state.user = { ...action.payload };
+                state.user.isPremium = true; // Ensure UI reflects it immediately
             });
     },
 });
 
-export const { clearError, setCredentials } = authSlice.actions;
+export const { clearError, setPremiumStatus, setCredentials } = authSlice.actions;
 export default authSlice.reducer;
 

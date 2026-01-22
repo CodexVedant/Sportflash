@@ -3,8 +3,10 @@ export type RootStackParamList = {
     Login: undefined;
     Register: undefined;
     ForgotPassword: undefined;
+    ResetOtpVerification: { email: string };
     ResetPassword: { resetToken: string };
-    MatchDetail: { match?: any; id?: string; sport?: string };
+    OtpVerification: { email: string };
+    MatchDetail: { match?: any; id?: string; matchId?: string; sport?: string };
     Series: { id: string; sport: string };
     Following: undefined;
     Bookmarks: undefined;
@@ -20,6 +22,8 @@ export type RootStackParamList = {
     TeamProfile: { teamId?: string; teamName?: string; sport?: string; team?: any };
     PlayerProfile: { playerId?: string; player?: any; sport?: string };
     Notifications: undefined;
+    NotificationSettings: undefined;
+    Premium: undefined;
     Preferences: undefined;
     UpcomingMatches: { sport?: string; date?: string };
     Home: undefined;

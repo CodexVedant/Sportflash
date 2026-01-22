@@ -5,14 +5,16 @@ export interface User extends BaseEntity {
     email: string;
     avatar?: string;
     preferences?: UserPreferences;
+    isPremium?: boolean;
 }
 
 export interface UserPreferences {
     theme?: 'light' | 'dark';
     notifications?: boolean;
-    favoriteSports?: string[];
-    favoriteTeams?: string[];
-    favoriteLeagues?: FavoriteLeague[];
+    favoriteTeams?: any[]; // string[] | Team[]
+    favoriteLeagues?: any[]; // string[] | FavoriteLeague[]
+    favoritePlayers?: any[]; // string[] | Player[]
+    followedMatches?: string[]; // Match IDs
 }
 
 export interface FavoriteLeague {
@@ -21,6 +23,7 @@ export interface FavoriteLeague {
     sport: string;
     country?: string;
     logo?: string;
+    season?: string;
 }
 
 export interface AuthResponse {

@@ -3,19 +3,20 @@ import { View, Text, Modal, ScrollView, TouchableOpacity, StyleSheet } from 'rea
 import { Ionicons } from '@expo/vector-icons';
 import { theme } from '@utils/theme';
 import { BlurView } from 'expo-blur';
-import NotificationItem, { Notification } from './NotificationItem';
+import NotificationItemComponent from './NotificationItem';
+import { NotificationItem } from '@app-types/models/notification';
 import EmptyState from '@components/common/EmptyState';
 import { styles } from '@utils/style/NotificationPanel.styles';
 
 interface NotificationPanelProps {
     visible: boolean;
     onClose: () => void;
-    notifications?: Notification[];
-    onNotificationPress?: (notification: Notification) => void;
+    notifications?: NotificationItem[];
+    onNotificationPress?: (notification: NotificationItem) => void;
 }
 
 export default function NotificationPanel({ visible, onClose, notifications = [], onNotificationPress }: NotificationPanelProps) {
-    const [localNotifications, setLocalNotifications] = useState<Notification[]>(notifications);
+    const [localNotifications, setLocalNotifications] = useState<NotificationItem[]>(notifications);
     const [filter, setFilter] = useState<'all' | 'unread'>('all'); // all, unread
 
     useEffect(() => {
@@ -136,7 +137,7 @@ export default function NotificationPanel({ visible, onClose, notifications = []
                             />
                         ) : (
                             filteredNotifications.map(notification => (
-                                <NotificationItem
+                                <NotificationItemComponent
                                     key={notification.id}
                                     notification={notification}
                                     onPress={onNotificationPress}

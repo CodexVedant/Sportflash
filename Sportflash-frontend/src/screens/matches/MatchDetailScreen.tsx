@@ -54,8 +54,39 @@ export default function MatchDetailScreen({ navigation, route }: Props) {
     const awayScore = matchData.awayTeam?.score || '0';
     const timer = matchData.timer || '';
 
-    const isFollowingHome = user?.preferences?.favoriteTeams?.includes(matchData.homeTeam?.name);
-    const isFollowingAway = user?.preferences?.favoriteTeams?.includes(matchData.awayTeam?.name);
+    const isFollowingHome = React.useMemo(() => {
+        return user?.preferences?.favoriteTeams?.some(t => {
+            const tId = typeof t === 'string' ? t : t.id;
+            const tName = typeof t === 'string' ? t : t.name; // Get name from saved pref
+
+            const hId = matchData.homeTeam?.id;
+            const hName = matchData.homeTeam?.name;
+
+            // 1. ID Match
+            if (hId && tId && String(tId) === String(hId)) return true;
+            // 2. Name Match (Normalized)
+            if (hName && tName && hName.trim().toLowerCase() === tName.trim().toLowerCase()) return true;
+
+            return false;
+        });
+    }, [user?.preferences?.favoriteTeams, matchData.homeTeam]);
+
+    const isFollowingAway = React.useMemo(() => {
+        return user?.preferences?.favoriteTeams?.some(t => {
+            const tId = typeof t === 'string' ? t : t.id;
+            const tName = typeof t === 'string' ? t : t.name;
+
+            const aId = matchData.awayTeam?.id;
+            const aName = matchData.awayTeam?.name;
+
+            // 1. ID Match
+            if (aId && tId && String(tId) === String(aId)) return true;
+            // 2. Name Match (Normalized)
+            if (aName && tName && aName.trim().toLowerCase() === tName.trim().toLowerCase()) return true;
+
+            return false;
+        });
+    }, [user?.preferences?.favoriteTeams, matchData.awayTeam]);
 
     // Initial Fetch (if needed, though HomeScreen likely fetched it)
     const { refetch } = useGetLiveMatchesQuery(undefined);
@@ -101,7 +132,7 @@ export default function MatchDetailScreen({ navigation, route }: Props) {
             commentaryList.reverse();
         }
 
-        // Basketball Commentary (Simulated from Quarter Scores)
+        // Basketball Commentary
         if (matchData.sport === 'basketball' && matchData.basketballData) {
             const b = matchData.basketballData;
             if (b.home_q4) commentaryList.push({ time: 'Q4', text: `End of Q4: ${b.home_q4} - ${b.away_q4}`, key: 'q4' });
@@ -114,29 +145,63 @@ export default function MatchDetailScreen({ navigation, route }: Props) {
     }, [matchData]);
 
 
-    const handleFollow = useCallback(async (teamName: string) => {
+    const handleFollow = useCallback(async (team: any) => {
         if (!user) {
             showToast('Please login to follow teams', 'info');
             return;
         }
 
-        try {
-            let currentTeams = user.preferences?.favoriteTeams || [];
-            let newTeams;
+        const teamName = team.name || 'Unknown';
+        const teamId = team.id;
 
-            if (currentTeams.includes(teamName)) {
-                newTeams = currentTeams.filter(t => t !== teamName);
-                showToast(`Unfollowed ${teamName}`);
+        try {
+            const currentTeams = user.preferences?.favoriteTeams || [];
+
+            // Robust check for existing follow
+            const isFollowing = currentTeams.some((t: any) => {
+                const tId = typeof t === 'string' ? t : t.id;
+                const tName = typeof t === 'string' ? t : t.name;
+
+                // 1. Check ID existence and match
+                if (teamId && tId && String(tId) === String(teamId)) return true;
+
+                // 2. Check Name existence and match (Normalize)
+                if (tName && teamName && tName.trim().toLowerCase() === teamName.trim().toLowerCase()) return true;
+
+                return false;
+            });
+
+            let newTeams;
+            if (isFollowing) {
+                // Unfollow
+                newTeams = currentTeams.filter((t: any) => {
+                    const tId = typeof t === 'string' ? t : t.id;
+                    const tName = typeof t === 'string' ? t : t.name;
+
+                    if (teamId && tId && String(tId) === String(teamId)) return false;
+                    if (tName && teamName && tName.trim().toLowerCase() === teamName.trim().toLowerCase()) return false;
+
+                    return true;
+                });
+                showToast(`Unfollowed ${teamName}`, 'success');
             } else {
-                newTeams = [...currentTeams, teamName];
-                showToast(`Following ${teamName}`);
+                // Follow - Save Full Object
+                const teamToSave = {
+                    id: teamId ? String(teamId) : undefined, // Ensure ID is saved if present
+                    name: teamName,
+                    sport: matchData.sport,
+                    logo: team.logo
+                };
+                newTeams = [...currentTeams, teamToSave];
+                showToast(`Following ${teamName}`, 'success');
             }
 
             await dispatch(updateUserPreferences({ favoriteTeams: newTeams })).unwrap();
         } catch (error) {
+            console.error('Follow Error:', error);
             showToast('Failed to update favorites', 'error');
         }
-    }, [user, dispatch, showToast]);
+    }, [user, dispatch, showToast, matchData.sport]);
 
     const getSportColor = () => {
         switch (matchData.sport?.toLowerCase()) {
@@ -154,8 +219,8 @@ export default function MatchDetailScreen({ navigation, route }: Props) {
     // Fetch Data for Tabs
     const { data: h2hData, isLoading: isH2HLoading, refetch: refetchH2H } = useGetMatchH2HQuery({
         sport: matchData.sport || 'football',
-        team1Id: matchData.homeTeam?.id,
-        team2Id: matchData.awayTeam?.id
+        team1Id: matchData.homeTeam?.id || '',
+        team2Id: matchData.awayTeam?.id || ''
     }, {
         skip: !matchData.homeTeam?.id || !matchData.awayTeam?.id,
         pollingInterval: isFinished ? 0 : 300000, // Disable polling if finished
@@ -164,7 +229,7 @@ export default function MatchDetailScreen({ navigation, route }: Props) {
 
     const { data: standingsData, isLoading: isStandingsLoading, refetch: refetchStandings } = useGetMatchStandingsQuery({
         sport: matchData.sport || 'football',
-        leagueId: matchData.leagueInfo?.id
+        leagueId: matchData.leagueInfo?.id || ''
     }, {
         skip: !matchData.leagueInfo?.id,
         pollingInterval: isFinished ? 0 : 300000, // Disable polling if finished
@@ -186,7 +251,9 @@ export default function MatchDetailScreen({ navigation, route }: Props) {
                 return (
                     <Scorecard
                         match={matchData}
-                        onPlayerPress={(player) => navigation.navigate('PlayerProfile', { player })}
+                        onPlayerPress={(player) => navigation.navigate('PlayerProfile', {
+                            player: { ...player, sport: matchData.sport || 'football' }
+                        })}
                     />
                 );
             case 'H2H':
@@ -249,8 +316,8 @@ export default function MatchDetailScreen({ navigation, route }: Props) {
                         <StandingsWidget
                             data={standingsData?.map(item => ({
                                 team: {
-                                    id: item.team?.id,
-                                    name: item.team?.name
+                                    id: item.team?.id || '',
+                                    name: item.team?.name || ''
                                 },
                                 position: item.position ?? item.rank ?? 0,
                                 stats: {
@@ -261,7 +328,7 @@ export default function MatchDetailScreen({ navigation, route }: Props) {
                                     percentage: item.stats?.percentage ?? (item as any).percentage
                                 }
                             })) || []}
-                            highlightTeams={[matchData.homeTeam?.id, matchData.awayTeam?.id]}
+                            highlightTeams={[matchData.homeTeam?.id || '', matchData.awayTeam?.id || '']}
                         />
                     </View>
                 );

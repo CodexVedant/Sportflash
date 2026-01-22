@@ -15,8 +15,8 @@ export const matchesApi = createApi({
             },
             keepUnusedDataFor: 300, // Cache for 5 minutes
         }),
-        getMatchDetails: builder.query<Match, string>({
-            query: (id) => `/matches/${id}`,
+        getMatchDetails: builder.query<Match, { id: string; sport: string }>({
+            query: ({ id, sport }) => `/matches/${id}?sport=${sport}`,
             transformResponse: (response: ApiResponse<Match>) => {
                 return response.data;
             }
@@ -42,6 +42,27 @@ export const matchesApi = createApi({
             },
             keepUnusedDataFor: 60, // Reduce cache time to 1 minute
         }),
+        getFinishedMatches: builder.query<Match[], { sport?: string; days?: number } | void>({
+            query: (args) => {
+                const { sport, days } = args || {};
+                const params = new URLSearchParams();
+                if (sport) params.append('sport', sport);
+                if (days) params.append('days', days.toString());
+                return `/matches/finished?${params.toString()}`;
+            },
+            transformResponse: (response: any) => {
+                return response.data || [];
+            },
+            keepUnusedDataFor: 300,
+        }),
+        getFollowedMatches: builder.mutation<Match[], { teams: any[]; players?: any[] }>({
+            query: (body) => ({
+                url: '/matches/following',
+                method: 'POST',
+                body,
+            }),
+            transformResponse: (response: ApiResponse<Match[]>) => response.data,
+        }),
     }),
 });
 
@@ -50,6 +71,8 @@ export const {
     useGetMatchDetailsQuery,
     useGetMatchH2HQuery,
     useGetMatchStandingsQuery,
-    useGetUpcomingMatchesQuery
+    useGetUpcomingMatchesQuery,
+    useGetFinishedMatchesQuery,
+    useGetFollowedMatchesMutation
 } = matchesApi;
 

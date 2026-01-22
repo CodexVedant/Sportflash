@@ -1,6 +1,7 @@
 ﻿import React, { useMemo } from 'react';
 import { View, Text, TouchableOpacity, GestureResponderEvent } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { Ionicons } from '@expo/vector-icons';
 import { theme } from '@utils/theme';
 import LiveBadge from './LiveBadge';
 import TeamLogo from './TeamLogo';
@@ -11,9 +12,11 @@ import { Match } from '@app-types/models/match';
 interface BasketballMatchCardProps {
     match: Match;
     onPress?: (event: GestureResponderEvent) => void;
+    onNotificationPress?: () => void;
+    isSubscribed?: boolean;
 }
 
-export default function BasketballMatchCard({ match, onPress }: BasketballMatchCardProps) {
+function BasketballMatchCard({ match, onPress, onNotificationPress, isSubscribed }: BasketballMatchCardProps) {
     const { status, displayStatus, league, homeTeam, awayTeam, score } = match;
 
     // Parse quarters data
@@ -53,14 +56,31 @@ export default function BasketballMatchCard({ match, onPress }: BasketballMatchC
             >
                 {/* Header */}
                 <View style={styles.header}>
-                    {status === 'live' ? (
-                        <LiveBadge sport="basketball" status={displayStatus} />
-                    ) : (
-                        <View style={styles.badgeContainer}>
-                            <Text style={styles.statusText}>{displayStatus?.toUpperCase() || status?.toUpperCase()}</Text>
-                        </View>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
+                        {status === 'live' ? (
+                            <LiveBadge sport="basketball" status={displayStatus} />
+                        ) : (
+                            <View style={styles.badgeContainer}>
+                                <Text style={styles.statusText}>{displayStatus?.toUpperCase() || status?.toUpperCase()}</Text>
+                            </View>
+                        )}
+                        <Text style={styles.league} numberOfLines={1}>{(typeof league === 'object' ? league?.name : league) || 'League'}</Text>
+                    </View>
+
+                    {/* Notification Bell */}
+                    {onNotificationPress && (
+                        <TouchableOpacity
+                            onPress={onNotificationPress}
+                            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                            style={{ padding: 4 }}
+                        >
+                            <Ionicons
+                                name={isSubscribed ? "notifications" : "notifications-outline"}
+                                size={20}
+                                color={isSubscribed ? '#FFD700' : theme.colors.textMuted}
+                            />
+                        </TouchableOpacity>
                     )}
-                    <Text style={styles.league} numberOfLines={1}>{(typeof league === 'object' ? league?.name : league) || 'League'}</Text>
                 </View>
 
                 {/* Score Header (Q1, Q2, Q3, Q4 labels) */}
@@ -106,3 +126,5 @@ export default function BasketballMatchCard({ match, onPress }: BasketballMatchC
     );
 }
 
+
+export default React.memo(BasketballMatchCard);

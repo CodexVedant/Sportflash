@@ -44,17 +44,18 @@ class AllSportsApiService {
             });
 
             if (response.data && response.data.success === 1) {
-                return response.data.result;
+                return response.data.result || [];
             } else {
                 console.error(`❌ AllSportsAPI Error: ${sport} - ${method}`, response.data);
-                return null;
+                return [];
             }
         } catch (error) {
             console.error(`❌ AllSportsAPI Request Failed: ${sport} - ${method}`, error.message);
             if (error.response) {
                 console.error('Response data:', error.response.data);
             }
-            throw error;
+            // Return empty array/object to prevent crash
+            return [];
         }
     }
 
@@ -89,14 +90,54 @@ class AllSportsApiService {
      * @param {string} leagueId - Optional league ID filter
      * @param {string} teamId - Optional team ID filter
      */
-    async getFootballFixtures({ date = null, leagueId = null, teamId = null } = {}) {
+    // === FOOTBALL ===
+    async getFootballFixtures({ date = null, from = null, to = null, leagueId = null, teamId = null } = {}) {
         const params = {};
-        if (date) params.from = date;
-        if (date) params.to = date;
+        if (date) {
+            params.from = date;
+            params.to = date;
+        } else {
+            if (from) params.from = from;
+            if (to) params.to = to;
+        }
         if (leagueId) params.league_id = leagueId;
         if (teamId) params.team_id = teamId;
 
         return await this.makeRequest('football', 'Fixtures', params);
+    }
+
+    // ... (other methods)
+
+    // === BASKETBALL ===
+    async getBasketballFixtures({ date = null, from = null, to = null, leagueId = null, teamId = null } = {}) {
+        const params = {};
+        if (date) {
+            params.from = date;
+            params.to = date;
+        } else {
+            if (from) params.from = from;
+            if (to) params.to = to;
+        }
+        if (leagueId) params.league_id = leagueId;
+        if (teamId) params.team_id = teamId;
+
+        return await this.makeRequest('basketball', 'Fixtures', params);
+    }
+
+    // === CRICKET ===
+    async getCricketFixtures({ date = null, from = null, to = null, leagueId = null, teamId = null } = {}) {
+        const params = {};
+        if (date) {
+            params.from = date;
+            params.to = date;
+        } else {
+            if (from) params.from = from;
+            if (to) params.to = to;
+        }
+        if (leagueId) params.league_id = leagueId;
+        if (teamId) params.team_id = teamId;
+
+        return await this.makeRequest('cricket', 'Fixtures', params);
     }
 
     /**
@@ -139,8 +180,16 @@ class AllSportsApiService {
      * Get football player details
      * @param {string} playerId - Player ID
      */
-    async getFootballPlayer(playerId) {
-        return await this.makeRequest('football', 'Players', { player_id: playerId });
+    async getFootballPlayer(playerIdOrName) {
+        const params = {};
+        // Check if input indicates a name search (API error suggested 'playerName' param support)
+        // Usually AllSportsAPI uses 'player_id' or 'player_name'
+        if (typeof playerIdOrName === 'string' && isNaN(playerIdOrName)) {
+            params.player_name = playerIdOrName;
+        } else {
+            params.player_id = playerIdOrName;
+        }
+        return await this.makeRequest('football', 'Players', params);
     }
 
     // === BASKETBALL METHODS ===
@@ -174,15 +223,7 @@ class AllSportsApiService {
      * @param {string} leagueId - Optional league ID filter
      * @param {string} teamId - Optional team ID filter
      */
-    async getBasketballFixtures({ date = null, leagueId = null, teamId = null } = {}) {
-        const params = {};
-        if (date) params.from = date;
-        if (date) params.to = date;
-        if (leagueId) params.leagueId = leagueId;
-        if (teamId) params.teamId = teamId;
-
-        return await this.makeRequest('basketball', 'Fixtures', params);
-    }
+    // (Duplicate getBasketballFixtures removed)
 
     /**
      * Get basketball standings
@@ -234,15 +275,7 @@ class AllSportsApiService {
      * @param {string} leagueId - Optional league ID filter
      * @param {string} teamId - Optional team ID filter
      */
-    async getCricketFixtures({ date = null, leagueId = null, teamId = null } = {}) {
-        const params = {};
-        if (date) params.from = date;
-        if (date) params.to = date;
-        if (leagueId) params.league_id = leagueId;
-        if (teamId) params.team_id = teamId;
-
-        return await this.makeRequest('cricket', 'Fixtures', params);
-    }
+    // (Duplicate getCricketFixtures removed)
 
     /**
      * Get cricket standings
@@ -284,6 +317,20 @@ class AllSportsApiService {
     }
 
     // === UNIFIED METHODS ===
+
+    /**
+     * Get cricket player details
+     * @param {string} playerId - Player ID
+     */
+    async getCricketPlayer(playerIdOrName) {
+        const params = {};
+        if (typeof playerIdOrName === 'string' && isNaN(playerIdOrName)) {
+            params.player_name = playerIdOrName;
+        } else {
+            params.player_id = playerIdOrName;
+        }
+        return await this.makeRequest('cricket', 'Players', params);
+    }
 
     /**
      * Get live scores for all sports

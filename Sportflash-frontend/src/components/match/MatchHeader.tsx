@@ -11,7 +11,7 @@ interface MatchHeaderProps {
     homeScore: string | number;
     awayScore: string | number;
     timer?: string;
-    onFollow: (teamName: string) => void;
+    onFollow: (team: any) => void;
     onTeamPress?: (team: any) => void;
     isFollowingHome: boolean;
     isFollowingAway: boolean;
@@ -47,7 +47,7 @@ const MatchHeader: React.FC<MatchHeaderProps> = ({
                     </TouchableOpacity>
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                         <Text style={styles.teamNameHero}>{match.homeTeam.name}</Text>
-                        <TouchableOpacity onPress={() => onFollow(match.homeTeam.name)}>
+                        <TouchableOpacity onPress={() => onFollow(match.homeTeam)}>
                             <Ionicons name={isFollowingHome ? "star" : "star-outline"} size={16} color={isFollowingHome ? theme.colors.warning : theme.colors.textMuted} />
                         </TouchableOpacity>
                     </View>
@@ -77,7 +77,7 @@ const MatchHeader: React.FC<MatchHeaderProps> = ({
                     </TouchableOpacity>
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                         <Text style={styles.teamNameHero}>{match.awayTeam.name}</Text>
-                        <TouchableOpacity onPress={() => onFollow(match.awayTeam.name)}>
+                        <TouchableOpacity onPress={() => onFollow(match.awayTeam)}>
                             <Ionicons name={isFollowingAway ? "star" : "star-outline"} size={16} color={isFollowingAway ? theme.colors.warning : theme.colors.textMuted} />
                         </TouchableOpacity>
                     </View>
@@ -101,7 +101,7 @@ const MatchHeader: React.FC<MatchHeaderProps> = ({
                 </TouchableOpacity>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                     <Text style={styles.teamNameHero}>{match.homeTeam.name}</Text>
-                    <TouchableOpacity onPress={() => onFollow(match.homeTeam.name)}>
+                    <TouchableOpacity onPress={() => onFollow(match.homeTeam)}>
                         <Ionicons name={isFollowingHome ? "star" : "star-outline"} size={16} color={isFollowingHome ? theme.colors.warning : theme.colors.textMuted} />
                     </TouchableOpacity>
                 </View>
@@ -127,7 +127,7 @@ const MatchHeader: React.FC<MatchHeaderProps> = ({
                 </TouchableOpacity>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                     <Text style={styles.teamNameHero}>{match.awayTeam.name}</Text>
-                    <TouchableOpacity onPress={() => onFollow(match.awayTeam.name)}>
+                    <TouchableOpacity onPress={() => onFollow(match.awayTeam)}>
                         <Ionicons name={isFollowingAway ? "star" : "star-outline"} size={16} color={isFollowingAway ? theme.colors.warning : theme.colors.textMuted} />
                     </TouchableOpacity>
                 </View>

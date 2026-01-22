@@ -8,6 +8,17 @@ const {
     searchNews
 } = require('../controllers/newsController');
 
+// @route   POST /api/news/bookmark
+// @desc    Toggle bookmark for an article
+// @access  Private
+const { protect } = require('../middleware/auth');
+router.post('/bookmark', protect, require('../controllers/newsController').toggleBookmark);
+
+// @route   GET /api/news/bookmarks
+// @desc    Get user bookmarks
+// @access  Private
+router.get('/bookmarks', protect, require('../controllers/newsController').getBookmarks);
+
 // @route   GET /api/news
 // @desc    Get all news or filtered by category
 // @access  Public

@@ -9,6 +9,12 @@
 const mapFootballMatch = (match) => {
     if (!match) return null;
 
+    // VALIDATION: Reject Cricket matches lurking in Football response
+    // Cricket matches have 'event_type' (ODI, T20) or 'event_home_rr'
+    if (match.event_type || match.event_home_rr) {
+        return null;
+    }
+
     return {
         _id: match.event_key,
         id: match.event_key,
@@ -98,6 +104,7 @@ const normalizeLineups = (lineups, sport = 'football') => {
  */
 const mapCricketLineupPlayer = (p) => {
     return {
+        id: p.player_key || p.player_id || null, // Capture ID
         name: p.player || p.lineup_player || p.player_name || p.name,
         number: p.number || p.lineup_number || p.player_number || '',
         position: p.position || p.lineup_position || p.player_position || p.player_type || '',
@@ -161,6 +168,11 @@ const mapBasketballLineupPlayer = (p) => {
  */
 const mapBasketballMatch = (match) => {
     if (!match) return null;
+
+    // VALIDATION: Reject Cricket matches
+    if (match.event_type || match.event_home_rr) {
+        return null;
+    }
 
     // Format Quarters
     const quartersData = formatBasketballQuarters(match.scores);
@@ -269,6 +281,7 @@ const mapCricketMatch = (match) => {
         status: mapMatchStatus(match.event_status, match.event_live),
         displayStatus: match.event_status,
         statusInfo: match.event_status_info,
+        date: match.event_date_start, // Essential for frontend grouping/display
         dateStart: match.event_date_start,
         dateStop: match.event_date_stop,
         time: match.event_time,
@@ -367,6 +380,7 @@ const normalizeCricketScorecard = (scorecard) => {
             batting = inning
                 .filter(p => p.type === 'Batsman')
                 .map(b => ({
+                    id: b.player_id || b.player_key || null, // Capture ID
                     player: b.player,
                     status: b.status || 'not out',
                     runs: b.R || '0',
@@ -379,6 +393,7 @@ const normalizeCricketScorecard = (scorecard) => {
             bowling = inning
                 .filter(p => p.type === 'Bowler')
                 .map(b => ({
+                    id: b.player_id || b.player_key || null, // Capture ID
                     player: b.player,
                     overs: b.O || '0',
                     maidens: b.M || '0',
@@ -389,6 +404,7 @@ const normalizeCricketScorecard = (scorecard) => {
         } else {
             // Handle Object structure (legacy/fallback)
             batting = (inning.batsman || inning.batsmen || inning.batting || []).map(b => ({
+                id: b.player_id || b.player_key || b.id || null, // Capture ID
                 player: b.name || b.player,
                 status: b.out_by || b.dismissal || b.status || 'not out',
                 runs: b.runs || b.R || '0',
@@ -399,6 +415,7 @@ const normalizeCricketScorecard = (scorecard) => {
             }));
 
             bowling = (inning.bowler || inning.bowlers || inning.bowling || []).map(b => ({
+                id: b.player_id || b.player_key || b.id || null, // Capture ID
                 player: b.name || b.player,
                 overs: b.O || b.overs || '0',
                 maidens: b.M || b.maidens || '0',
@@ -575,7 +592,8 @@ const mapPlayer = (player, sport) => {
         position: player.player_type || player.player_position || null,
         age: player.player_age || null,
         nationality: player.player_country || null,
-        photo: player.player_image || null,
+        // Check multiple possible keys for image
+        photo: player.player_image || player.player_logo || player.image_path || null,
         team: player.team_name ? {
             id: player.team_key,
             name: player.team_name,
@@ -599,6 +617,76 @@ const mapPlayer = (player, sport) => {
     };
 };
 
+/**
+ * Map TheSportsDB Match to Unified Format
+ */
+const mapTheSportsDbMatch = (match) => {
+    if (!match) return null;
+
+    // Determine Sport
+    // Standardize to: 'football', 'basketball', 'cricket', 'volleyball'
+    // If strSport is 'Volleyball', we should return 'volleyball'. 
+    // Do NOT default to 'football'.
+    let sport = (match.strSport || '').toLowerCase();
+    if (sport === 'soccer') sport = 'football';
+
+    // Status Mapping
+    let status = 'upcoming';
+    const s = match.strStatus || '';
+
+    // Regex for strict time "14:00" or "09:30:00"
+    const timeRegex = /^\d{1,2}:\d{2}(:\d{2})?$/;
+
+    if (s === 'Match Finished' || s === 'FT' || s === 'AOT') {
+        status = 'finished';
+    } else if (s === 'Not Started' || s === 'ns' || timeRegex.test(s)) {
+        status = 'upcoming';
+    } else if (['Postponed', 'Canceled', 'Suspended'].includes(s)) {
+        status = 'finished';
+    } else {
+        status = 'live';
+    }
+
+    return {
+        _id: match.idEvent,
+        id: match.idEvent,
+        sport: sport,
+        status: status,
+        displayStatus: match.strStatus || match.strTime, // e.g., "15:00" or "FT"
+        date: match.dateEvent,
+        time: match.strTime,
+        league: match.strLeague,
+        leagueInfo: {
+            id: match.idLeague,
+            name: match.strLeague,
+            season: match.strSeason
+        },
+        homeTeam: {
+            id: match.idHomeTeam,
+            name: match.strHomeTeam,
+            logo: match.strHomeTeamBadge || null, // TheSportsDB often includes badges!
+            score: match.intHomeScore || (status === 'upcoming' ? '' : '0')
+        },
+        awayTeam: {
+            id: match.idAwayTeam,
+            name: match.strAwayTeam,
+            logo: match.strAwayTeamBadge || null,
+            score: match.intAwayScore || (status === 'upcoming' ? '' : '0')
+        },
+        venue: {
+            name: match.strVenue
+        },
+        // Detailed scores (if available)
+        score: {
+            fulltime: `${match.intHomeScore}-${match.intAwayScore}`,
+            // TheSportsDB is simpler, minimal partial scores in free tier
+        },
+        isLive: status === 'live',
+        // Optional: Thumbnails
+        thumbnail: match.strThumb || match.strFanart
+    };
+};
+
 module.exports = {
     mapFootballMatch,
     mapBasketballMatch,
@@ -606,5 +694,6 @@ module.exports = {
     mapLeague,
     mapTeam,
     mapStandings,
-    mapPlayer
+    mapPlayer,
+    mapTheSportsDbMatch // <-- New Export
 };

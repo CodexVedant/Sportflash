@@ -18,8 +18,8 @@ export default function LeagueDetailsScreen({ navigation, route }: Props) {
     // Fetch Standings Data for this League using existing API endpoint
     // We reuse the match standings query since it accepts leagueId
     const { data: standingsData, isLoading } = useGetMatchStandingsQuery({
-        sport,
-        leagueId
+        sport: sport || 'football',
+        leagueId: leagueId || ''
     }, { skip: !leagueId });
 
     // Mock header info (In a real app, we'd fetch League Info specifically)
@@ -34,8 +34,8 @@ export default function LeagueDetailsScreen({ navigation, route }: Props) {
                         <StandingsWidget
                             data={standingsData?.map(item => ({
                                 team: {
-                                    id: item.team?.id,
-                                    name: item.team?.name
+                                    id: item.team?.id || 'unknown',
+                                    name: item.team?.name || 'Unknown Team'
                                 },
                                 position: item.position ?? item.rank ?? 0,
                                 stats: {
