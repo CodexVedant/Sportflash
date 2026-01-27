@@ -1,0 +1,178 @@
+﻿import React, { useEffect } from 'react';
+import { NavigationContainer, DefaultTheme, Theme as NavigationThemeType } from '@react-navigation/native';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { ActivityIndicator, View, Platform } from 'react-native';
+import { useAppDispatch, useAppSelector } from '@hooks/redux';
+import { loadUser } from '@store/slices/authSlice';
+import * as SplashScreen from 'expo-splash-screen';
+import { StatusBar } from 'expo-status-bar';
+import * as Notifications from 'expo-notifications';
+import { RootStackParamList } from '@app-types/navigation';
+import { theme } from '@utils/theme';
+import { navigationRef } from '@services/NavigationService';
+
+// Navigators
+import MainNavigator from '@navigation/MainNavigator';
+// Screens
+import LoginScreen from '@screens/auth/LoginScreen';
+import RegisterScreen from '@screens/auth/RegisterScreen';
+import ForgotPasswordScreen from '@screens/auth/ForgotPasswordScreen';
+import ResetPasswordScreen from '@screens/auth/ResetPasswordScreen';
+import ResetOtpVerificationScreen from '@screens/auth/ResetOtpVerificationScreen';
+import MatchDetailScreen from '@screens/matches/MatchDetailScreen';
+import SeriesScreen from '@screens/series/SeriesScreen';
+import FollowingScreen from '@screens/following/FollowingScreen';
+import BookmarksScreen from '@screens/profile/BookmarksScreen';
+import SettingsScreen from '@screens/profile/SettingsScreen';
+import PlayerProfileScreen from '@screens/player/PlayerProfileScreen';
+import NotificationsScreen from '@screens/profile/NotificationsScreen';
+import NotificationSettingsScreen from '@screens/profile/NotificationSettingsScreen';
+import PreferencesScreen from '@screens/profile/PreferencesScreen';
+import NewsDetailScreen from '@screens/news/NewsDetailScreen';
+import LeagueDetailsScreen from '@screens/league/LeagueDetailsScreen';
+import LeagueDetailScreen from '@screens/series/LeagueDetailScreen';
+import TeamProfileScreen from '@screens/team/TeamProfileScreen';
+import UpcomingMatchesScreen from '@screens/matches/UpcomingMatchesScreen';
+import PremiumScreen from '@screens/profile/PremiumScreen';
+import OtpScreen from '@screens/auth/OtpScreen';
+
+const Stack = createNativeStackNavigator<RootStackParamList>();
+
+const NavigationTheme: NavigationThemeType = {
+    ...DefaultTheme,
+    colors: {
+        ...DefaultTheme.colors,
+        background: theme.colors.background,
+        card: theme.colors.surface,
+        text: theme.colors.text,
+        border: 'transparent',
+    },
+};
+
+export default function AppNavigator() {
+    const dispatch = useAppDispatch();
+    const { isInitialized, user } = useAppSelector(state => state.auth);
+
+    useEffect(() => {
+        async function prepare() {
+            try {
+                await dispatch(loadUser());
+            } catch (e) {
+                console.warn(e);
+            } finally {
+                await SplashScreen.hideAsync();
+            }
+        }
+        prepare();
+    }, [dispatch]);
+
+    // 🔔 NOTIFICATION LISTENER SETUP
+    useEffect(() => {
+        interface NotificationData {
+            matchId?: string;
+            sport?: string;
+        }
+
+        // 1. Handle Cold Start (App Closed -> Notification Tap -> Open)
+        const checkInitialNotification = async () => {
+            // Web doesn't support Cold Start via this API (handled by URL usually)
+            if (Platform.OS === 'web') return;
+
+            const response = await Notifications.getLastNotificationResponseAsync();
+            if (response) {
+                const data = response.notification.request.content.data as NotificationData;
+                console.log('🔔 Cold Start Notification:', data);
+                if (data?.matchId) {
+                    // Wait for navigation mount
+                    setTimeout(() => {
+                        if (navigationRef.isReady()) {
+                            // @ts-ignore
+                            navigationRef.navigate('MatchDetail', {
+                                matchId: String(data.matchId),
+                                sport: String(data.sport || 'football')
+                            });
+                        }
+                    }, 500);
+                }
+            }
+        };
+
+        checkInitialNotification();
+
+        // 2. Handle Foreground/Background Tap
+        const subscription = Notifications.addNotificationResponseReceivedListener(response => {
+            const data = response.notification.request.content.data as NotificationData;
+            console.log('🔔 Notification Tapped (Foreground/Background):', data);
+
+            if (data?.matchId) {
+                if (navigationRef.isReady()) {
+                    // @ts-ignore
+                    navigationRef.navigate('MatchDetail', {
+                        matchId: String(data.matchId),
+                        sport: String(data.sport || 'football')
+                    });
+                }
+            }
+        });
+
+        return () => subscription.remove();
+    }, []);
+
+    if (!isInitialized) {
+        return (
+            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: theme.colors.background }}>
+                <ActivityIndicator size="large" color={theme.colors.primary} />
+            </View>
+        );
+    }
+
+    const linking = {
+        prefixes: ['sportflash://', 'https://sportflash.app'],
+        config: {
+            screens: {
+                ResetPassword: 'reset-password/:resetToken',
+                // other screens if needed
+            }
+        }
+    };
+
+    return (
+        <NavigationContainer theme={NavigationTheme} ref={navigationRef} linking={linking}>
+            <StatusBar style="light" />
+            <Stack.Navigator
+                screenOptions={{
+                    headerShown: false,
+                    contentStyle: { backgroundColor: theme.colors.background }
+                }}
+            >
+                {/* 🏠 Main Entry Point (Accessible to Guests) */}
+                <Stack.Screen name="Main" component={MainNavigator} />
+
+                {/* 🔐 Auth Screens */}
+                <Stack.Screen name="Login" component={LoginScreen} />
+                <Stack.Screen name="Register" component={RegisterScreen} />
+                <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
+                <Stack.Screen name="ResetPassword" component={ResetPasswordScreen} />
+                <Stack.Screen name="ResetOtpVerification" component={ResetOtpVerificationScreen} />
+                <Stack.Screen name="OtpVerification" component={OtpScreen} />
+
+                {/* 🏆 App Screens */}
+                <Stack.Screen name="MatchDetail" component={MatchDetailScreen} />
+                <Stack.Screen name="Series" component={SeriesScreen} />
+                <Stack.Screen name="Following" component={FollowingScreen} />
+                <Stack.Screen name="Bookmarks" component={BookmarksScreen} />
+                <Stack.Screen name="Settings" component={SettingsScreen} />
+                <Stack.Screen name="LeagueDetails" component={LeagueDetailScreen} />
+                <Stack.Screen name="LeagueDetail" component={LeagueDetailScreen} />
+                <Stack.Screen name="TeamProfile" component={TeamProfileScreen} />
+                <Stack.Screen name="PlayerProfile" component={PlayerProfileScreen} />
+                <Stack.Screen name="Notifications" component={NotificationsScreen} />
+                <Stack.Screen name="NotificationSettings" component={NotificationSettingsScreen} />
+                <Stack.Screen name="Preferences" component={PreferencesScreen} />
+                <Stack.Screen name="NewsDetail" component={NewsDetailScreen} />
+                <Stack.Screen name="UpcomingMatches" component={UpcomingMatchesScreen} />
+                <Stack.Screen name="Premium" component={PremiumScreen} />
+            </Stack.Navigator>
+        </NavigationContainer>
+    );
+}
