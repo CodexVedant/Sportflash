@@ -1,0 +1,15 @@
+node_modules/
+.expo/
+dist/
+web-build/
+
+# Local Env Files
+.env
+.env*.local
+
+# Expo
+.expo-shared
+
+# Native builds
+android/
+ios/

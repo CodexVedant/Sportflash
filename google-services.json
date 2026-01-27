@@ -1,0 +1,29 @@
+{
+    "project_info": {
+        "project_number": "140922075108",
+        "project_id": "sportflash-6178d",
+        "storage_bucket": "sportflash-6178d.firebasestorage.app"
+    },
+    "client": [
+        {
+            "client_info": {
+                "mobilesdk_app_id": "1:140922075108:android:1c7a7b3a8908feab02f9f1",
+                "android_client_info": {
+                    "package_name": "com.sportflash.frontend"
+                }
+            },
+            "oauth_client": [],
+            "api_key": [
+                {
+                    "current_key": "AIzaSyBoAM9mcsXehG3SGDI_UhwJ64SpXjDG670"
+                }
+            ],
+            "services": {
+                "appinvite_service": {
+                    "other_platform_oauth_client": []
+                }
+            }
+        }
+    ],
+    "configuration_version": "1"
+}
