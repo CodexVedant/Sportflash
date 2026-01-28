@@ -88,9 +88,28 @@ export default function OtpScreen({ route, navigation }: Props) {
         }
     };
 
-    const handleResend = () => {
-        Alert.alert('Coming Soon', 'Resend API not implemented yet.');
-        setTimer(60);
+    const handleResend = async () => {
+        if (timer > 0) return; // Prevent resend if timer is still running
+
+        try {
+            setLoading(true);
+            const response = await axios.post(`${API_BASE_URL}/auth/resend-otp`, {
+                email
+            });
+
+            if (response.data.success) {
+                Alert.alert('Success', 'A new verification code has been sent to your email');
+                setTimer(60); // Reset timer
+                setOtp(['', '', '', '', '', '']); // Clear OTP inputs
+                inputs.current[0]?.focus(); // Focus first input
+            }
+        } catch (error: any) {
+            console.error('Resend Error:', error);
+            const msg = error.response?.data?.message || 'Failed to resend code. Please try again.';
+            Alert.alert('Resend Failed', msg);
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
