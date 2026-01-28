@@ -10,6 +10,7 @@ import { API_BASE_URL } from '@config/index';
 import axios from 'axios';
 import { setCredentials } from '@store/slices/authSlice';
 import { useAppDispatch } from '@hooks/redux';
+import { ErrorMessage } from '@components/common';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'OtpVerification'>;
 
@@ -17,6 +18,7 @@ export default function OtpScreen({ route, navigation }: Props) {
     const { email } = route.params; // Email passed from RegisterScreen
     const [otp, setOtp] = useState(['', '', '', '', '', '']);
     const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
     const [timer, setTimer] = useState(60); // 60s countdown for resend
     const inputs = useRef<Array<TextInput | null>>([]);
     const dispatch = useAppDispatch();
@@ -29,6 +31,7 @@ export default function OtpScreen({ route, navigation }: Props) {
     }, []);
 
     const handleChange = (text: string, index: number) => {
+        setError(null); // Clear error on typing
         const newOtp = [...otp];
         newOtp[index] = text;
         setOtp(newOtp);
@@ -45,15 +48,17 @@ export default function OtpScreen({ route, navigation }: Props) {
     };
 
     const handleBackspace = (text: string, index: number) => {
+        setError(null);
         if (!text && index > 0) {
             inputs.current[index - 1]?.focus();
         }
     };
 
     const handleVerify = async () => {
+        setError(null);
         const code = otp.join('');
         if (code.length !== 6) {
-            Alert.alert('Error', 'Please enter a valid 6-digit code');
+            setError('Please enter a valid 6-digit code');
             return;
         }
 
@@ -71,7 +76,6 @@ export default function OtpScreen({ route, navigation }: Props) {
                 console.log('✅ OTP Verified. Resetting to Main...');
 
                 // Force navigation reset relative to root
-                // Using setTimeout to allow Redux state to propagate if needed (though not strictly necessary)
                 setTimeout(() => {
                     navigation.reset({
                         index: 0,
@@ -82,7 +86,9 @@ export default function OtpScreen({ route, navigation }: Props) {
         } catch (error: any) {
             console.error('Verify Error:', error);
             const msg = error.response?.data?.message || 'Invalid code';
-            Alert.alert('Verification Failed', msg);
+            setError(msg);
+            // Optionally keep Alert if user prefers both, but request said "show verify error message in frontend errormessage"
+            // Alert.alert('Verification Failed', msg); 
         } finally {
             setLoading(false);
         }
@@ -93,6 +99,7 @@ export default function OtpScreen({ route, navigation }: Props) {
 
         try {
             setLoading(true);
+            setError(null);
             const response = await axios.post(`${API_BASE_URL}/auth/resend-otp`, {
                 email
             });
@@ -106,7 +113,7 @@ export default function OtpScreen({ route, navigation }: Props) {
         } catch (error: any) {
             console.error('Resend Error:', error);
             const msg = error.response?.data?.message || 'Failed to resend code. Please try again.';
-            Alert.alert('Resend Failed', msg);
+            setError(msg);
         } finally {
             setLoading(false);
         }
@@ -129,6 +136,16 @@ export default function OtpScreen({ route, navigation }: Props) {
                     <Text style={styles.email}>{email}</Text>
                 </Text>
 
+                <View style={{ width: '100%', marginBottom: 20 }}>
+                    {error && (
+                        <ErrorMessage
+                            message={error}
+                            type="error"
+                            onDismiss={() => setError(null)}
+                        />
+                    )}
+                </View>
+
                 <View style={styles.otpContainer}>
                     {otp.map((digit, index) => (
                         <TextInput
@@ -136,7 +153,8 @@ export default function OtpScreen({ route, navigation }: Props) {
                             ref={(ref) => { inputs.current[index] = ref; }}
                             style={[
                                 styles.otpInput,
-                                digit ? styles.otpInputFilled : null
+                                digit ? styles.otpInputFilled : null,
+                                error ? { borderColor: theme.colors.danger } : null
                             ]}
                             keyboardType="number-pad"
                             maxLength={1}
